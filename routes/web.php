@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectController;
+
+Route::get('/dashboard', [ProjectController::class, 'index']);
+Route::get('/new', [ProjectController::class, 'create']);
+Route::post('/projects', [ProjectController::class, 'store']);
+
 
 Route::get('/', function () {
     return view('welcome');

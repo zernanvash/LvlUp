@@ -9,7 +9,7 @@ class DashboardController extends Controller
 {
     public function dashboard()
     {
-        $projects = Project::where('is_published', true)->get();
+        $projects = Project::all();
         return view('dashboard', compact('projects'));
     }
 }

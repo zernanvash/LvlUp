@@ -14,31 +14,19 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
-        $projects = [
-            [
-                'name' => 'Universidad',
-                'description' => 'A narrative-driven horror experience focused on environmental storytelling.',
-                'tech' => 'Roblox / Lua',
-            ],
-            [
-                'name' => 'HexCore',
-                'description' => 'A modular skill-tree system designed to experiment with progression mechanics.',
-                'tech' => 'JavaScript',
-            ],
-            [
-                'name' => 'LvlUp Dashboard',
-                'description' => 'A personal dashboard for tracking projects, skills, and long-term growth.',
-                'tech' => 'Laravel',
-            ],
-        ];
+        \App\Models\Project::create([
+            'name' => 'Portfolio System',
+            'slug' => 'portfolio-system',
+            'description' => 'A Laravel based skill tracking system with a hex-grid tree.',
+            'language' => 'PHP',
+        ]);
     
-        foreach ($projects as $project) {
-            Project::create([
-                'name' => $project['name'],
-                'slug' => Str::slug($project['name']),
-                'description' => $project['description'],
-                'tech' => $project['tech'],
-            ]);
-        }
+        \App\Models\Project::create([
+            'name' => 'Skill Tree Visualizer',
+            'slug' => 'skill-tree-visualizer',
+            'description' => 'A JavaScript component for rendering complex skill trees.',
+            'language' => 'JavaScript',
+        ]);
+        
     }
 }

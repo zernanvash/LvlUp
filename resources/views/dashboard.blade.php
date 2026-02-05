@@ -3,6 +3,10 @@
 @section('title', 'Dashboard')
 
 @section('content')
+
+<div class="text-white">
+    Debug: Found {{ count($projects) }} projects in database.
+</div>
 <div class="max-w-7xl mx-auto">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
@@ -44,7 +48,15 @@
             class="absolute bottom-16 right-0 w-56 bg-[#161b22] border border-[#30363d] rounded-xl shadow-2xl overflow-hidden">
             <button
                 class="w-full px-5 py-4 text-left text-sm text-[#f0f6fc] hover:bg-[#21262d] flex items-center gap-3 border-b border-[#30363d]">
-                <i class="fa-solid fa-folder-plus text-indigo-400"></i> Add Project
+                <a href="/new"
+                    class="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-md font-bold transition shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Add Project
+                </a>
             </button>
             <button
                 class="w-full px-5 py-4 text-left text-sm text-[#f0f6fc] hover:bg-[#21262d] flex items-center gap-3">
