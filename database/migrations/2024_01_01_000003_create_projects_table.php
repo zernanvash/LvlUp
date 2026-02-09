@@ -6,26 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->string('language'); // e.g., PHP, JS
-            $table->text('content')->nullable(); // For code/text snippets
-            $table->string('tags')->nullable(); // For manually typed or suggested tags
+            $table->string('url')->nullable();
+            $table->string('github_url')->nullable();
+            $table->string('language')->default('PHP');
+            $table->string('thumbnail')->nullable();
+            $table->integer('xp_reward')->default(100);
+            $table->boolean('is_featured')->default(false);
+            $table->json('metadata')->nullable(); // For storing code snippets, stats, etc.
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('projects');

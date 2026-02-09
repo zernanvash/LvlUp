@@ -110,10 +110,6 @@ body {
 }
 
 /* Firefox */
-#skillScroll {
-    scrollbar-width: thin;
-    scrollbar-color: #30363d #0d1117;
-}
 
 
 </style>
