@@ -16,9 +16,7 @@ use Illuminate\Http\Request;
 */
 
 // Welcome Page
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', '/login');
 
 // Authentication Routes (Laravel Breeze provides these)
 require __DIR__.'/auth.php';
