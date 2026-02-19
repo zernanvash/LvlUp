@@ -16,12 +16,7 @@ use Illuminate\Http\Request;
 */
 
 // Welcome Page
-Route::get('/', function () {
-    return view('welcome');
-});
-
-// Public Profile (accessible without authentication)
-Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
+Route::redirect('/', '/login');
 
 // Authentication Routes (Laravel Breeze provides these)
 require __DIR__.'/auth.php';
@@ -41,31 +36,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Skill Tree
     Route::get('/skill-tree', [SkillTreeController::class, 'index'])->name('skill-tree.index');
-    Route::get('/skill-tree/{node}', [SkillTreeController::class, 'show'])->name('skill-tree.show');
     Route::post('/skill-tree/{node}/unlock', [SkillTreeController::class, 'unlock'])->name('skill-tree.unlock');
-    Route::get('/skill-tree-progress', [SkillTreeController::class, 'progress'])->name('skill-tree.progress');
+    Route::get('/skill-tree/{node}/details', [SkillTreeController::class, 'getNodeDetails'])->name('skill-tree.details');
     
     // Achievements/Badges
     Route::get('/achievements', [BadgeController::class, 'index'])->name('achievements.index');
-    Route::get('/badges/{badge}', [BadgeController::class, 'show'])->name('badges.show');
-    Route::post('/badges/{badge}/equip', [BadgeController::class, 'equip'])->name('badges.equip');
-    Route::post('/badges/{badge}/unequip', [BadgeController::class, 'unequip'])->name('badges.unequip');
     Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])->name('badges.toggle-display');
     
     // Resume Builder
-    Route::get('/resumes', [ResumeController::class, 'index'])->name('resumes.index');
-    Route::get('/resumes/create', [ResumeController::class, 'create'])->name('resumes.create');
-    Route::post('/resumes', [ResumeController::class, 'store'])->name('resumes.store');
-    Route::get('/resumes/{resume}', [ResumeController::class, 'show'])->name('resumes.show');
-    Route::patch('/resumes/{resume}', [ResumeController::class, 'update'])->name('resumes.update');
-    Route::post('/resumes/analyze', [ResumeController::class, 'analyze'])->name('resumes.analyze');
-    Route::post('/resumes/{resume}/generate', [ResumeController::class, 'generate'])->name('resumes.generate');
-    Route::get('/resumes/{resume}/download', [ResumeController::class, 'download'])->name('resumes.download');
+    Route::get('/resume-builder', [ResumeController::class, 'index'])->name('resume.index');
+    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])->name('resume.analyze');
+    Route::post('/resume/generate', [ResumeController::class, 'generate'])->name('resume.generate');
+    Route::get('/resume/{resume}/download', [ResumeController::class, 'download'])->name('resume.download');
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/toggle-visibility', [ProfileController::class, 'toggleVisibility'])->name('profile.toggle-visibility');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 });
