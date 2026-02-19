@@ -134,7 +134,6 @@ class Badge extends Model
         'required_skill_id',
         'threshold',
         'xp_reward',
-        'gacha_currency_reward',
     ];
 
     public function users()

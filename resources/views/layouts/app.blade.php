@@ -186,7 +186,6 @@
 </head>
 <body class="animated-bg text-gray-100 min-h-screen" x-data="{ 
     sidebarOpen: false, 
-    showDailyReward: @json(auth()->user()->canClaimDailyReward() ?? false),
     showLevelUp: false,
     showBadgeUnlock: false,
     newBadge: null
@@ -254,24 +253,13 @@
                     </div>
                 </div>
                 
-                <!-- Currency -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-purple-950/30 rounded-lg p-3 border border-purple-500/20">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-gem text-purple-400"></i>
-                            <div>
-                                <p class="text-xs text-purple-300">Primogems</p>
-                                <p class="font-display font-bold text-white">{{ auth()->user()->gacha_currency }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-amber-950/30 rounded-lg p-3 border border-amber-500/20">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-star text-amber-400"></i>
-                            <div>
-                                <p class="text-xs text-amber-300">Skill Points</p>
-                                <p class="font-display font-bold text-white">{{ auth()->user()->skill_points }}</p>
-                            </div>
+                <!-- Rank Display -->
+                <div class="bg-purple-950/30 rounded-lg p-3 border border-purple-500/20">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-trophy text-amber-400"></i>
+                        <div>
+                            <p class="text-xs text-purple-300">Rank</p>
+                            <p class="font-display font-bold text-white">{{ auth()->user()->rank }}</p>
                         </div>
                     </div>
                 </div>
@@ -345,23 +333,6 @@
 
             <div class="flex items-center gap-4">
                 @auth
-                <!-- Daily Login Streak -->
-                <div class="hidden sm:flex items-center gap-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-500/30 px-4 py-2 rounded-xl">
-                    <i class="fas fa-fire text-orange-400"></i>
-                    <span class="font-display text-sm font-bold text-white">{{ auth()->user()->streak_days }} Day Streak</span>
-                </div>
-                
-                <!-- Daily Reward Button -->
-                @if(auth()->user()->canClaimDailyReward())
-                <button @click="showDailyReward = true" class="relative btn-glow bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-6 py-3 rounded-xl font-bold shadow-lg transition">
-                    <span class="relative z-10 flex items-center gap-2">
-                        <i class="fas fa-gift"></i>
-                        Daily Reward
-                    </span>
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                </button>
-                @endif
-                
                 <!-- Profile Avatar -->
                 <a href="/profile" class="w-12 h-12 rounded-2xl border-2 border-purple-400 overflow-hidden hover:border-pink-400 transition shadow-lg">
                     <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=a78bfa&color=fff&size=48' }}" 
@@ -379,57 +350,6 @@
 
     <!-- Backdrop -->
     <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"></div>
-
-    <!-- Daily Reward Modal -->
-    <div x-show="showDailyReward" 
-         x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-         @click.self="showDailyReward = false">
-        <div class="glow-border-gold rounded-3xl p-8 max-w-md w-full mx-4 bg-gradient-to-br from-[#2d1b4e] to-[#1a1d3e] transform scale-95 hover:scale-100 transition">
-            <div class="text-center">
-                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center floating shadow-2xl">
-                    <i class="fas fa-gift text-4xl text-white"></i>
-                </div>
-                <h2 class="font-display text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
-                    Daily Reward!
-                </h2>
-                <p class="text-purple-200 mb-6">Day {{ auth()->user()->streak_days }} Streak Bonus</p>
-                
-                <div class="space-y-4 mb-8">
-                    <div class="bg-purple-950/50 rounded-xl p-4 border-2 border-purple-500/30">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-star text-purple-400 text-xl"></i>
-                                </div>
-                                <span class="text-white font-bold">Experience Points</span>
-                            </div>
-                            <span class="font-display text-2xl font-bold text-purple-300">+{{ 50 * (floor(auth()->user()->streak_days / 7) + 1) }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-purple-950/50 rounded-xl p-4 border-2 border-purple-500/30">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-gem text-purple-400 text-xl"></i>
-                                </div>
-                                <span class="text-white font-bold">Primogems</span>
-                            </div>
-                            <span class="font-display text-2xl font-bold text-purple-300">+{{ 20 * (floor(auth()->user()->streak_days / 7) + 1) }}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <form method="POST" action="/daily-reward/claim">
-                    @csrf
-                    <button type="submit" class="w-full btn-glow bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 py-4 rounded-xl font-display font-bold text-lg shadow-2xl transition">
-                        <span class="relative z-10">Claim Reward</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 
     @yield('modals')
 </body>

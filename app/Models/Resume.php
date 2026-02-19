@@ -18,6 +18,7 @@ class Resume extends Model
         'selected_skill_ids',
         'pdf_path',
         'match_score',
+        'template',
     ];
 
     protected $casts = [
@@ -47,4 +48,44 @@ class Resume extends Model
         
         return Skill::whereIn('id', $this->selected_skill_ids)->get();
     }
+
+    /**
+     * Generate a PDF resume using the specified template
+     *
+     * @param string|null $template Template name (modern, classic, minimal, creative). If null, uses stored template.
+     * @return string Path to the generated PDF file
+     */
+    public function generatePDF(?string $template = null): string
+    {
+        // Use provided template or fall back to stored template or default
+        $templateName = $template ?? $this->template ?? 'modern';
+        
+        $user = $this->user;
+        $projects = $this->getSelectedProjects();
+        $skills = $this->getSelectedSkills();
+
+        // Generate PDF using dompdf
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView("resumes.templates.{$templateName}", [
+            'user' => $user,
+            'resume' => $this,
+            'projects' => $projects,
+            'skills' => $skills,
+        ]);
+
+        // Generate filename
+        $filename = 'resume_' . $user->id . '_' . time() . '.pdf';
+        $path = 'resumes/' . $filename;
+
+        // Save PDF to storage
+        \Storage::put($path, $pdf->output());
+
+        // Update resume record with PDF path and template used
+        $this->update([
+            'pdf_path' => $path,
+            'template' => $templateName,
+        ]);
+
+        return $path;
+    }
 }
+

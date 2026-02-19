@@ -18,7 +18,11 @@ class SkillNode extends Model
         'y_position',
         'tier',
         'required_level',
-        'skill_point_cost',
+        'task_requirements',
+    ];
+
+    protected $casts = [
+        'task_requirements' => 'array',
     ];
 
     public function skill()
@@ -55,11 +59,6 @@ class SkillNode extends Model
             return false;
         }
 
-        // Check skill points
-        if ($user->skill_points < $this->skill_point_cost) {
-            return false;
-        }
-
         // Check if parent is unlocked (if exists)
         if ($this->parent_node_id) {
             if (!$this->parent->isUnlockedBy($user)) {
@@ -72,6 +71,74 @@ class SkillNode extends Model
             return false;
         }
 
+        // Check task requirements
+        $taskProgress = $this->checkTaskRequirements($user);
+        foreach ($taskProgress as $task) {
+            if (!$task['completed']) {
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    public function checkTaskRequirements(User $user): array
+    {
+        if (!$this->task_requirements) {
+            return [];
+        }
+
+        $results = [];
+
+        foreach ($this->task_requirements as $task) {
+            $type = $task['type'];
+            $required = $task['required'];
+            $current = 0;
+
+            switch ($type) {
+                case 'project_count':
+                    $current = $user->projects()->count();
+                    break;
+
+                case 'skill_projects':
+                    $skillSlug = $task['skill_slug'];
+                    $skill = Skill::where('slug', $skillSlug)->first();
+                    if ($skill) {
+                        $current = $user->projects()
+                            ->whereHas('skills', fn($q) => $q->where('skills.id', $skill->id))
+                            ->count();
+                    }
+                    break;
+
+                case 'badge_count':
+                    $current = $user->badges()->count();
+                    break;
+
+                case 'level_requirement':
+                    $current = $user->level;
+                    break;
+
+                case 'node_unlock':
+                    $nodeId = $task['node_id'];
+                    $current = $user->unlockedNodes()->where('skill_node_id', $nodeId)->exists() ? 1 : 0;
+                    $required = 1;
+                    break;
+            }
+
+            $results[] = [
+                'type' => $type,
+                'description' => $task['description'],
+                'current' => $current,
+                'required' => $required,
+                'completed' => $current >= $required,
+            ];
+        }
+
+        return $results;
+    }
+
+    public function calculateTaskProgress(User $user): array
+    {
+        return $this->checkTaskRequirements($user);
     }
 }

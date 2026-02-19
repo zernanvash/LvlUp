@@ -47,4 +47,36 @@ class Skill extends Model
             default => '#6b7280',
         };
     }
+
+    /**
+     * Get all projects for this skill
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getProjectsForSkill()
+    {
+        return $this->projects()->get();
+    }
+
+    /**
+     * Calculate user proficiency with this skill
+     * Based on number of projects and average proficiency level
+     *
+     * @param User $user
+     * @return float Average proficiency (0 if no projects)
+     */
+    public function calculateUserProficiency(User $user): float
+    {
+        $userProjects = $this->projects()
+            ->where('user_id', $user->id)
+            ->get();
+
+        if ($userProjects->isEmpty()) {
+            return 0;
+        }
+
+        $totalProficiency = $userProjects->sum('pivot.proficiency');
+        return $totalProficiency / $userProjects->count();
+    }
+
 }
