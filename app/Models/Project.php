@@ -25,6 +25,8 @@ class Project extends Model
     protected $casts = [
         'metadata' => 'array',
         'is_featured' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Relationships
@@ -45,8 +47,14 @@ class Project extends Model
     {
         foreach ($tags as $tagName) {
             $skill = Skill::firstOrCreate(
-                ['slug' => \Str::slug($tagName)],
-                ['name' => $tagName]
+                ['slug' => \Illuminate\Support\Str::slug($tagName)],
+                [
+                    'name' => $tagName,
+                    'category' => 'backend', // Default category for auto-created skills
+                    'icon' => 'fa-code',
+                    'color' => '#6366f1',
+                    'rarity' => 'common',
+                ]
             );
             
             if (!$this->skills->contains($skill->id)) {
@@ -111,32 +119,32 @@ class Project extends Model
             foreach ($badges as $badge) {
                 if (!$user->badges->contains($badge->id)) {
                     $user->badges()->attach($badge->id, [
-                        'earned_at' => now()
+                        'earned_at' => now(),
+                        'is_displayed' => false
                     ]);
                     
-                    // Award badge rewards
+                    // Award badge XP reward
                     $user->addXP($badge->xp_reward);
-                    $user->gacha_currency += $badge->gacha_currency_reward;
-                    $user->save();
                 }
             }
         }
         
         // Check total project count badges
         $totalProjects = $user->projects()->count();
-        $projectBadges = Badge::where('category', 'project')
+        $projectBadges = Badge::whereNull('required_skill_id')
+            ->where('category', 'project')
             ->where('threshold', '<=', $totalProjects)
             ->get();
             
         foreach ($projectBadges as $badge) {
             if (!$user->badges->contains($badge->id)) {
                 $user->badges()->attach($badge->id, [
-                    'earned_at' => now()
+                    'earned_at' => now(),
+                    'is_displayed' => false
                 ]);
                 
+                // Award badge XP reward
                 $user->addXP($badge->xp_reward);
-                $user->gacha_currency += $badge->gacha_currency_reward;
-                $user->save();
             }
         }
     }

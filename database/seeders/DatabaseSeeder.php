@@ -2,18 +2,39 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Models\Skill;
 use App\Models\SkillNode;
 use App\Models\Badge;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->seedTestUser();
         $this->seedSkills();
         $this->seedSkillTree();
         $this->seedBadges();
+    }
+    
+    private function seedTestUser()
+    {
+        User::create([
+            'name' => 'Test User',
+            'email' => 'test@lvlup.dev',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+            'title' => 'Test Developer',
+            'level' => 5,
+            'xp' => 150,
+            'total_xp' => 650,
+            'rank' => 'Bronze',
+            'is_public' => true,
+            'last_login' => now()->subDay(),
+            'bio' => 'A test user account for exploring the LvlUp gamification system.',
+        ]);
     }
     
     private function seedSkills()
@@ -68,160 +89,54 @@ class DatabaseSeeder extends Seeder
     
     private function seedSkillTree()
     {
-        // Root node
+        // Root node - unlocked by uploading first project
         $root = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'html')->first()->id,
-            'title' => 'Foundations',
-            'description' => 'The absolute core of all tech disciplines. Learn logical thinking, problem solving, and how computers work.',
+            'skill_id' => null,
+            'title' => 'Taking the First Steps',
+            'description' => 'Begin your journey by uploading your first project.',
             'x_position' => 50,
-            'y_position' => 80,
-            'tier' => 'core',
+            'y_position' => 50,
+            'tier' => 1,
             'required_level' => 1,
-            'skill_point_cost' => 0, // Free
+            'task_requirements' => [
+                ['type' => 'project_count', 'description' => 'Upload your first project', 'required' => 1]
+            ],
         ]);
         
-        // Web Development Branch
-        $html = SkillNode::create([
+        // Web Development Path
+        $webDev = SkillNode::create([
             'skill_id' => Skill::where('slug', 'html')->first()->id,
             'parent_node_id' => $root->id,
-            'title' => 'HTML Mastery',
-            'description' => 'Learn semantic HTML, accessibility, and SEO-friendly markup.',
-            'x_position' => 25,
-            'y_position' => 220,
-            'tier' => 'basic',
+            'title' => 'Web Developer Path',
+            'description' => 'Master web development fundamentals.',
+            'x_position' => 30,
+            'y_position' => 150,
+            'tier' => 1,
             'required_level' => 1,
-            'skill_point_cost' => 1,
+            'task_requirements' => [
+                ['type' => 'project_count', 'description' => 'Upload 2 projects', 'required' => 2]
+            ],
         ]);
         
-        $css = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'css')->first()->id,
-            'parent_node_id' => $html->id,
-            'title' => 'CSS Styling',
-            'description' => 'Master Flexbox, Grid, animations, and responsive design.',
-            'x_position' => 15,
-            'y_position' => 360,
-            'tier' => 'basic',
-            'required_level' => 2,
-            'skill_point_cost' => 1,
-        ]);
-        
-        $js = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'javascript')->first()->id,
-            'parent_node_id' => $html->id,
-            'title' => 'JavaScript Power',
-            'description' => 'DOM manipulation, events, async programming, and modern ES6+.',
-            'x_position' => 35,
-            'y_position' => 360,
-            'tier' => 'advanced',
-            'required_level' => 3,
-            'skill_point_cost' => 2,
-        ]);
-        
-        $react = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'react')->first()->id,
-            'parent_node_id' => $js->id,
-            'title' => 'React Framework',
-            'description' => 'Build modern SPAs with hooks, context, and component architecture.',
-            'x_position' => 25,
-            'y_position' => 500,
-            'tier' => 'master',
-            'required_level' => 5,
-            'skill_point_cost' => 3,
-        ]);
-        
-        // Backend Branch
-        $php = SkillNode::create([
+        // Backend Path
+        $backendDev = SkillNode::create([
             'skill_id' => Skill::where('slug', 'php')->first()->id,
             'parent_node_id' => $root->id,
-            'title' => 'PHP Development',
-            'description' => 'Server-side programming, OOP, and web applications.',
-            'x_position' => 55,
-            'y_position' => 220,
-            'tier' => 'basic',
+            'title' => 'Backend Developer Path',
+            'description' => 'Build server-side applications.',
+            'x_position' => 70,
+            'y_position' => 150,
+            'tier' => 1,
             'required_level' => 1,
-            'skill_point_cost' => 1,
-        ]);
-        
-        $laravel = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'laravel')->first()->id,
-            'parent_node_id' => $php->id,
-            'title' => 'Laravel Framework',
-            'description' => 'MVC architecture, Eloquent ORM, authentication, and APIs.',
-            'x_position' => 55,
-            'y_position' => 360,
-            'tier' => 'master',
-            'required_level' => 4,
-            'skill_point_cost' => 3,
-        ]);
-        
-        // Database
-        $mysql = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'mysql')->first()->id,
-            'parent_node_id' => $php->id,
-            'title' => 'Database Design',
-            'description' => 'SQL queries, normalization, indexing, and relationships.',
-            'x_position' => 65,
-            'y_position' => 360,
-            'tier' => 'advanced',
-            'required_level' => 3,
-            'skill_point_cost' => 2,
-        ]);
-        
-        // DevOps Branch
-        $git = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'git')->first()->id,
-            'parent_node_id' => $root->id,
-            'title' => 'Version Control',
-            'description' => 'Git workflows, branching, merging, and collaboration.',
-            'x_position' => 75,
-            'y_position' => 220,
-            'tier' => 'basic',
-            'required_level' => 1,
-            'skill_point_cost' => 1,
-        ]);
-        
-        $docker = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'docker')->first()->id,
-            'parent_node_id' => $git->id,
-            'title' => 'Containerization',
-            'description' => 'Docker containers, images, and orchestration.',
-            'x_position' => 75,
-            'y_position' => 360,
-            'tier' => 'advanced',
-            'required_level' => 6,
-            'skill_point_cost' => 2,
-        ]);
-        
-        // AI/ML Branch
-        $python = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'python')->first()->id,
-            'parent_node_id' => $root->id,
-            'title' => 'Python Programming',
-            'description' => 'Versatile language for web, data science, and automation.',
-            'x_position' => 85,
-            'y_position' => 220,
-            'tier' => 'basic',
-            'required_level' => 2,
-            'skill_point_cost' => 1,
-        ]);
-        
-        $ml = SkillNode::create([
-            'skill_id' => Skill::where('slug', 'ml')->first()->id,
-            'parent_node_id' => $python->id,
-            'title' => 'Machine Learning',
-            'description' => 'AI algorithms, neural networks, and data modeling.',
-            'x_position' => 85,
-            'y_position' => 360,
-            'tier' => 'legendary',
-            'required_level' => 10,
-            'skill_point_cost' => 5,
+            'task_requirements' => [
+                ['type' => 'project_count', 'description' => 'Upload 2 projects', 'required' => 2]
+            ],
         ]);
     }
     
     private function seedBadges()
     {
         $badges = [
-            // Project milestones
             [
                 'title' => 'First Steps',
                 'slug' => 'first-project',
@@ -231,7 +146,6 @@ class DatabaseSeeder extends Seeder
                 'category' => 'project',
                 'threshold' => 1,
                 'xp_reward' => 50,
-                'gacha_currency_reward' => 10,
             ],
             [
                 'title' => 'Portfolio Builder',
@@ -242,7 +156,6 @@ class DatabaseSeeder extends Seeder
                 'category' => 'project',
                 'threshold' => 5,
                 'xp_reward' => 200,
-                'gacha_currency_reward' => 50,
             ],
             [
                 'title' => 'Project Master',
@@ -253,92 +166,6 @@ class DatabaseSeeder extends Seeder
                 'category' => 'project',
                 'threshold' => 10,
                 'xp_reward' => 500,
-                'gacha_currency_reward' => 100,
-            ],
-            
-            // Skill badges
-            [
-                'title' => 'JavaScript Ninja',
-                'slug' => 'js-master',
-                'description' => 'Complete 3 JavaScript projects',
-                'icon' => '🥷',
-                'rarity' => 'epic',
-                'category' => 'skill',
-                'required_skill_id' => Skill::where('slug', 'javascript')->first()->id,
-                'threshold' => 3,
-                'xp_reward' => 300,
-                'gacha_currency_reward' => 75,
-            ],
-            [
-                'title' => 'Laravel Architect',
-                'slug' => 'laravel-expert',
-                'description' => 'Complete 5 Laravel projects',
-                'icon' => '🏗️',
-                'rarity' => 'legendary',
-                'category' => 'skill',
-                'required_skill_id' => Skill::where('slug', 'laravel')->first()->id,
-                'threshold' => 5,
-                'xp_reward' => 1000,
-                'gacha_currency_reward' => 200,
-            ],
-            
-            // Streak badges
-            [
-                'title' => 'Committed',
-                'slug' => 'week-streak',
-                'description' => 'Login for 7 consecutive days',
-                'icon' => '🔥',
-                'rarity' => 'rare',
-                'category' => 'streak',
-                'threshold' => 7,
-                'xp_reward' => 100,
-                'gacha_currency_reward' => 30,
-            ],
-            [
-                'title' => 'Unstoppable',
-                'slug' => 'month-streak',
-                'description' => 'Login for 30 consecutive days',
-                'icon' => '⚡',
-                'rarity' => 'legendary',
-                'category' => 'streak',
-                'threshold' => 30,
-                'xp_reward' => 1000,
-                'gacha_currency_reward' => 300,
-            ],
-            
-            // Level badges
-            [
-                'title' => 'Beginner',
-                'slug' => 'level-5',
-                'description' => 'Reach level 5',
-                'icon' => '🌱',
-                'rarity' => 'common',
-                'category' => 'level',
-                'threshold' => 5,
-                'xp_reward' => 100,
-                'gacha_currency_reward' => 20,
-            ],
-            [
-                'title' => 'Expert',
-                'slug' => 'level-25',
-                'description' => 'Reach level 25',
-                'icon' => '⭐',
-                'rarity' => 'epic',
-                'category' => 'level',
-                'threshold' => 25,
-                'xp_reward' => 500,
-                'gacha_currency_reward' => 100,
-            ],
-            [
-                'title' => 'Legend',
-                'slug' => 'level-50',
-                'description' => 'Reach level 50',
-                'icon' => '👑',
-                'rarity' => 'mythic',
-                'category' => 'level',
-                'threshold' => 50,
-                'xp_reward' => 2000,
-                'gacha_currency_reward' => 500,
             ],
         ];
         

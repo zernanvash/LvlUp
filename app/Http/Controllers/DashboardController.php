@@ -13,9 +13,6 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        // Check and update daily login
-        $user->checkDailyLogin();
-        
         // Get user's projects
         $projects = $user->projects()
             ->with('skills')
@@ -23,24 +20,5 @@ class DashboardController extends Controller
             ->get();
         
         return view('dashboard', compact('projects'));
-    }
-    
-    public function claimDailyReward(Request $request)
-    {
-        $user = auth()->user();
-        
-        if (!$user->canClaimDailyReward()) {
-            return redirect()->back()->with('error', 'Daily reward already claimed!');
-        }
-        
-        $reward = $user->claimDailyReward();
-        
-        if ($reward) {
-            return redirect()->back()->with('success', 
-                "Daily reward claimed! +{$reward->xp_earned} XP, +{$reward->gacha_currency_earned} Primogems"
-            );
-        }
-        
-        return redirect()->back()->with('error', 'Failed to claim reward');
     }
 }

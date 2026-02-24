@@ -7,6 +7,190 @@
 @section('content')
 <div class="max-w-7xl mx-auto space-y-8">
     
+    <!-- XP Progress Section -->
+    <div class="glow-border rounded-3xl p-8 bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-purple-900/40 backdrop-blur relative overflow-hidden">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-purple-600/10 animate-pulse"></div>
+        
+        <div class="relative z-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white mb-2">
+                        Level {{ auth()->user()->level }} 
+                        <span class="text-{{ auth()->user()->rank === 'Master' ? 'amber' : (auth()->user()->rank === 'Diamond' ? 'cyan' : (auth()->user()->rank === 'Platinum' ? 'purple' : (auth()->user()->rank === 'Gold' ? 'amber' : (auth()->user()->rank === 'Silver' ? 'gray' : 'amber')))) }}-400">
+                            {{ auth()->user()->rank }}
+                        </span>
+                    </h2>
+                    <p class="text-purple-300">
+                        {{ number_format(auth()->user()->xp) }} / {{ number_format(auth()->user()->xpNeededForNextLevel()) }} XP
+                        <span class="text-purple-400 ml-2">({{ number_format(auth()->user()->xpProgress(), 1) }}%)</span>
+                    </p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-purple-300 mb-1">Next Level</div>
+                    <div class="font-display text-2xl font-bold text-white">
+                        {{ number_format(auth()->user()->xpNeededForNextLevel() - auth()->user()->xp) }} XP
+                    </div>
+                    <div class="text-xs text-purple-400">to Level {{ auth()->user()->level + 1 }}</div>
+                </div>
+            </div>
+            
+            <!-- XP Progress Bar -->
+            <div class="relative h-8 bg-black/40 rounded-full overflow-hidden border-2 border-purple-500/30">
+                <div class="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20"></div>
+                <div 
+                    class="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full transition-all duration-1000 ease-out"
+                    style="width: {{ auth()->user()->xpProgress() }}%"
+                >
+                    <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent animate-pulse"></div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="font-display font-bold text-white text-sm drop-shadow-lg">
+                        {{ number_format(auth()->user()->xpProgress(), 1) }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipped Badges Section -->
+    @php
+        $equippedBadges = auth()->user()->badges()->wherePivot('is_displayed', true)->orderBy('user_badges.created_at', 'desc')->limit(6)->get();
+    @endphp
+    @if($equippedBadges->count() > 0)
+    <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-amber-900/30 to-amber-950/30 backdrop-blur">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-trophy text-amber-400"></i>
+                Equipped Badges
+            </h3>
+            <a href="{{ route('achievements.index') }}" class="text-sm text-amber-300 hover:text-amber-200 transition">
+                Manage <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            @foreach($equippedBadges as $badge)
+            <div class="group relative">
+                <div class="glow-border rounded-xl p-4 bg-gradient-to-br from-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : ($badge->rarity === 'rare' ? 'blue' : 'gray')) }}-900/40 to-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : ($badge->rarity === 'rare' ? 'blue' : 'gray')) }}-950/40 backdrop-blur text-center card-hover">
+                    <div class="text-4xl mb-2">{{ $badge->icon }}</div>
+                    <div class="text-xs font-bold text-white truncate">{{ $badge->title }}</div>
+                    <div class="text-xs text-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : ($badge->rarity === 'rare' ? 'blue' : 'gray')) }}-300 uppercase mt-1">{{ $badge->rarity }}</div>
+                </div>
+                <!-- Tooltip -->
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black/90 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                    {{ $badge->description }}
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- Quick Links Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{{ route('skill-tree.index') }}" class="group glow-border rounded-2xl p-6 bg-gradient-to-br from-purple-900/40 to-purple-950/40 backdrop-blur card-hover relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-purple-600/0 to-purple-600/20 group-hover:from-purple-600/10 group-hover:to-purple-600/30 transition-all"></div>
+            <div class="relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                    <i class="fas fa-network-wired text-3xl text-white"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-2">Skill Tree</h3>
+                <p class="text-sm text-purple-300 mb-4">
+                    {{ auth()->user()->unlockedNodes->count() }} nodes unlocked
+                </p>
+                <div class="flex items-center text-purple-400 text-sm font-bold">
+                    Explore <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ route('achievements.index') }}" class="group glow-border rounded-2xl p-6 bg-gradient-to-br from-amber-900/40 to-amber-950/40 backdrop-blur card-hover relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-600/0 to-amber-600/20 group-hover:from-amber-600/10 group-hover:to-amber-600/30 transition-all"></div>
+            <div class="relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                    <i class="fas fa-trophy text-3xl text-white"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-2">Achievements</h3>
+                <p class="text-sm text-amber-300 mb-4">
+                    {{ auth()->user()->badges->count() }} badges earned
+                </p>
+                <div class="flex items-center text-amber-400 text-sm font-bold">
+                    View All <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ route('projects.index') }}" class="group glow-border rounded-2xl p-6 bg-gradient-to-br from-blue-900/40 to-blue-950/40 backdrop-blur card-hover relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-600/0 to-blue-600/20 group-hover:from-blue-600/10 group-hover:to-blue-600/30 transition-all"></div>
+            <div class="relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                    <i class="fas fa-folder text-3xl text-white"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-2">Projects</h3>
+                <p class="text-sm text-blue-300 mb-4">
+                    {{ $projects->count() }} projects created
+                </p>
+                <div class="flex items-center text-blue-400 text-sm font-bold">
+                    Manage <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <!-- Skill Tree Progress Summary -->
+    @php
+        $totalNodes = \App\Models\SkillNode::count();
+        $unlockedNodes = auth()->user()->unlockedNodes->count();
+        $progressPercentage = $totalNodes > 0 ? ($unlockedNodes / $totalNodes) * 100 : 0;
+    @endphp
+    <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-pink-900/30 to-pink-950/30 backdrop-blur">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="font-display text-xl font-bold text-white flex items-center gap-2 mb-1">
+                    <i class="fas fa-network-wired text-pink-400"></i>
+                    Skill Tree Progress
+                </h3>
+                <p class="text-sm text-pink-300">{{ $unlockedNodes }} of {{ $totalNodes }} nodes unlocked</p>
+            </div>
+            <a href="{{ route('skill-tree.index') }}" class="btn-glow bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 px-4 py-2 rounded-xl font-bold text-sm shadow-lg transition">
+                <span class="relative z-10">View Tree</span>
+            </a>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="relative h-6 bg-black/40 rounded-full overflow-hidden border-2 border-pink-500/30 mb-4">
+            <div class="absolute inset-0 bg-gradient-to-r from-pink-600/20 to-purple-600/20"></div>
+            <div 
+                class="absolute inset-y-0 left-0 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out"
+                style="width: {{ $progressPercentage }}%"
+            >
+                <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent animate-pulse"></div>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="font-display font-bold text-white text-xs drop-shadow-lg">
+                    {{ number_format($progressPercentage, 1) }}%
+                </span>
+            </div>
+        </div>
+
+        <!-- Node Breakdown by Tier -->
+        @php
+            $nodesByTier = auth()->user()->unlockedNodes->groupBy('tier');
+        @endphp
+        <div class="grid grid-cols-5 gap-2">
+            @for($tier = 1; $tier <= 5; $tier++)
+                @php
+                    $tierCount = $nodesByTier->get($tier, collect())->count();
+                    $tierTotal = \App\Models\SkillNode::where('tier', $tier)->count();
+                @endphp
+                <div class="text-center p-3 bg-black/30 rounded-lg border border-pink-500/20">
+                    <div class="text-xs text-pink-300 mb-1">Tier {{ $tier }}</div>
+                    <div class="font-display font-bold text-white">{{ $tierCount }}/{{ $tierTotal }}</div>
+                </div>
+            @endfor
+        </div>
+    </div>
+
     <!-- Quick Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Total XP -->
@@ -205,9 +389,17 @@
     <!-- Recent Achievements -->
     @if(auth()->user()->badges->count() > 0)
     <div>
-        <h2 class="font-display text-2xl font-bold text-white mb-6">Recent Achievements</h2>
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="font-display text-2xl font-bold text-white mb-1">Recent Achievements</h2>
+                <p class="text-purple-300">Your latest accomplishments</p>
+            </div>
+            <a href="{{ route('achievements.index') }}" class="text-sm text-purple-300 hover:text-purple-200 transition">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach(auth()->user()->badges->take(3) as $badge)
+            @foreach(auth()->user()->badges->sortByDesc('pivot.earned_at')->take(3) as $badge)
             <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-[#2d1b4e]/60 to-[#1a1d3e]/60 backdrop-blur card-hover rarity-{{ $badge->rarity }}">
                 <div class="flex items-center gap-4">
                     <div class="w-16 h-16 bg-gradient-to-br from-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : 'blue') }}-500/20 to-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : 'blue') }}-600/20 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
@@ -215,10 +407,10 @@
                     </div>
                     <div class="flex-1">
                         <h3 class="font-bold text-white mb-1">{{ $badge->title }}</h3>
-                        <p class="text-xs text-purple-300">{{ $badge->description }}</p>
+                        <p class="text-xs text-purple-300 line-clamp-2">{{ $badge->description }}</p>
                         <div class="flex items-center gap-2 mt-2">
                             <span class="text-xs font-bold text-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : 'blue') }}-300 uppercase">{{ $badge->rarity }}</span>
-                            <span class="text-xs text-purple-400">• {{ $badge->pivot->earned_at->diffForHumans() }}</span>
+                            <span class="text-xs text-purple-400">• {{ \Carbon\Carbon::parse($badge->pivot->earned_at)->diffForHumans() }}</span>
                         </div>
                     </div>
                 </div>

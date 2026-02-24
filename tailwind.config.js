@@ -12,7 +12,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Rajdhani', ...defaultTheme.fontFamily.sans],
+                display: ['Orbitron', ...defaultTheme.fontFamily.sans],
             },
         },
     },

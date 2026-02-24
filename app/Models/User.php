@@ -21,10 +21,8 @@ class User extends Authenticatable
         'level',
         'xp',
         'total_xp',
-        'skill_points',
         'rank',
-        'gacha_currency',
-        'streak_days',
+        'is_public',
         'last_login',
     ];
 
@@ -52,16 +50,20 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function equippedBadges()
+    {
+        return $this->belongsToMany(Badge::class, 'user_badges')
+                    ->withPivot('earned_at', 'is_displayed')
+                    ->withTimestamps()
+                    ->wherePivot('is_displayed', true)
+                    ->orderBy('user_badges.updated_at', 'asc');
+    }
+
     public function unlockedNodes()
     {
         return $this->belongsToMany(SkillNode::class, 'user_skill_nodes')
                     ->withPivot('unlocked_at')
                     ->withTimestamps();
-    }
-
-    public function dailyRewards()
-    {
-        return $this->hasMany(DailyReward::class);
     }
 
     public function resumes()
@@ -75,11 +77,10 @@ class User extends Authenticatable
         $this->xp += $amount;
         $this->total_xp += $amount;
         
-        // Level up logic
-        while ($this->xp >= $this->xpNeededForNextLevel()) {
-            $this->xp -= $this->xpNeededForNextLevel();
+        // Level up logic - calculate XP needed before modifying level
+        while ($this->xp >= ($xpNeeded = $this->xpNeededForNextLevel())) {
+            $this->xp -= $xpNeeded;
             $this->level++;
-            $this->skill_points += 3; // Gain skill points on level up
             
             // Update rank based on level
             $this->updateRank();
@@ -97,6 +98,9 @@ class User extends Authenticatable
     public function xpProgress(): float
     {
         $needed = $this->xpNeededForNextLevel();
+        if ($needed == 0) {
+            return 0;
+        }
         return ($this->xp / $needed) * 100;
     }
 
@@ -119,57 +123,54 @@ class User extends Authenticatable
         }
     }
 
-    public function checkDailyLogin(): void
+    // Badge Management
+    public function equipBadge(int $badgeId): bool
     {
-        $today = Carbon::today();
-        
-        if ($this->last_login === null || !$this->last_login->isToday()) {
-            $yesterday = Carbon::yesterday();
-            
-            if ($this->last_login && $this->last_login->isSameDay($yesterday)) {
-                // Continue streak
-                $this->streak_days++;
-            } else {
-                // Reset streak
-                $this->streak_days = 1;
-            }
-            
-            $this->last_login = $today;
-            $this->save();
-        }
-    }
-
-    public function canClaimDailyReward(): bool
-    {
-        return !$this->dailyRewards()
-                    ->whereDate('claimed_date', Carbon::today())
-                    ->exists();
-    }
-
-    public function claimDailyReward(): ?DailyReward
-    {
-        if (!$this->canClaimDailyReward()) {
-            return null;
+        // Check if user owns the badge
+        if (!$this->badges()->where('badge_id', $badgeId)->exists()) {
+            return false;
         }
 
-        $dayNumber = $this->streak_days;
-        $baseXP = 50;
-        $baseCurrency = 20;
-        
-        // Bonus rewards for streaks (every 7 days)
-        $multiplier = floor($dayNumber / 7) + 1;
-        
-        $reward = $this->dailyRewards()->create([
-            'claimed_date' => Carbon::today(),
-            'day_number' => $dayNumber,
-            'xp_earned' => $baseXP * $multiplier,
-            'gacha_currency_earned' => $baseCurrency * $multiplier,
+        // Check if badge is already equipped
+        $badge = $this->badges()->where('badge_id', $badgeId)->first();
+        if ($badge && $badge->pivot->is_displayed) {
+            return true; // Already equipped, no action needed
+        }
+
+        // Check if already at limit (6 badges)
+        $equippedCount = $this->badges()->wherePivot('is_displayed', true)->count();
+        if ($equippedCount >= 6) {
+            return false;
+        }
+
+        // Equip the badge - update timestamps to track equip order
+        $this->badges()->updateExistingPivot($badgeId, [
+            'is_displayed' => true,
+            'updated_at' => now()
         ]);
+        return true;
+    }
 
-        $this->addXP($reward->xp_earned);
-        $this->gacha_currency += $reward->gacha_currency_earned;
+    public function unequipBadge(int $badgeId): bool
+    {
+        // Check if user owns the badge
+        if (!$this->badges()->where('badge_id', $badgeId)->exists()) {
+            return false;
+        }
+
+        // Unequip the badge
+        $this->badges()->updateExistingPivot($badgeId, ['is_displayed' => false]);
+        return true;
+    }
+
+    public function toggleVisibility(): void
+    {
+        $this->is_public = !$this->is_public;
         $this->save();
+    }
 
-        return $reward;
+    public function getPublicUrl(): string
+    {
+        return route('profile.public', ['username' => $this->name]);
     }
 }

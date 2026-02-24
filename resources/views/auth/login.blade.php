@@ -126,8 +126,8 @@
             </p>
 
         </div>
-
-    </div>
+    </form>
+</x-guest-layout>
 
 </body>
 </html>
