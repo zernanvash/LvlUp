@@ -110,7 +110,7 @@ class DatabaseSeeder extends Seeder
             'title' => 'Web Developer Path',
             'description' => 'Master web development fundamentals.',
             'x_position' => 30,
-            'y_position' => 150,
+            'y_position' => 70,
             'tier' => 1,
             'required_level' => 1,
             'task_requirements' => [
@@ -125,7 +125,7 @@ class DatabaseSeeder extends Seeder
             'title' => 'Backend Developer Path',
             'description' => 'Build server-side applications.',
             'x_position' => 70,
-            'y_position' => 150,
+            'y_position' => 70,
             'tier' => 1,
             'required_level' => 1,
             'task_requirements' => [
