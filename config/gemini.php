@@ -14,7 +14,7 @@ return [
     | on Google AI Studio, at https://aistudio.google.com/app/apikey.
     */
 
-    'api_key' => env('AIzaSyDhUJj9hQbfM1b-7G4UJOGxCgKVj4CuHSo'),
+    'api_key' => env('GEMINI_API_KEY'),
 
     /*
     |--------------------------------------------------------------------------
@@ -24,7 +24,7 @@ return [
     | If you need a specific base URL for the Gemini API, you can provide it here.
     | Otherwise, leave empty to use the default value.
     */
-    'base_url' => env('https://generativelanguage.googleapis.com/v1beta/'),
+    'base_url' => env('GEMINI_BASE_URL'),
 
     /*
     |--------------------------------------------------------------------------

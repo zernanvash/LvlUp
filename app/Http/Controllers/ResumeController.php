@@ -133,6 +133,7 @@ class ResumeController extends Controller
             $projects,
             $skills
         );
+        dd($resumeData); // <-- add this temporarily
 
         // Store AI sections back into the record if column exists
         if (in_array('resume_data', $resume->getFillable())) {
@@ -207,17 +208,17 @@ class ResumeController extends Controller
             return redirect()->back()->with('error', 'Resume PDF has not been generated yet.');
         }
 
-        $fullPath = storage_path('app/' . $resume->pdf_path);
-
-        if (!file_exists($fullPath)) {
-            // Attempt to regenerate on the fly
+        // If file missing → regenerate
+        if (!Storage::disk('local')->exists($resume->pdf_path)) {
             $resumeData = $this->buildResumeDataFromRecord($resume);
             $pdfPath    = $this->renderPdf($resume, $resumeData, $resume->user);
             $resume->update(['pdf_path' => $pdfPath]);
-            $fullPath = storage_path('app/' . $pdfPath);
         }
 
-        return response()->download($fullPath, 'resume_' . str()->slug($resume->job_title) . '.pdf');
+        return Storage::disk('local')->download(
+            $resume->pdf_path,
+            'resume_' . str()->slug($resume->job_title) . '.pdf'
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -228,10 +229,9 @@ class ResumeController extends Controller
     {
         $this->authorizeResume($resume);
 
-        if ($resume->pdf_path && file_exists(storage_path('app/' . $resume->pdf_path))) {
-            unlink(storage_path('app/' . $resume->pdf_path));
+        if ($resume->pdf_path && Storage::disk('local')->exists($resume->pdf_path)) {
+            Storage::disk('local')->delete($resume->pdf_path);
         }
-
         $resume->delete();
 
         return redirect()->route('resume.index')

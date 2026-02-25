@@ -1,192 +1,351 @@
 @extends('layouts.app')
-
-@section('title', 'My Resumes')
-
+@section('title', 'Skill Tree')
 @section('content')
-<div class="py-10 px-6 max-w-7xl mx-auto">
 
-        {{-- Page Header --}}
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-white tracking-tight">My Resumes</h1>
-                <p class="text-purple-300/60 text-sm mt-1">AI-tailored resumes for every opportunity</p>
-            </div>
-            <a href="{{ route('resume.create') }}"
-                class="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold py-2.5 px-5 rounded-2xl transition-all duration-300 shadow-lg shadow-purple-900/40 hover:shadow-purple-700/50 hover:scale-105">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                New Resume
-            </a>
-        </div>
+<div class="w-full h-[calc(100vh-80px)] relative overflow-hidden bg-[#0a0e27]" x-data="skillTreeApp()" x-init="init()">
 
-        {{-- Flash Message --}}
-        @if(session('success'))
-            <div class="mb-6 flex items-center gap-3 bg-green-900/30 border border-green-500/30 text-green-300 px-4 py-3 rounded-2xl backdrop-blur">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                {{ session('success') }}
-            </div>
-        @endif
-
-        {{-- Resume Grid --}}
-        @if($resumes->count() > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                @foreach($resumes as $resume)
-                    <div class="group relative glow-border rounded-3xl overflow-hidden bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-purple-900/40 backdrop-blur border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-900/50">
-
-                        {{-- Animated gradient background --}}
-                        <div class="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-purple-600/5 animate-pulse pointer-events-none"></div>
-
-                        {{-- Card Top: Colour band with score --}}
-                        <div class="relative h-28 bg-gradient-to-br from-purple-800/60 to-pink-900/60 flex items-center justify-center overflow-hidden">
-                            {{-- Decorative circles --}}
-                            <div class="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-purple-500/10 blur-xl"></div>
-                            <div class="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-pink-500/10 blur-lg"></div>
-
-                            {{-- Document icon --}}
-                            <svg class="w-10 h-10 text-purple-300/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-
-                            {{-- Match score badge --}}
-                            @if($resume->match_score)
-                                <div class="absolute top-3 right-3">
-                                    <span class="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full
-                                        {{ $resume->match_score >= 75 ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                                           ($resume->match_score >= 50 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                                           'bg-red-500/20 text-red-300 border border-red-500/30') }}">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                        {{ $resume->match_score }}% match
-                                    </span>
-                                </div>
-                            @endif
-
-                            {{-- Date badge --}}
-                            <div class="absolute bottom-3 left-3">
-                                <span class="text-xs text-purple-300/60">
-                                    {{ $resume->created_at->format('M d, Y') }}
-                                </span>
-                            </div>
+    <div class="absolute top-6 left-1/2 -translate-x-1/2 z-30 w-[95%] max-w-6xl">
+        <div
+            class="glow-border rounded-2xl p-4 bg-gradient-to-br from-purple-900/60 to-[#0a0e27]/80 backdrop-blur-md shadow-2xl border border-purple-500/30">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center border border-blue-500/50">
+                            <i class="fas fa-network-wired text-blue-400"></i>
                         </div>
-
-                        {{-- Card Body --}}
-                        <div class="relative p-5">
-                            <h3 class="font-bold text-white text-base leading-snug mb-1 line-clamp-2">
-                                {{ $resume->job_title }}
-                            </h3>
-
-                            @if($resume->target_keywords)
-                                <p class="text-xs text-purple-300/50 line-clamp-1 mb-3">
-                                    {{ $resume->target_keywords }}
-                                </p>
-                            @endif
-
-                            {{-- Skills chips --}}
-                            @php
-                                $skills = $resume->getSelectedSkills()->take(3);
-                            @endphp
-                            @if($skills->count())
-                                <div class="flex flex-wrap gap-1.5 mb-4">
-                                    @foreach($skills as $skill)
-                                        <span class="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full">
-                                            {{ $skill->name }}
-                                        </span>
-                                    @endforeach
-                                    @if($resume->getSelectedSkills()->count() > 3)
-                                        <span class="text-xs text-purple-400/50">
-                                            +{{ $resume->getSelectedSkills()->count() - 3 }} more
-                                        </span>
-                                    @endif
-                                </div>
-                            @endif
-
-                            {{-- Divider --}}
-                            <div class="border-t border-purple-500/20 mb-4"></div>
-
-                            {{-- Actions --}}
-                            <div class="flex items-center justify-between">
-                                <a href="{{ route('resume.show', $resume) }}"
-                                    class="flex items-center gap-1.5 text-sm text-purple-300 hover:text-white transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                    Preview
-                                </a>
-
-                                <div class="flex items-center gap-3">
-                                    @if($resume->pdf_path)
-                                        <a href="{{ route('resume.download', $resume) }}"
-                                            class="flex items-center gap-1.5 text-sm text-green-400 hover:text-green-300 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                            </svg>
-                                            PDF
-                                        </a>
-                                    @else
-                                        <form action="{{ route('resume.download', $resume) }}" method="GET" class="inline">
-                                            <button type="submit"
-                                                class="flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                </svg>
-                                                Generate PDF
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                    {{-- Delete --}}
-                                    <form action="{{ route('resume.destroy', $resume) }}" method="POST"
-                                        onsubmit="return confirm('Delete this resume?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="text-red-400/50 hover:text-red-400 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wider text-blue-300 opacity-70">Skills</p>
+                            <p class="font-display text-lg font-bold text-white">
+                                {{ count($unlockedNodeIds) }}/{{ $nodes->count() }}</p>
                         </div>
                     </div>
-                @endforeach
-            </div>
 
-            {{-- Pagination --}}
-            <div class="mt-8">
-                {{ $resumes->links() }}
-            </div>
+                    <div class="w-px h-8 bg-purple-500/20"></div>
 
-        @else
-            {{-- Empty State --}}
-            <div class="flex flex-col items-center justify-center py-24 text-center">
-                <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-800/60 to-pink-900/60 flex items-center justify-center mb-6 shadow-xl shadow-purple-900/30">
-                    <svg class="w-10 h-10 text-purple-300/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 bg-pink-600/20 rounded-lg flex items-center justify-center border border-pink-500/50">
+                            <i class="fas fa-level-up-alt text-pink-400"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wider text-pink-300 opacity-70">Level</p>
+                            <p class="font-display text-lg font-bold text-white">{{ auth()->user()->level }}</p>
+                        </div>
+                    </div>
+
+                    <div class="w-px h-8 bg-purple-500/20"></div>
+
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 bg-amber-600/20 rounded-lg flex items-center justify-center border border-amber-500/50">
+                            <i class="fas fa-trophy text-amber-400"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wider text-amber-300 opacity-70">Rank</p>
+                            <p class="font-display text-lg font-bold text-white">{{ auth()->user()->rank }}</p>
+                        </div>
+                    </div>
                 </div>
-                <h2 class="text-xl font-bold text-white mb-2">No resumes yet</h2>
-                <p class="text-purple-300/50 text-sm mb-8 max-w-xs">
-                    Let AI craft a tailored resume for your next opportunity in seconds.
-                </p>
-                <a href="{{ route('resume.create') }}"
-                    class="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold py-3 px-8 rounded-2xl transition-all duration-300 shadow-lg shadow-purple-900/40 hover:scale-105">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    Generate My First Resume
-                </a>
-            </div>
-        @endif
 
+                <div class="flex items-center gap-4 bg-black/20 px-4 py-2 rounded-xl border border-white/5">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                        <span class="text-gray-300">Available</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+                        <span class="text-gray-300">Locked</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]"></span>
+                        <span class="text-gray-300">Unlocked</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-@endsection
+    <div id="skillTreeStage" class="w-full h-full cursor-grab active:cursor-grabbing">
+        <div id="skillTreeViewport" class="absolute origin-top-left transition-transform duration-700 ease-out"
+            style="width:2000px; height:2000px;">
+            <canvas id="skillTreeCanvas" width="2000" height="2000"
+                class="absolute top-0 left-0 pointer-events-none"></canvas>
+
+            <div class="relative w-full h-full">
+                @foreach($nodes as $node)
+                @php
+                $isUnlocked = in_array($node->id, $unlockedNodeIds);
+                $canUnlock = $node->canBeUnlockedBy(auth()->user());
+                $state = $isUnlocked ? 'unlocked' : ($canUnlock ? 'available' : 'locked');
+                @endphp
+
+                <div id="node-{{ $node->id }}"
+                    class="skill-node absolute transition-transform duration-300 hover:z-20"
+                    data-node-id="{{ $node->id }}"
+                    data-parent-id="{{ $node->parent_node_id }}"
+                    data-state="{{ $state }}"
+                    style="left: {{ $node->x_position }}%; top: {{ $node->y_position }}%; transform: translate(-50%, -50%);"
+                    @click="openNodeModal({{ $node->id }})">
+
+                    <div class="relative group">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl border-2 transition-all duration-300 group-hover:scale-110
+                                @if($state === 'unlocked') border-purple-400 bg-purple-900/80 shadow-purple-500/20 
+                                @elseif($state === 'available') border-green-400 bg-green-900/40 animate-pulse shadow-green-500/40
+                                @else border-gray-600 bg-gray-800/80 opacity-60 @endif">
+
+                            <i class="{{ $node->skill->icon ?? 'fas fa-code' }} text-xl text-white"></i>
+                        </div>
+
+                        <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
+                            <p class="text-[10px] font-bold text-center tracking-tight
+                                    @if($state === 'unlocked') text-purple-300
+                                    @elseif($state === 'available') text-green-300
+                                    @else text-gray-500 @endif">
+                                {{ Str::limit($node->title, 15) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- <div x-show="tooltip.show" x-transition class="fixed z-50 pointer-events-none"
+        :style="`left: ${tooltip.x}px; top: ${tooltip.y}px; transform: translate(-50%, -100%); margin-top: -10px;`">
+        <div
+            class="glow-border rounded-xl p-4 bg-gradient-to-br from-purple-900/95 to-purple-950/95 backdrop-blur-xl shadow-2xl max-w-xs border border-purple-500/30">
+            <template x-if="tooltip.node">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <i :class="tooltip.node.skill.icon" class="text-xl text-purple-300"></i>
+                        <h4 class="font-display font-bold text-white" x-text="tooltip.node.title"></h4>
+                    </div>
+                    <p class="text-xs text-purple-200 mb-3" x-text="tooltip.node.description"></p>
+                    <div class="mt-2 pt-2 border-t border-purple-500/30 text-center">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-purple-400"
+                            x-text="tooltip.state"></span>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div> -->
+
+    <div x-show="modal.open" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100" x-cloak
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md">
+
+        <div class="relative w-full max-w-lg bg-[#0f1229] border border-purple-500/30 rounded-2xl p-8 shadow-2xl">
+
+            <!-- Dedicated Close Button -->
+            <button @click="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full 
+                   bg-gray-800 hover:bg-red-600 text-gray-300 hover:text-white transition">
+                ✕
+            </button>
+
+            <template x-if="modal.node">
+                <div>
+                    <div class="flex items-center gap-4 mb-6">
+                        <div
+                            class="w-14 h-14 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/40">
+                            <i :class="modal.node.skill.icon" class="text-2xl text-purple-300"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white" x-text="modal.node.title"></h3>
+                            <p class="text-purple-400 text-sm" x-text="modal.node.skill.name"></p>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-300 mb-6 leading-relaxed" x-text="modal.node.description"></p>
+
+                    <template x-if="modal.state === 'available'">
+                        <form :action="`/skill-tree/${modal.node.id}/unlock`" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="w-full px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition">
+                                Unlock Skill
+                            </button>
+                        </form>
+                    </template>
+                </div>
+            </template>
+
+        </div>
+    </div>
+
+    <script>
+    function skillTreeApp() {
+        return {
+            scale: 1,
+            offsetX: window.innerWidth / 2,
+            offsetY: 70,
+            isDragging: false,
+            startX: 0,
+            startY: 0,
+            nodes: @json($nodes),
+            // tooltip: {
+            //     show: false,
+            //     x: 0,
+            //     y: 0,
+            //     node: null,
+            //     state: ''
+            // },
+            modal: {
+                open: false,
+                node: null,
+                state: null
+            },
+
+            init() {
+                const stage = document.getElementById("skillTreeStage");
+                const viewport = document.getElementById("skillTreeViewport");
+                const canvas = document.getElementById("skillTreeCanvas");
+                const ctx = canvas.getContext("2d");
+
+                const updateTransform = () => {
+                    viewport.style.transform =
+                        `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+                };
+
+                const centerOnProgress = () => {
+                    const available = document.querySelector('[data-state="available"]');
+                    const unlocked = Array.from(document.querySelectorAll('[data-state="unlocked"]')).pop();
+                    const target = available || unlocked;
+
+                    if (target) {
+                        // Center the target node in the screen
+                        this.offsetX = (window.innerWidth / 2) - target.offsetLeft;
+                        this.offsetY = (window.innerHeight / 2) - target.offsetTop;
+                    } else {
+                        this.offsetX = window.innerWidth / 2 - 1000;
+                        this.offsetY = 150;
+                    }
+                    updateTransform();
+                };
+
+                const drawLines = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.lineWidth = 5;
+                    ctx.lineCap = "round";
+
+                    document.querySelectorAll('.skill-node').forEach(node => {
+                        const parentId = node.getAttribute('data-parent-id');
+                        if (parentId && parentId !== "0") {
+                            const parentEl = document.getElementById(`node-${parentId}`);
+                            if (parentEl) {
+                                // Using offsetTop/Left ensures we get the position relative to the viewport container
+                                const x1 = parentEl.offsetLeft;
+                                const y1 = parentEl.offsetTop;
+                                const x2 = node.offsetLeft;
+                                const y2 = node.offsetTop;
+
+                                const state = node.getAttribute('data-state');
+
+                                // Draw Line
+                                ctx.beginPath();
+                                ctx.moveTo(x1, y1);
+                                ctx.lineTo(x2, y2);
+
+                                // Style
+                                ctx.strokeStyle = state === 'unlocked' ? '#a855f7' : '#334155';
+                                ctx.globalAlpha = state === 'locked' ? 0.3 : 1;
+                                ctx.stroke();
+                            }
+                        }
+                    });
+                };
+
+                // Dragging Logic
+                stage.addEventListener("mousedown", e => {
+                    if (e.target.closest('.skill-node')) return;
+                    this.isDragging = true;
+                    this.startX = e.clientX - this.offsetX;
+                    this.startY = e.clientY - this.offsetY;
+                });
+
+                window.addEventListener("mousemove", e => {
+                    if (!this.isDragging) return;
+                    this.offsetX = e.clientX - this.startX;
+                    this.offsetY = e.clientY - this.startY;
+                    updateTransform();
+                });
+
+                window.addEventListener("mouseup", () => this.isDragging = false);
+
+                // Zoom Logic
+                stage.addEventListener("wheel", e => {
+                    e.preventDefault();
+
+                    const rect = stage.getBoundingClientRect();
+
+                    // Mouse position relative to stage
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                    const newScale = Math.min(Math.max(this.scale * zoomFactor, 0.25), 2);
+
+                    // Adjust offset so zoom focuses on cursor
+                    this.offsetX = mouseX - (mouseX - this.offsetX) * (newScale / this.scale);
+                    this.offsetY = mouseY - (mouseY - this.offsetY) * (newScale / this.scale);
+
+                    this.scale = newScale;
+
+                    updateTransform();
+                }, {
+                    passive: false
+                });
+
+                // Initial view setup
+                setTimeout(drawLines, 150);
+                window.addEventListener("resize", drawLines);
+                centerOnProgress();
+            },
+
+            // showTooltip(nodeId, event) {
+            //     const node = this.nodes.find(n => n.id === nodeId);
+            //     if (!node) return;
+            //     const rect = event.currentTarget.getBoundingClientRect();
+            //     this.tooltip.x = rect.left + rect.width / 2;
+            //     this.tooltip.y = rect.top;
+            //     this.tooltip.node = node;
+            //     this.tooltip.state = event.currentTarget.dataset.state;
+            //     this.tooltip.show = true;
+            // },
+
+            // hideTooltip() {
+            //     this.tooltip.show = false;
+            // },
+
+            openNodeModal(nodeId) {
+                const node = this.nodes.find(n => n.id === nodeId);
+                this.modal.node = node;
+                this.modal.state = document.getElementById(`node-${nodeId}`).dataset.state;
+                this.modal.open = true;
+            },
+
+            closeModal() {
+                this.modal.open = false;
+                this.modal.node = null;
+                this.modal.state = null;
+            }
+        }
+    }
+    </script>
+
+    <style>
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .glow-border {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+    }
+
+    #skillTreeStage {
+        background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+        background-size: 50px 50px;
+    }
+    </style>
+    @endsection
