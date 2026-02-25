@@ -106,14 +106,13 @@ class ResumeController extends Controller
             'selected_project_ids.*' => 'exists:projects,id',
             'selected_skill_ids'     => 'nullable|array',
             'selected_skill_ids.*'   => 'exists:skills,id',
-            'template'               => 'nullable|string|in:modern,classic,minimal,creative',
+            'template'               => 'nullable|string|in:modern,classic,minimal,creative,executive,tech',
         ]);
 
-        $user     = auth()->user();
-        $keywords = $this->analyzer->extractKeywords($validated['job_description']);
+        $user       = auth()->user();
+        $keywords   = $this->analyzer->extractKeywords($validated['job_description']);
         $matchScore = $this->analyzer->calculateMatchScore($user, $keywords);
 
-        // Create the resume record first (your original logic)
         $resume = $user->resumes()->create([
             'job_title'            => $validated['job_title'],
             'job_description'      => $validated['job_description'],
@@ -124,24 +123,17 @@ class ResumeController extends Controller
             'template'             => $validated['template'] ?? 'modern',
         ]);
 
-        // Now generate AI content and PDF
         $projects   = Project::whereIn('id', $validated['selected_project_ids'])->get();
         $skills     = Skill::whereIn('id', $validated['selected_skill_ids'] ?? [])->get();
-        $resumeData = $this->aiWriter->generate(
-            $user,
-            $resume,
-            $projects,
-            $skills
-        );
-        dd($resumeData); // <-- add this temporarily
+        $resumeData = $this->aiWriter->generate($user, $resume, $projects, $skills);
 
-        // Store AI sections back into the record if column exists
+        // Store AI sections back into the record
         if (in_array('resume_data', $resume->getFillable())) {
             $resume->update(['resume_data' => $resumeData]);
         }
 
-        // Generate PDF
-        $pdfPath = $this->renderPdf($resume, $resumeData, $user);
+        // Generate PDF — pass $projects and $skills so templates can use them
+        $pdfPath = $this->renderPdf($resume, $resumeData, $user, $projects, $skills);
         $resume->update(['pdf_path' => $pdfPath]);
 
         return redirect()->route('resume.show', $resume)
@@ -159,6 +151,8 @@ class ResumeController extends Controller
         $validated = $request->validate([
             'job_title'              => 'sometimes|string|max:255',
             'job_description'        => 'sometimes|string',
+            'target_keywords'        => 'nullable|string',
+            'template'               => 'nullable|string|in:modern,classic,minimal,creative,executive,tech',
             'selected_project_ids'   => 'sometimes|array',
             'selected_project_ids.*' => 'exists:projects,id',
             'selected_skill_ids'     => 'sometimes|array',
@@ -183,13 +177,24 @@ class ResumeController extends Controller
     // -------------------------------------------------------------------------
     // Generate PDF (standalone action, e.g. re-generate button)
     // -------------------------------------------------------------------------
+        public function edit(Resume $resume)
+    {
+        $this->authorizeResume($resume);
+
+        $projects = auth()->user()->projects;
+        $skills   = Skill::orderBy('category')->orderBy('name')->get();
+
+        return view('resume.edit', compact('resume', 'projects', 'skills'));
+    }
 
     public function generate(Resume $resume)
     {
         $this->authorizeResume($resume);
 
+        $projects   = $resume->getSelectedProjects();
+        $skills     = $resume->getSelectedSkills();
         $resumeData = $this->buildResumeDataFromRecord($resume);
-        $pdfPath    = $this->renderPdf($resume, $resumeData, auth()->user());
+        $pdfPath    = $this->renderPdf($resume, $resumeData, auth()->user(), $projects, $skills);
         $resume->update(['pdf_path' => $pdfPath]);
 
         return redirect()->route('resume.show', $resume)
@@ -208,10 +213,11 @@ class ResumeController extends Controller
             return redirect()->back()->with('error', 'Resume PDF has not been generated yet.');
         }
 
-        // If file missing → regenerate
         if (!Storage::disk('local')->exists($resume->pdf_path)) {
+            $projects   = $resume->getSelectedProjects();
+            $skills     = $resume->getSelectedSkills();
             $resumeData = $this->buildResumeDataFromRecord($resume);
-            $pdfPath    = $this->renderPdf($resume, $resumeData, $resume->user);
+            $pdfPath    = $this->renderPdf($resume, $resumeData, $resume->user, $projects, $skills);
             $resume->update(['pdf_path' => $pdfPath]);
         }
 
@@ -248,118 +254,9 @@ class ResumeController extends Controller
     }
 
     /**
-     * Call Claude AI and return parsed resume sections.
-     */
-//     private function generateWithAI($user, Resume $resume, $projects, $skills): array
-//     {
-//         $projectsList = $projects->map(fn($p) => "- {$p->name}: {$p->description}")->join("\n");
-//         $skillsList   = $skills->map(fn($s) => $s->name)->join(', ');
-
-//         $prompt = <<<PROMPT
-// You are an expert resume writer. Generate a professional, ATS-optimised resume for the following candidate.
-
-// ## Candidate Information
-// Name: {$user->name}
-// Email: {$user->email}
-
-// ## Target Role
-// Job Title: {$resume->job_title}
-
-// ## Job Description
-// {$resume->job_description}
-
-// ## Target Keywords to Include
-// {$resume->target_keywords}
-
-// ## Selected Projects
-// {$projectsList}
-
-// ## Selected Skills
-// {$skillsList}
-
-// ## Instructions
-// Write a complete resume with the following clearly labelled sections:
-// 1. PROFESSIONAL_SUMMARY — 3-4 sentences tailored to the job description
-// 2. SKILLS — a comma-separated list of relevant technical and soft skills
-// 3. PROJECTS — for each project write a title and 2-3 bullet points highlighting impact and tech used
-// 4. EXPERIENCE — if no work history is provided, omit this section
-// 5. EDUCATION — placeholder if unknown
-
-// Use action verbs. Incorporate the target keywords naturally. Keep language concise and impactful.
-
-// Return ONLY the resume content, clearly separated by the section labels above (e.g. "PROFESSIONAL_SUMMARY:", "SKILLS:", etc.). No extra commentary.
-// PROMPT;
-
-//         $response = Gemini::generativeModel('gemini-1.5-flash')
-//             ->generateContent($prompt);
-//         try {
-
-//             $response = Gemini::generativeModel('gemini-1.5-flash')
-//                 ->generateContent($prompt);
-
-//             $text = trim($response->text() ?? '');
-
-//             if (!$text) {
-//                 throw new \Exception('Empty AI response');
-//             }
-
-//             return $this->parseAiResponse($text);
-
-//         } catch (\Throwable $e) {
-
-//             logger()->error('Gemini resume generation failed', [
-//                 'error' => $e->getMessage()
-//             ]);
-
-//             // graceful fallback
-//             return [
-//                 'summary' => 'Professional summary unavailable.',
-//                 'skills' => $skills->pluck('name')->join(', '),
-//                 'projects' => $projects->pluck('description')->join("\n"),
-//                 'experience' => '',
-//                 'education' => '',
-//             ];
-//         }
-//     }
-
-//     /**
-//      * Parse raw AI text into named sections.
-//      */
-//     private function parseAiResponse(string $text): array
-//     {
-//         $sections = [
-//             'summary'    => '',
-//             'skills'     => '',
-//             'projects'   => '',
-//             'experience' => '',
-//             'education'  => '',
-//         ];
-
-//         $map = [
-//             'PROFESSIONAL_SUMMARY' => 'summary',
-//             'SKILLS'               => 'skills',
-//             'PROJECTS'             => 'projects',
-//             'EXPERIENCE'           => 'experience',
-//             'EDUCATION'            => 'education',
-//         ];
-
-//         $pattern = '/(' . implode('|', array_keys($map)) . '):\s*/';
-//         $parts   = preg_split($pattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-//         for ($i = 1; $i < count($parts) - 1; $i += 2) {
-//             $label = trim($parts[$i]);
-//             $body  = trim($parts[$i + 1]);
-//             if (isset($map[$label])) {
-//                 $sections[$map[$label]] = $body;
-//             }
-//         }
-
-//         return $sections;
-//     }
-
-    /**
      * Build resumeData from stored record fields (used when AI data isn't separately stored).
      */
+    
     private function buildResumeDataFromRecord(Resume $resume): array
     {
         // If resume_data JSON column exists and is populated, use it directly
@@ -385,10 +282,13 @@ class ResumeController extends Controller
     /**
      * Render the PDF blade view and save to storage.
      */
-    private function renderPdf(Resume $resume, array $resumeData, $user): string
+    private function renderPdf(Resume $resume, array $resumeData, $user, $projects = null, $skills = null): string
     {
-        $pdf  = Pdf::loadView('resume.pdf', compact('resume', 'resumeData', 'user'))
-                   ->setPaper('a4', 'portrait');
+        $projects = $projects ?? $resume->getSelectedProjects();
+        $skills   = $skills   ?? $resume->getSelectedSkills();
+
+        $pdf = Pdf::loadView('resume.pdf', compact('resume', 'resumeData', 'user', 'projects', 'skills'))
+                  ->setPaper('a4', 'portrait');
 
         $path = 'resume/' . $resume->id . '/resume-' . str()->slug($resume->job_title) . '-' . $resume->id . '.pdf';
 

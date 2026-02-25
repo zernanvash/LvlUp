@@ -49,8 +49,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get   ('/resume/create',           [ResumeController::class, 'create'])   ->name('resume.create');
     Route::post  ('/resume',                   [ResumeController::class, 'store'])    ->name('resume.store'); 
     Route::post  ('/resume/generate',         [ResumeController::class, 'generate']) ->name('resume.generate');
+    Route::post  ('/resume/{resume}/generate', [ResumeController::class, 'generate'])->name('resume.regenerate');
     Route::get   ('/resume/{resume}',         [ResumeController::class, 'show'])     ->name('resume.show');
     Route::get   ('/resume/{resume}/download',[ResumeController::class, 'download']) ->name('resume.download');
+    Route::get   ('/resume/{resume}/edit',   [ResumeController::class, 'edit'])   ->name('resume.edit');
+    Route::put   ('/resume/{resume}',        [ResumeController::class, 'update']) ->name('resume.update');
     Route::delete('/resume/{resume}',         [ResumeController::class, 'destroy'])  ->name('resume.destroy');
 
 

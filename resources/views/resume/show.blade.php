@@ -27,13 +27,26 @@
             All Resumes
         </a>
         <div class="flex items-center gap-3">
-            <a href="{{ route('resume.generate', $resume) }}"
+            {{-- Edit Resume --}}
+            <a href="{{ route('resume.edit', $resume) }}"
                 class="flex items-center gap-2 text-sm bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 hover:text-white border border-purple-500/30 px-4 py-2 rounded-xl transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
-                Regenerate PDF
+                Edit
             </a>
+            {{-- Regenerate PDF --}}
+            <form action="{{ route('resume.generate') }}" method="POST" class="inline">
+                @csrf
+                <input type="hidden" name="resume_id" value="{{ $resume->id }}">
+                <button type="submit"
+                    class="flex items-center gap-2 text-sm bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 hover:text-white border border-purple-500/30 px-4 py-2 rounded-xl transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Regenerate PDF
+                </button>
+            </form>
             @if($resume->pdf_path)
                 <a href="{{ route('resume.download', $resume) }}"
                     class="flex items-center gap-2 text-sm bg-gradient-to-r from-green-700/50 to-emerald-700/50 hover:from-green-600/60 hover:to-emerald-600/60 text-green-300 border border-green-500/30 px-4 py-2 rounded-xl transition">
@@ -78,6 +91,9 @@
                 <h1 class="text-2xl font-bold text-white">{{ auth()->user()->name }}</h1>
                 <p class="text-purple-300/70 text-sm mt-1">{{ auth()->user()->email }}</p>
                 <p class="text-pink-400 font-semibold mt-2">{{ $resume->job_title }}</p>
+                <span class="inline-block mt-2 text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full capitalize">
+                    {{ $resume->template ?? 'modern' }} template
+                </span>
             </div>
 
             {{-- Summary --}}
