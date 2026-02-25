@@ -41,6 +41,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Achievements/Badges
     Route::get('/achievements', [BadgeController::class, 'index'])->name('achievements.index');
+    Route::post('/badges/{badge}/equip', [BadgeController::class, 'equip'])->name('badges.equip');
+    Route::post('/badges/{badge}/unequip', [BadgeController::class, 'unequip'])->name('badges.unequip');
     Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])->name('badges.toggle-display');
     
     // Resume Builder
@@ -54,6 +56,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::patch('/profile/toggle-visibility', [ProfileController::class, 'toggleVisibility'])->name('profile.toggle-visibility');
+    
+    // Public Profile
+    Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 });
 
 // API Routes (Optional - for future mobile app)

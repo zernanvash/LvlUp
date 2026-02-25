@@ -293,11 +293,6 @@
                 <i class="fas fa-file-alt w-5 text-center {{ Request::is('resume-builder') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
                 <span class="font-medium {{ Request::is('resume-builder') ? 'text-white' : 'text-gray-300' }}">Resume Builder</span>
             </a>
-            
-            <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('profile') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-user w-5 text-center {{ Request::is('profile') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('profile') ? 'text-white' : 'text-gray-300' }}">Profile</span>
-            </a>
         </nav>
         
         <!-- Logout -->

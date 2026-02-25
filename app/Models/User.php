@@ -18,6 +18,8 @@ class User extends Authenticatable
         'avatar',
         'bio',
         'title',
+        'linkedin_url',
+        'github_url',
         'level',
         'xp',
         'total_xp',

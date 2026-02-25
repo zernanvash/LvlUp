@@ -216,22 +216,21 @@
                 
                 <!-- Action Buttons (for earned badges) -->
                 @if($isEarned)
-                <div class="bg-gradient-to-t from-{{ $color }}-600/20 to-transparent p-4">
+                <div class="bg-gradient-to-t from-black/20 to-transparent p-4">
                     @if($isDisplayed)
                         <form method="POST" action="{{ route('badges.unequip', $badge) }}" class="w-full">
                             @csrf
                             <button type="submit" 
-                                    class="w-full px-4 py-2 bg-{{ $color }}-500/30 hover:bg-{{ $color }}-500/50 border border-{{ $color }}-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors">
+                                    class="w-full px-4 py-2 bg-red-500/30 hover:bg-red-500/50 border border-red-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors">
                                 <i class="fas fa-times-circle"></i> Unequip Badge
                             </button>
                         </form>
                     @else
-                        <form method="POST" action="{{ route('badges.equip', $badge) }}" class="w-full" x-data>
+                        <form method="POST" action="{{ route('badges.equip', $badge) }}" class="w-full">
                             @csrf
                             <button type="submit" 
-                                    class="w-full px-4 py-2 bg-{{ $color }}-500/30 hover:bg-{{ $color }}-500/50 border border-{{ $color }}-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors"
-                                    :disabled="$root.querySelector('[x-data]').__x.$data.equippedCount >= 6"
-                                    :class="$root.querySelector('[x-data]').__x.$data.equippedCount >= 6 ? 'opacity-50 cursor-not-allowed' : ''">
+                                    class="w-full px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors {{ $equippedCount >= 6 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                    {{ $equippedCount >= 6 ? 'disabled' : '' }}>
                                 <i class="fas fa-crown"></i> Equip Badge
                             </button>
                         </form>
