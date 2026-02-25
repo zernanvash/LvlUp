@@ -44,10 +44,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])->name('badges.toggle-display');
     
     // Resume Builder
-    Route::get('/resume-builder', [ResumeController::class, 'index'])->name('resume.index');
-    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])->name('resume.analyze');
-    Route::post('/resume/generate', [ResumeController::class, 'generate'])->name('resume.generate');
-    Route::get('/resume/{resume}/download', [ResumeController::class, 'download'])->name('resume.download');
+
+    Route::get   ('/resume',                  [ResumeController::class, 'index'])    ->name('resume.index');
+    Route::get   ('/resume/create',           [ResumeController::class, 'create'])   ->name('resume.create');
+    Route::post  ('/resume',                   [ResumeController::class, 'store'])    ->name('resume.store'); 
+    Route::post  ('/resume/generate',         [ResumeController::class, 'generate']) ->name('resume.generate');
+    Route::get   ('/resume/{resume}',         [ResumeController::class, 'show'])     ->name('resume.show');
+    Route::get   ('/resume/{resume}/download',[ResumeController::class, 'download']) ->name('resume.download');
+    Route::delete('/resume/{resume}',         [ResumeController::class, 'destroy'])  ->name('resume.destroy');
+
+
+
+    // Route::get('/resume', [ResumeController::class, 'index'])->name('resume.index');
+    // //Route::resource('resumes', ResumeController::class);
+    // Route::post('/resume/analyze', [ResumeController::class, 'analyze'])->name('resume.analyze');
+    // Route::post('/resume/create', [ResumeController::class, 'create'])->name('resume.create');
+    // Route::get('/resume/{resume}/download', [ResumeController::class, 'download'])->name('resume.download');
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
