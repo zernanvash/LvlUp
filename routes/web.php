@@ -40,9 +40,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/skill-tree/{node}/details', [SkillTreeController::class, 'getNodeDetails'])->name('skill-tree.details');
     
     // Achievements/Badges
-    Route::get('/achievements', [BadgeController::class, 'index'])->name('achievements.index');
-    Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])->name('badges.toggle-display');
-    
+    Route::get('/achievements', [BadgeController::class, 'index'])
+        ->name('achievements.index');
+
+    Route::get('/achievements/{badge}', [BadgeController::class, 'show'])
+        ->name('achievements.show');
+
+    Route::post('/badges/{badge}/equip', [BadgeController::class, 'equip'])
+        ->name('badges.equip');
+
+    Route::post('/badges/{badge}/unequip', [BadgeController::class, 'unequip'])
+        ->name('badges.unequip');
+
+    Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])
+        ->name('badges.toggle-display');
     // Resume Builder
 
     Route::get   ('/resume',                  [ResumeController::class, 'index'])    ->name('resume.index');

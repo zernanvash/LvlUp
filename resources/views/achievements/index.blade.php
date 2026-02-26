@@ -218,7 +218,7 @@
                 @if($isEarned)
                 <div class="bg-gradient-to-t from-{{ $color }}-600/20 to-transparent p-4">
                     @if($isDisplayed)
-                        <form method="POST" action="{{ route('badges.unequip', $badge) }}" class="w-full">
+                        <form method="POST" action="{{ route('badges.unequip', $badge->id) }}" class="w-full">
                             @csrf
                             <button type="submit" 
                                     class="w-full px-4 py-2 bg-{{ $color }}-500/30 hover:bg-{{ $color }}-500/50 border border-{{ $color }}-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors">
@@ -226,7 +226,7 @@
                             </button>
                         </form>
                     @else
-                        <form method="POST" action="{{ route('badges.equip', $badge) }}" class="w-full" x-data>
+                        <form method="POST" action="{{ route('badges.equip', $badge->id) }}" class="w-full" x-data>
                             @csrf
                             <button type="submit" 
                                     class="w-full px-4 py-2 bg-{{ $color }}-500/30 hover:bg-{{ $color }}-500/50 border border-{{ $color }}-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors"
