@@ -40,20 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/skill-tree/{node}/details', [SkillTreeController::class, 'getNodeDetails'])->name('skill-tree.details');
     
     // Achievements/Badges
-    Route::get('/achievements', [BadgeController::class, 'index'])
-        ->name('achievements.index');
-
-    Route::get('/achievements/{badge}', [BadgeController::class, 'show'])
-        ->name('achievements.show');
-
-    Route::post('/badges/{badge}/equip', [BadgeController::class, 'equip'])
-        ->name('badges.equip');
-
-    Route::post('/badges/{badge}/unequip', [BadgeController::class, 'unequip'])
-        ->name('badges.unequip');
-
-    Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])
-        ->name('badges.toggle-display');
+    Route::get('/achievements', [BadgeController::class, 'index'])->name('achievements.index');
+    Route::post('/badges/{badge}/equip', [BadgeController::class, 'equip'])->name('badges.equip');
+    Route::post('/badges/{badge}/unequip', [BadgeController::class, 'unequip'])->name('badges.unequip');
+    Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])->name('badges.toggle-display');
     // Resume Builder
 
     Route::get   ('/resume',                  [ResumeController::class, 'index'])    ->name('resume.index');
@@ -66,20 +56,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get   ('/resume/{resume}/edit',   [ResumeController::class, 'edit'])   ->name('resume.edit');
     Route::put   ('/resume/{resume}',        [ResumeController::class, 'update']) ->name('resume.update');
     Route::delete('/resume/{resume}',         [ResumeController::class, 'destroy'])  ->name('resume.destroy');
-
-
-
-    // Route::get('/resume', [ResumeController::class, 'index'])->name('resume.index');
-    // //Route::resource('resumes', ResumeController::class);
-    // Route::post('/resume/analyze', [ResumeController::class, 'analyze'])->name('resume.analyze');
-    // Route::post('/resume/create', [ResumeController::class, 'create'])->name('resume.create');
-    // Route::get('/resume/{resume}/download', [ResumeController::class, 'download'])->name('resume.download');
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::patch('/profile/toggle-visibility', [ProfileController::class, 'toggleVisibility'])->name('profile.toggle-visibility');
+
+    // Public Profile
+    Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 });
 
 // API Routes (Optional - for future mobile app)
