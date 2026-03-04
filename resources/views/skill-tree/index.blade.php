@@ -68,8 +68,8 @@
 
     <div id="skillTreeStage" class="w-full h-full cursor-grab active:cursor-grabbing">
         <div id="skillTreeViewport" class="absolute origin-top-left transition-transform duration-700 ease-out"
-            style="width:2000px; height:2000px;">
-            <canvas id="skillTreeCanvas" width="2000" height="2000"
+            style="width:1200px; height:1200px;">
+            <canvas id="skillTreeCanvas" width="1200" height="1200"
                 class="absolute top-0 left-0 pointer-events-none"></canvas>
 
             <div class="relative w-full h-full">
@@ -85,24 +85,24 @@
                     data-node-id="{{ $node->id }}"
                     data-parent-id="{{ $node->parent_node_id }}"
                     data-state="{{ $state }}"
-                    style="left: {{ $node->x_position }}%; top: {{ $node->y_position }}%; transform: translate(-50%, -50%);"
+                    style="left: {{ $node->x_position * 10 }}px; top: {{ $node->y_position * 10 }}px; transform: translate(-50%, -50%);"
                     @click="openNodeModal({{ $node->id }})">
 
                     <div class="relative group">
-                        <div class="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl border-2 transition-all duration-300 group-hover:scale-110
-                                @if($state === 'unlocked') border-purple-400 bg-purple-900/80 shadow-purple-500/20 
-                                @elseif($state === 'available') border-green-400 bg-green-900/40 animate-pulse shadow-green-500/40
-                                @else border-gray-600 bg-gray-800/80 opacity-60 @endif">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl border-3 transition-all duration-300 group-hover:scale-125
+                                @if($state === 'unlocked') border-purple-400 bg-gradient-to-br from-purple-900/90 to-purple-700/80 shadow-[0_0_30px_rgba(168,85,247,0.6)] 
+                                @elseif($state === 'available') border-green-400 bg-gradient-to-br from-green-900/60 to-green-700/50 animate-pulse shadow-[0_0_30px_rgba(34,197,94,0.7)]
+                                @else border-gray-600 bg-gray-800/80 opacity-50 @endif">
 
-                            <i class="{{ $node->skill->icon ?? 'fas fa-code' }} text-xl text-white"></i>
+                            <i class="{{ $node->skill->icon ?? 'fas fa-code' }} text-2xl text-white drop-shadow-lg"></i>
                         </div>
 
-                        <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
-                            <p class="text-[10px] font-bold text-center tracking-tight
-                                    @if($state === 'unlocked') text-purple-300
-                                    @elseif($state === 'available') text-green-300
-                                    @else text-gray-500 @endif">
-                                {{ Str::limit($node->title, 15) }}
+                        <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
+                            <p class="text-xs font-bold text-center tracking-tight px-2 py-1 rounded-lg backdrop-blur-sm
+                                    @if($state === 'unlocked') text-purple-200 bg-purple-900/40
+                                    @elseif($state === 'available') text-green-200 bg-green-900/40
+                                    @else text-gray-400 bg-gray-900/40 @endif">
+                                {{ Str::limit($node->title, 20) }}
                             </p>
                         </div>
                     </div>
@@ -226,12 +226,12 @@
 
                 const drawLines = () => {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.lineWidth = 5;
+                    ctx.lineWidth = 3;
                     ctx.lineCap = "round";
 
                     document.querySelectorAll('.skill-node').forEach(node => {
                         const parentId = node.getAttribute('data-parent-id');
-                        if (parentId && parentId !== "0") {
+                        if (parentId && parentId !== "0" && parentId !== "null") {
                             const parentEl = document.getElementById(`node-${parentId}`);
                             if (parentEl) {
                                 // Using offsetTop/Left ensures we get the position relative to the viewport container
@@ -242,15 +242,30 @@
 
                                 const state = node.getAttribute('data-state');
 
-                                // Draw Line
+                                // Draw Line with glow effect
                                 ctx.beginPath();
                                 ctx.moveTo(x1, y1);
                                 ctx.lineTo(x2, y2);
 
-                                // Style
-                                ctx.strokeStyle = state === 'unlocked' ? '#a855f7' : '#334155';
-                                ctx.globalAlpha = state === 'locked' ? 0.3 : 1;
+                                // Style based on state
+                                if (state === 'unlocked') {
+                                    ctx.strokeStyle = '#a855f7';
+                                    ctx.shadowBlur = 10;
+                                    ctx.shadowColor = '#a855f7';
+                                } else if (state === 'available') {
+                                    ctx.strokeStyle = '#22c55e';
+                                    ctx.shadowBlur = 10;
+                                    ctx.shadowColor = '#22c55e';
+                                } else {
+                                    ctx.strokeStyle = '#475569';
+                                    ctx.shadowBlur = 0;
+                                }
+                                
+                                ctx.globalAlpha = state === 'locked' ? 0.3 : 0.8;
                                 ctx.stroke();
+                                
+                                // Reset shadow
+                                ctx.shadowBlur = 0;
                             }
                         }
                     });
