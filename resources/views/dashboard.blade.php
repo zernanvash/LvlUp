@@ -218,7 +218,7 @@
             <div class="group relative">
                 <div
                     class="glow-border rounded-xl p-4 bg-gradient-to-br from-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : ($badge->rarity === 'rare' ? 'blue' : 'gray')) }}-900/40 to-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : ($badge->rarity === 'rare' ? 'blue' : 'gray')) }}-950/40 backdrop-blur text-center card-hover">
-                    <div class="text-4xl mb-2">{{ $badge->icon }}</div>
+                    <div class="text-4xl mb-2"><i class="{{ $badge->icon }}"></i></div>
                     <div class="text-xs font-bold text-white truncate">{{ $badge->title }}</div>
                     <div
                         class="text-xs text-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : ($badge->rarity === 'rare' ? 'blue' : 'gray')) }}-300 uppercase mt-1">
@@ -442,7 +442,7 @@
                 <div class="flex items-center gap-4">
                     <div
                         class="w-16 h-16 bg-gradient-to-br from-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : 'blue') }}-500/20 to-{{ $badge->rarity === 'legendary' ? 'amber' : ($badge->rarity === 'epic' ? 'purple' : 'blue') }}-600/20 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                        {{ $badge->icon }}
+                        <i class="{{ $badge->icon }}"></i>
                     </div>
                     <div class="flex-1">
                         <h3 class="font-bold text-white mb-1">{{ $badge->title }}</h3>

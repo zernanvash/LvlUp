@@ -207,7 +207,7 @@
                 @endphp
                 <div class="group relative">
                     <div class="glow-border rounded-xl p-4 bg-gradient-to-br from-{{ $color }}-900/40 to-{{ $color }}-950/40 backdrop-blur text-center card-hover">
-                        <div class="text-4xl mb-2">{{ $badge->icon }}</div>
+                        <div class="text-4xl mb-2"><i class="{{ $badge->icon }}"></i></div>
                         <div class="text-xs font-bold text-white truncate">{{ $badge->title }}</div>
                         <div class="text-xs text-{{ $color }}-300 uppercase mt-1">{{ $badge->rarity }}</div>
                     </div>

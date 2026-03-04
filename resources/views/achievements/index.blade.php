@@ -38,7 +38,7 @@
             @endphp
             <div class="relative group">
                 <div class="glow-border rounded-xl p-4 bg-gradient-to-br from-{{ $color }}-900/40 to-{{ $color }}-950/40 backdrop-blur text-center transition-transform hover:scale-105">
-                    <div class="text-4xl mb-2">{{ $badge->icon }}</div>
+                    <div class="text-4xl mb-2"><i class="{{ $badge->icon }}"></i></div>
                     <p class="text-xs text-white font-bold truncate">{{ $badge->title }}</p>
                     <p class="text-xs text-{{ $color }}-300 uppercase">{{ $badge->rarity }}</p>
                 </div>
@@ -156,7 +156,7 @@
                         <div class="w-20 h-20 bg-gradient-to-br from-{{ $color }}-500/20 to-{{ $color }}-600/20 
                                     border-2 border-{{ $color }}-500/40 rounded-2xl flex items-center justify-center text-4xl
                                     {{ $isEarned ? '' : 'grayscale' }}">
-                            {{ $badge->icon }}
+                            <i class="{{ $badge->icon }}"></i>
                         </div>
                         
                         <!-- Rarity Stars -->
