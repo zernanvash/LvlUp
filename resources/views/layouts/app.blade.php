@@ -35,6 +35,27 @@
             animation: gradientShift 15s ease infinite;
         }
         
+        #skillTreeContainer {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            touch-action: none;
+        }
+
+        #skillTreeCanvas {
+            transform-origin: top left;
+        }
+
+        #skillTreeViewport {
+            user-select: none;
+            cursor: grab;
+        }
+
+        #skillTreeViewport:active {
+            cursor: grabbing;
+        }
+        
         /* Star field background */
         .stars {
             position: fixed;
@@ -146,6 +167,32 @@
         .level-badge {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             clip-path: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
+        }
+
+            /* ===== SKILL TREE DESIGN IMPROVEMENTS ===== */
+
+        .skill-node::before {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 2px dashed rgba(139,92,246,0.3);
+            animation: rotate 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .skill-node[data-state="unlocked"] {
+            animation: unlockPop 0.5s ease;
+        }
+
+        @keyframes unlockPop {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
         }
         
         /* Scrollbar styling */
@@ -279,7 +326,7 @@
                 <span class="font-medium {{ Request::is('skill-tree') ? 'text-white' : 'text-gray-300' }}">Skill Tree</span>
             </a>
             
-            <a href="/projects" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('projects*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('projects*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
                 <i class="fas fa-folder-open w-5 text-center {{ Request::is('projects*') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
                 <span class="font-medium {{ Request::is('projects*') ? 'text-white' : 'text-gray-300' }}">Projects</span>
             </a>
@@ -289,9 +336,9 @@
                 <span class="font-medium {{ Request::is('achievements') ? 'text-white' : 'text-gray-300' }}">Achievements</span>
             </a>
             
-            <a href="/resume-builder" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('resume-builder') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-file-alt w-5 text-center {{ Request::is('resume-builder') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('resume-builder') ? 'text-white' : 'text-gray-300' }}">Resume Builder</span>
+            <a href="/resume" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('resume') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
+                <i class="fas fa-file-alt w-5 text-center {{ Request::is('resume') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
+                <span class="font-medium {{ Request::is('resume') ? 'text-white' : 'text-gray-300' }}">Resume Builder</span>
             </a>
         </nav>
         

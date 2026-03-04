@@ -22,7 +22,6 @@
         }
     </style>
 </head>
-
 <body class="min-h-screen flex items-center justify-center p-6 text-white">
 
     <div class="w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl grid lg:grid-cols-2">
@@ -126,8 +125,6 @@
             </p>
 
         </div>
-
     </div>
-
 </body>
 </html>
