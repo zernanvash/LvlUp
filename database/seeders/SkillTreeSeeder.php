@@ -32,10 +32,10 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => null,
                 'x_position' => 50,
                 'y_position' => 10,
-                'tier' => 1,
+                'tier' => 'core',
                 'required_level' => 1,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 1, 'description' => 'Create your first project']
+                    ['type' => 'project_count', 'required' => 1, 'description' => 'Upload 1 project to your portfolio']
                 ],
             ],
 
@@ -47,11 +47,11 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 1, // Hello World
                 'x_position' => 35,
                 'y_position' => 25,
-                'tier' => 2,
+                'tier' => 'basic',
                 'required_level' => 2,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 2, 'description' => 'Complete 2 projects'],
-                    ['type' => 'level_requirement', 'required' => 2, 'description' => 'Reach level 2']
+                    ['type' => 'project_count', 'required' => 2, 'description' => 'Upload at least 2 projects'],
+                    ['type' => 'level_requirement', 'required' => 2, 'description' => 'Reach Level 2 (gain XP by completing projects)']
                 ],
             ],
             [
@@ -61,10 +61,10 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 1,
                 'x_position' => 65,
                 'y_position' => 25,
-                'tier' => 2,
+                'tier' => 'basic',
                 'required_level' => 2,
                 'task_requirements' => [
-                    ['type' => 'skill_projects', 'skill_slug' => 'web-dev', 'required' => 2, 'description' => 'Complete 2 web development projects']
+                    ['type' => 'skill_projects', 'skill_slug' => 'web-dev', 'required' => 2, 'description' => 'Upload 2 projects tagged with Web Development skills (HTML, CSS, JavaScript, etc.)']
                 ],
             ],
 
@@ -76,11 +76,11 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 2, // Git Gud
                 'x_position' => 25,
                 'y_position' => 40,
-                'tier' => 3,
+                'tier' => 'basic',
                 'required_level' => 3,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 3, 'description' => 'Complete 3 projects'],
-                    ['type' => 'badge_count', 'required' => 1, 'description' => 'Earn your first badge']
+                    ['type' => 'project_count', 'required' => 3, 'description' => 'Upload a total of 3 projects'],
+                    ['type' => 'badge_count', 'required' => 1, 'description' => 'Earn at least 1 achievement badge']
                 ],
             ],
             [
@@ -90,10 +90,10 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 3, // CSS Sorcerer
                 'x_position' => 75,
                 'y_position' => 40,
-                'tier' => 3,
+                'tier' => 'basic',
                 'required_level' => 3,
                 'task_requirements' => [
-                    ['type' => 'skill_projects', 'skill_slug' => 'web-dev', 'required' => 3, 'description' => 'Complete 3 web projects']
+                    ['type' => 'skill_projects', 'skill_slug' => 'web-dev', 'required' => 3, 'description' => 'Upload 3 projects using Web Development skills (React, Vue, or similar frameworks)']
                 ],
             ],
 
@@ -105,11 +105,11 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 4, // API Whisperer
                 'x_position' => 15,
                 'y_position' => 55,
-                'tier' => 4,
+                'tier' => 'advanced',
                 'required_level' => 5,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 4, 'description' => 'Complete 4 projects'],
-                    ['type' => 'level_requirement', 'required' => 5, 'description' => 'Reach level 5']
+                    ['type' => 'project_count', 'required' => 4, 'description' => 'Upload a total of 4 projects to your portfolio'],
+                    ['type' => 'level_requirement', 'required' => 5, 'description' => 'Reach Level 5 by earning XP from projects and achievements']
                 ],
             ],
             [
@@ -119,10 +119,10 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 4,
                 'x_position' => 35,
                 'y_position' => 55,
-                'tier' => 4,
+                'tier' => 'advanced',
                 'required_level' => 5,
                 'task_requirements' => [
-                    ['type' => 'skill_projects', 'skill_slug' => 'backend', 'required' => 2, 'description' => 'Complete 2 backend projects']
+                    ['type' => 'skill_projects', 'skill_slug' => 'backend', 'required' => 2, 'description' => 'Upload 2 projects tagged with Backend skills (PHP, Laravel, Node.js, Python, etc.)']
                 ],
             ],
             [
@@ -132,10 +132,10 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 5, // Component Architect
                 'x_position' => 65,
                 'y_position' => 55,
-                'tier' => 4,
+                'tier' => 'advanced',
                 'required_level' => 5,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 5, 'description' => 'Complete 5 projects']
+                    ['type' => 'project_count', 'required' => 5, 'description' => 'Upload a total of 5 projects showcasing your skills']
                 ],
             ],
 
@@ -147,11 +147,11 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 6, // Database Bender
                 'x_position' => 15,
                 'y_position' => 70,
-                'tier' => 5,
+                'tier' => 'master',
                 'required_level' => 8,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 6, 'description' => 'Complete 6 projects'],
-                    ['type' => 'badge_count', 'required' => 3, 'description' => 'Earn 3 badges']
+                    ['type' => 'project_count', 'required' => 6, 'description' => 'Upload a total of 6 projects'],
+                    ['type' => 'badge_count', 'required' => 3, 'description' => 'Earn at least 3 achievement badges by completing milestones']
                 ],
             ],
             [
@@ -161,11 +161,11 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 7, // Async Assassin
                 'x_position' => 35,
                 'y_position' => 70,
-                'tier' => 5,
+                'tier' => 'master',
                 'required_level' => 8,
                 'task_requirements' => [
-                    ['type' => 'level_requirement', 'required' => 8, 'description' => 'Reach level 8'],
-                    ['type' => 'skill_projects', 'skill_slug' => 'backend', 'required' => 3, 'description' => 'Complete 3 backend projects']
+                    ['type' => 'level_requirement', 'required' => 8, 'description' => 'Reach Level 8 by earning XP'],
+                    ['type' => 'skill_projects', 'skill_slug' => 'backend', 'required' => 3, 'description' => 'Upload 3 projects using Backend technologies']
                 ],
             ],
 
@@ -177,12 +177,12 @@ class SkillTreeSeeder extends Seeder
                 'parent_node_id' => 10, // Performance Optimizer
                 'x_position' => 50,
                 'y_position' => 85,
-                'tier' => 6,
+                'tier' => 'legendary',
                 'required_level' => 10,
                 'task_requirements' => [
-                    ['type' => 'project_count', 'required' => 10, 'description' => 'Complete 10 projects'],
-                    ['type' => 'badge_count', 'required' => 5, 'description' => 'Earn 5 badges'],
-                    ['type' => 'level_requirement', 'required' => 10, 'description' => 'Reach level 10']
+                    ['type' => 'project_count', 'required' => 10, 'description' => 'Upload a total of 10 projects to your portfolio'],
+                    ['type' => 'badge_count', 'required' => 5, 'description' => 'Earn at least 5 achievement badges'],
+                    ['type' => 'level_requirement', 'required' => 10, 'description' => 'Reach Level 10 - the legendary milestone']
                 ],
             ],
         ];
