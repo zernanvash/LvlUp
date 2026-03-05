@@ -159,6 +159,24 @@
 
                     <p class="text-gray-300 mb-6 leading-relaxed" x-text="modal.node.description"></p>
 
+                    <!-- Task Requirements -->
+                    <template x-if="modal.node.task_requirements && modal.node.task_requirements.length > 0">
+                        <div class="mb-6 p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
+                            <h4 class="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
+                                <i class="fas fa-tasks"></i>
+                                Requirements to Unlock
+                            </h4>
+                            <ul class="space-y-2">
+                                <template x-for="task in modal.node.task_requirements" :key="task.description">
+                                    <li class="flex items-start gap-2 text-sm text-gray-300">
+                                        <i class="fas fa-check-circle text-green-400 mt-0.5"></i>
+                                        <span x-text="task.description"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </template>
+
                     <template x-if="modal.state === 'available'">
                         <form :action="`/skill-tree/${modal.node.id}/unlock`" method="POST">
                             @csrf
