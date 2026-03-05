@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SkillTreeController;
 use App\Http\Controllers\BadgeController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ResumeController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -69,6 +70,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Public Profile
     Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
+    Route::patch('/profile/visibility', [ProfileController::class, 'toggleVisibility'])->name('profile.toggle-visibility');
+
+    // certificates
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
+    Route::post('/certificates', [CertificateController::class, 'store'])->name('certificates.store');
+    Route::delete('/certificates/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
 });
 
 // API Routes (Optional - for future mobile app)

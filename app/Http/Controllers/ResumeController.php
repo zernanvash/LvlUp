@@ -7,20 +7,18 @@ use App\Models\Project;
 use App\Models\Skill;
 use App\Services\ResumeAnalyzer;
 use App\Services\AiResumeWriter;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ResumeController extends Controller
 {
-    protected ResumeAnalyzer $analyzer;
-    protected AiResumeWriter $aiWriter;
-
-    public function __construct(ResumeAnalyzer $analyzer, AiResumeWriter $aiWriter)
-    {
-        $this->analyzer = $analyzer;
-        $this->aiWriter = $aiWriter;
-    }
+    public function __construct(
+        protected ResumeAnalyzer    $analyzer,
+        protected AiResumeWriter    $aiWriter,
+        protected CloudinaryService $cloudinary,
+    ) {}
 
     // =========================================================================
     // Index
@@ -29,7 +27,6 @@ class ResumeController extends Controller
     public function index()
     {
         $resumes = auth()->user()->resumes()->latest()->paginate(10);
-
         return view('resume.index', compact('resumes'));
     }
 
@@ -41,38 +38,30 @@ class ResumeController extends Controller
     {
         $projects = auth()->user()->projects;
         $skills   = Skill::orderBy('category')->orderBy('name')->get();
-
         return view('resume.create', compact('projects', 'skills'));
     }
 
     // =========================================================================
-    // Store — validates, saves, calls AI, generates PDF
+    // Store
     // =========================================================================
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // Core role fields
             'job_title'              => 'required|string|max:255',
             'job_description'        => 'required|string',
             'target_keywords'        => 'nullable|string|max:500',
             'template'               => 'nullable|string|in:modern,classic,minimal,creative,executive,tech',
             'tone'                   => 'nullable|string|in:professional,creative,executive,concise',
-
-            // Contact / personal
             'phone'                  => 'nullable|string|max:50',
             'location'               => 'nullable|string|max:150',
             'linked_in'              => 'nullable|url|max:255',
             'github_url'             => 'nullable|url|max:255',
-
-            // Rich input
             'work_experience'        => 'nullable|string',
             'education_details'      => 'nullable|string',
             'certifications'         => 'nullable|string',
             'spoken_languages'       => 'nullable|string|max:255',
             'bio_seed'               => 'nullable|string',
-
-            // Projects & skills
             'selected_project_ids'   => 'nullable|array',
             'selected_project_ids.*' => 'exists:projects,id',
             'selected_skill_ids'     => 'nullable|array',
@@ -82,7 +71,6 @@ class ResumeController extends Controller
         $user     = auth()->user();
         $keywords = $this->analyzer->extractKeywords($validated['job_description']);
 
-        // Merge user-supplied target keywords with auto-extracted ones
         if (!empty($validated['target_keywords'])) {
             $manualKeywords = array_map('trim', explode(',', $validated['target_keywords']));
             $keywords       = array_values(array_unique(array_merge($keywords, $manualKeywords)));
@@ -91,45 +79,35 @@ class ResumeController extends Controller
         $matchScore = $this->analyzer->calculateMatchScore($user, $keywords);
 
         $resume = $user->resumes()->create([
-            // Core
             'job_title'            => $validated['job_title'],
             'job_description'      => $validated['job_description'],
             'target_keywords'      => implode(', ', $keywords),
             'match_score'          => $matchScore,
-            'template'             => $validated['template']  ?? 'modern',
-            'tone'                 => $validated['tone']      ?? 'professional',
-
-            // Contact
-            'phone'                => $validated['phone']     ?? null,
-            'location'             => $validated['location']  ?? null,
-            'linked_in'            => $validated['linked_in'] ?? null,
-            'github_url'           => $validated['github_url'] ?? null,
-
-            // Rich input
+            'template'             => $validated['template']          ?? 'modern',
+            'tone'                 => $validated['tone']              ?? 'professional',
+            'phone'                => $validated['phone']             ?? null,
+            'location'             => $validated['location']          ?? null,
+            'linked_in'            => $validated['linked_in']         ?? null,
+            'github_url'           => $validated['github_url']        ?? null,
             'work_experience'      => $validated['work_experience']   ?? null,
             'education_details'    => $validated['education_details'] ?? null,
             'certifications'       => $validated['certifications']    ?? null,
             'spoken_languages'     => $validated['spoken_languages']  ?? null,
             'bio_seed'             => $validated['bio_seed']          ?? null,
-
-            // Selections
             'selected_project_ids' => $validated['selected_project_ids'] ?? [],
             'selected_skill_ids'   => $validated['selected_skill_ids']   ?? [],
         ]);
 
-        // Fetch the actual Eloquent models for the AI writer
         $projects   = Project::with('skills')
             ->whereIn('id', $validated['selected_project_ids'] ?? [])
             ->get();
         $skills     = Skill::whereIn('id', $validated['selected_skill_ids'] ?? [])->get();
 
-        // Generate AI resume content (9 fields via Gemini responseSchema)
         $resumeData = $this->aiWriter->generate($user, $resume, $projects, $skills);
         $resume->update(['resume_data' => $resumeData]);
 
-        // Render PDF
-        $pdfPath = $this->renderPdf($resume, $resumeData, $user, $projects, $skills);
-        $resume->update(['pdf_path' => $pdfPath]);
+        $pdfUrl = $this->renderAndUploadPdf($resume, $resumeData, $user, $projects, $skills);
+        $resume->update(['pdf_path' => $pdfUrl]);
 
         return redirect()->route('resume.show', $resume)
             ->with('success', 'Resume generated successfully!');
@@ -165,7 +143,7 @@ class ResumeController extends Controller
     }
 
     // =========================================================================
-    // Update — re-validates all fields, recalculates score
+    // Update
     // =========================================================================
 
     public function update(Request $request, Resume $resume)
@@ -173,78 +151,115 @@ class ResumeController extends Controller
         $this->authorizeResume($resume);
 
         $validated = $request->validate([
-            // Core
             'job_title'              => 'sometimes|string|max:255',
             'job_description'        => 'sometimes|string',
             'target_keywords'        => 'nullable|string|max:500',
             'template'               => 'nullable|string|in:modern,classic,minimal,creative,executive,tech',
             'tone'                   => 'nullable|string|in:professional,creative,executive,concise',
-
-            // Contact
             'phone'                  => 'nullable|string|max:50',
             'location'               => 'nullable|string|max:150',
             'linked_in'              => 'nullable|url|max:255',
             'github_url'             => 'nullable|url|max:255',
-
-            // Rich input
             'work_experience'        => 'nullable|string',
             'education_details'      => 'nullable|string',
             'certifications'         => 'nullable|string',
             'spoken_languages'       => 'nullable|string|max:255',
             'bio_seed'               => 'nullable|string',
-
-            // Selections
             'selected_project_ids'   => 'sometimes|array',
             'selected_project_ids.*' => 'exists:projects,id',
             'selected_skill_ids'     => 'sometimes|array',
             'selected_skill_ids.*'   => 'exists:skills,id',
         ]);
 
-        // Recalculate keyword match whenever the job description changes
-        if (isset($validated['job_description'])) {
-            $keywords = $this->analyzer->extractKeywords($validated['job_description']);
-
-            if (!empty($validated['target_keywords'])) {
-                $manualKeywords = array_map('trim', explode(',', $validated['target_keywords']));
-                $keywords       = array_values(array_unique(array_merge($keywords, $manualKeywords)));
-            }
-
-            $validated['target_keywords'] = implode(', ', $keywords);
-            $validated['match_score']     = $this->analyzer->calculateMatchScore(auth()->user(), $keywords);
-        }
-
         $resume->update($validated);
 
+        if (isset($validated['job_description'])) {
+            $keywords   = $this->analyzer->extractKeywords($validated['job_description']);
+            $matchScore = $this->analyzer->calculateMatchScore(auth()->user(), $keywords);
+            $resume->update([
+                'target_keywords' => implode(', ', $keywords),
+                'match_score'     => $matchScore,
+            ]);
+        }
+
         return redirect()->route('resume.show', $resume)
-            ->with('success', 'Resume updated. Use "Regenerate PDF" to rebuild the AI content.');
+            ->with('success', 'Resume updated successfully!');
     }
 
     // =========================================================================
-    // Regenerate PDF (standalone action — re-runs AI + PDF render)
+    // Generate / Regenerate PDF
     // =========================================================================
 
     public function generate(Request $request)
     {
-        // Accept resume_id posted from the show page button
-        $resumeId = $request->input('resume_id');
-        $resume   = Resume::findOrFail($resumeId);
+        $resumeId = $request->input('resume_id') ?? $request->route('resume');
+        $resume   = Resume::findOrFail($resumeId instanceof Resume ? $resumeId->id : $resumeId);
 
         $this->authorizeResume($resume);
 
-        $user     = auth()->user();
-        $projects = $resume->getSelectedProjects()->load('skills');
-        $skills   = $resume->getSelectedSkills();
-
-        // Always re-run AI so new fields (work_experience, education_details, etc.)
-        // are included in the fresh output
+        $user       = auth()->user();
+        $projects   = $resume->getSelectedProjects()->load('skills');
+        $skills     = $resume->getSelectedSkills();
         $resumeData = $this->aiWriter->generate($user, $resume, $projects, $skills);
         $resume->update(['resume_data' => $resumeData]);
 
-        $pdfPath = $this->renderPdf($resume, $resumeData, $user, $projects, $skills);
-        $resume->update(['pdf_path' => $pdfPath]);
+        $pdfUrl = $this->renderAndUploadPdf($resume, $resumeData, $user, $projects, $skills);
+        $resume->update(['pdf_path' => $pdfUrl]);
 
         return redirect()->route('resume.show', $resume)
             ->with('success', 'Resume regenerated successfully!');
+    }
+
+    // =========================================================================
+    // Download — redirects to Cloudinary URL
+    // =========================================================================
+
+    public function download(Resume $resume)
+    {
+        $this->authorizeResume($resume);
+
+        if (!$resume->pdf_path) {
+            return redirect()->back()->with('error', 'No PDF has been generated yet.');
+        }
+
+        // Cloudinary URL — redirect directly, no local file needed
+        if (str_contains($resume->pdf_path, 'cloudinary.com')) {
+            return redirect($resume->pdf_path);
+        }
+
+        // Legacy local file fallback
+        if (!Storage::disk('local')->exists($resume->pdf_path)) {
+            $projects   = $resume->getSelectedProjects()->load('skills');
+            $skills     = $resume->getSelectedSkills();
+            $resumeData = $this->resolveResumeData($resume);
+            $pdfUrl     = $this->renderAndUploadPdf($resume, $resumeData, $resume->user, $projects, $skills);
+            $resume->update(['pdf_path' => $pdfUrl]);
+            return redirect($pdfUrl);
+        }
+
+        return Storage::disk('local')->download(
+            $resume->pdf_path,
+            'resume_' . str()->slug($resume->job_title) . '.pdf'
+        );
+    }
+
+    // =========================================================================
+    // Destroy
+    // =========================================================================
+
+    public function destroy(Resume $resume)
+    {
+        $this->authorizeResume($resume);
+
+        if ($resume->pdf_path && str_contains($resume->pdf_path, 'cloudinary.com')) {
+            $this->cloudinary->deleteByUrl($resume->pdf_path, 'raw');
+        } elseif ($resume->pdf_path && Storage::disk('local')->exists($resume->pdf_path)) {
+            Storage::disk('local')->delete($resume->pdf_path);
+        }
+
+        $resume->delete();
+
+        return redirect()->route('resume.index')->with('success', 'Resume deleted.');
     }
 
     // =========================================================================
@@ -277,50 +292,6 @@ class ResumeController extends Controller
     }
 
     // =========================================================================
-    // Download
-    // =========================================================================
-
-    public function download(Resume $resume)
-    {
-        $this->authorizeResume($resume);
-
-        if (!$resume->pdf_path) {
-            return redirect()->back()->with('error', 'No PDF has been generated yet.');
-        }
-
-        // Regenerate on-the-fly if the file was deleted from storage
-        if (!Storage::disk('local')->exists($resume->pdf_path)) {
-            $projects   = $resume->getSelectedProjects()->load('skills');
-            $skills     = $resume->getSelectedSkills();
-            $resumeData = $this->resolveResumeData($resume);
-            $pdfPath    = $this->renderPdf($resume, $resumeData, $resume->user, $projects, $skills);
-            $resume->update(['pdf_path' => $pdfPath]);
-        }
-
-        return Storage::disk('local')->download(
-            $resume->pdf_path,
-            'resume_' . str()->slug($resume->job_title) . '.pdf'
-        );
-    }
-
-    // =========================================================================
-    // Destroy
-    // =========================================================================
-
-    public function destroy(Resume $resume)
-    {
-        $this->authorizeResume($resume);
-
-        if ($resume->pdf_path && Storage::disk('local')->exists($resume->pdf_path)) {
-            Storage::disk('local')->delete($resume->pdf_path);
-        }
-        $resume->delete();
-
-        return redirect()->route('resume.index')
-            ->with('success', 'Resume deleted.');
-    }
-
-    // =========================================================================
     // Private helpers
     // =========================================================================
 
@@ -329,10 +300,6 @@ class ResumeController extends Controller
         abort_if($resume->user_id !== auth()->id(), 403);
     }
 
-    /**
-     * Return stored resume_data as an array, or build a minimal fallback.
-     * Handles both the old 5-field format and new 9-field format gracefully.
-     */
     private function resolveResumeData(Resume $resume): array
     {
         if (!empty($resume->resume_data)) {
@@ -341,7 +308,6 @@ class ResumeController extends Controller
                 : json_decode($resume->resume_data, true);
 
             if (is_array($data) && !empty($data)) {
-                // Back-fill keys missing from older 5-field records
                 $data = array_merge([
                     'headline'       => '',
                     'certifications' => '',
@@ -353,7 +319,6 @@ class ResumeController extends Controller
             }
         }
 
-        // Minimal fallback (no AI data stored yet)
         $projects = $resume->getSelectedProjects();
         $skills   = $resume->getSelectedSkills();
 
@@ -361,22 +326,15 @@ class ResumeController extends Controller
             'headline'       => $resume->job_title,
             'summary'        => "Tailored resume for {$resume->job_title}.",
             'skills'         => $skills->pluck('name')->join(', '),
-            'experience'     => $resume->work_experience ?? '',
+            'experience'     => $resume->work_experience   ?? '',
             'projects'       => $projects->map(fn($p) => "• {$p->name}: {$p->description}")->join("\n"),
             'education'      => $resume->education_details ?? '',
-            'certifications' => $resume->certifications ?? '',
-            'languages'      => $resume->spoken_languages ?? '',
+            'certifications' => $resume->certifications    ?? '',
+            'languages'      => $resume->spoken_languages  ?? '',
             'achievements'   => '',
         ]);
     }
 
-    /**
-     * Guarantee every resume field is a plain string.
-     *
-     * Gemini occasionally returns `skills` (or other fields) as a JSON array
-     * instead of a comma-separated string, which breaks any blade template
-     * that calls explode() or other string functions on the value.
-     */
     private function sanitiseResumeData(array $data): array
     {
         $stringKeys = [
@@ -393,13 +351,9 @@ class ResumeController extends Controller
             $value = $data[$key];
 
             if (is_array($value)) {
-                // Flat sequential array (e.g. ["PHP","Laravel"]) → comma-separated string
-                // Associative / nested array → JSON-encode as a last resort
-                $isFlat = array_keys($value) === range(0, count($value) - 1)
-                          && count(array_filter($value, 'is_array')) === 0;
-
+                $isFlat     = array_keys($value) === range(0, count($value) - 1)
+                              && count(array_filter($value, 'is_array')) === 0;
                 $data[$key] = $isFlat ? implode(', ', $value) : json_encode($value);
-
             } elseif (!is_string($value)) {
                 $data[$key] = (string) $value;
             }
@@ -409,9 +363,10 @@ class ResumeController extends Controller
     }
 
     /**
-     * Render the PDF blade view and persist it to local storage.
+     * Render the PDF and upload it to Cloudinary.
+     * Returns the Cloudinary secure URL stored as pdf_path.
      */
-    private function renderPdf(Resume $resume, array $resumeData, $user, $projects = null, $skills = null): string
+    private function renderAndUploadPdf(Resume $resume, array $resumeData, $user, $projects = null, $skills = null): string
     {
         $projects = $projects ?? $resume->getSelectedProjects();
         $skills   = $skills   ?? $resume->getSelectedSkills();
@@ -419,10 +374,10 @@ class ResumeController extends Controller
         $pdf = Pdf::loadView('resume.pdf', compact('resume', 'resumeData', 'user', 'projects', 'skills'))
                   ->setPaper('a4', 'portrait');
 
-        $path = 'resume/' . $resume->id . '/resume-' . str()->slug($resume->job_title) . '-' . $resume->id . '.pdf';
-
-        Storage::disk('local')->put($path, $pdf->output());
-
-        return $path;
+        return $this->cloudinary->uploadResumePdf(
+            $pdf->output(),
+            $resume->id,
+            $resume->job_title
+        );
     }
 }

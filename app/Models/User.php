@@ -173,4 +173,9 @@ class User extends Authenticatable
     {
         return route('profile.public', ['username' => $this->name]);
     }
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class)->latest();
+    }
 }
