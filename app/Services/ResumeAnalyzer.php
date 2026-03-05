@@ -28,19 +28,49 @@ class ResumeAnalyzer
     /**
      * Common technology keywords to prioritize
      */
-    private const TECH_KEYWORDS = [
-        'php', 'laravel', 'javascript', 'typescript', 'react', 'vue', 'angular',
-        'node', 'python', 'django', 'flask', 'java', 'spring', 'kotlin',
-        'swift', 'ios', 'android', 'flutter', 'dart', 'ruby', 'rails',
-        'go', 'golang', 'rust', 'c++', 'c#', 'dotnet', '.net', 'asp.net',
-        'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch',
-        'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'cloud', 'devops',
-        'git', 'ci/cd', 'jenkins', 'terraform', 'ansible', 'linux',
-        'api', 'rest', 'graphql', 'microservices', 'agile', 'scrum',
-        'testing', 'tdd', 'jest', 'pytest', 'junit', 'selenium',
-        'html', 'css', 'sass', 'tailwind', 'bootstrap', 'webpack', 'vite',
-        'machine learning', 'ai', 'data science', 'tensorflow', 'pytorch',
-        'blockchain', 'web3', 'solidity', 'ethereum', 'security', 'cybersecurity'
+private const TECH_KEYWORDS = [
+        // Languages
+        'php', 'laravel', 'javascript', 'typescript', 'python', 'ruby', 'go', 'golang',
+        'rust', 'java', 'kotlin', 'swift', 'dart', 'c#', 'dotnet', '.net', 'asp.net',
+        'elixir', 'scala', 'r', 'perl', 'lua', 'haskell', 'clojure', 'erlang',
+
+        // Frontend
+        'react', 'vue', 'angular', 'svelte', 'nextjs', 'next.js', 'nuxtjs', 'nuxt',
+        'remix', 'astro', 'html', 'css', 'sass', 'tailwind', 'bootstrap', 'shadcn',
+        'radix', 'webpack', 'vite', 'parcel', 'turbopack',
+
+        // Backend / Frameworks
+        'node', 'nodejs', 'express', 'fastapi', 'django', 'flask', 'rails', 'spring',
+        'nestjs', 'hono', 'fiber', 'gin', 'actix',
+
+        // Mobile
+        'flutter', 'react native', 'ios', 'android', 'expo',
+
+        // Data / Databases
+        'sql', 'mysql', 'postgresql', 'sqlite', 'mongodb', 'redis', 'elasticsearch',
+        'dynamodb', 'cassandra', 'neo4j', 'supabase', 'prisma', 'drizzle',
+
+        // Cloud / DevOps
+        'docker', 'kubernetes', 'k8s', 'terraform', 'ansible', 'pulumi', 'helm',
+        'aws', 'azure', 'gcp', 'cloud', 'devops', 'ci/cd', 'github actions',
+        'jenkins', 'circleci', 'linux', 'nginx', 'caddy', 'cloudflare',
+
+        // AI / ML
+        'machine learning', 'deep learning', 'ai', 'llm', 'langchain', 'openai',
+        'gemini', 'tensorflow', 'pytorch', 'scikit-learn', 'huggingface', 'rag',
+        'vector database', 'embeddings', 'fine-tuning', 'data science',
+
+        // APIs / Architecture
+        'api', 'rest', 'graphql', 'grpc', 'websockets', 'microservices', 'serverless',
+        'event-driven', 'message queue', 'kafka', 'rabbitmq', 'pubsub',
+
+        // Security / Other
+        'git', 'agile', 'scrum', 'tdd', 'testing', 'jest', 'vitest', 'pytest',
+        'phpunit', 'selenium', 'playwright', 'cypress', 'security', 'cybersecurity',
+        'oauth', 'jwt', 'web3', 'blockchain', 'solidity',
+
+        // Tooling
+        'sdk', 'cli', 'api', 'ui', 'ux', 'xml', 'json', 'yaml', 'graphql',
     ];
 
     /**

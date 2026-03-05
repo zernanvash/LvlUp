@@ -24,6 +24,9 @@ require __DIR__.'/auth.php';
 // Protected Routes (Require Authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
     
+
+    Route::get('/ai-debug', [\App\Http\Controllers\AiDebugController::class, 'test']);
+    
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/daily-reward/claim', [DashboardController::class, 'claimDailyReward'])->name('daily-reward.claim');
