@@ -5,6 +5,19 @@
 @section('page_subtitle', 'Project Details')
 
 @section('content')
+@php
+$typeConfig = [
+    'web'       => ['label' => 'Web / Frontend', 'icon' => 'fas fa-globe',       'gradient' => 'from-blue-500 to-cyan-500'],
+    'backend'   => ['label' => 'Backend / API',  'icon' => 'fas fa-server',      'gradient' => 'from-violet-500 to-purple-500'],
+    'fullstack' => ['label' => 'Full Stack',     'icon' => 'fas fa-layer-group', 'gradient' => 'from-pink-500 to-rose-500'],
+    'mobile'    => ['label' => 'Mobile',         'icon' => 'fas fa-mobile-alt',  'gradient' => 'from-green-500 to-emerald-500'],
+    'devops'    => ['label' => 'DevOps / Cloud', 'icon' => 'fas fa-cloud',       'gradient' => 'from-amber-500 to-orange-500'],
+    'ai'        => ['label' => 'AI / ML',        'icon' => 'fas fa-brain',       'gradient' => 'from-red-500 to-pink-500'],
+    'other'     => ['label' => 'Other',          'icon' => 'fas fa-code',        'gradient' => 'from-gray-500 to-slate-500'],
+];
+$type = $project->project_type ?? 'other';
+$cfg  = $typeConfig[$type] ?? $typeConfig['other'];
+@endphp
 <div class="max-w-5xl mx-auto space-y-8">
     
     <!-- Project Header -->
@@ -23,6 +36,10 @@
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-3">
                         <h1 class="font-display text-3xl font-bold text-white">{{ $project->name }}</h1>
+                        <!-- Project Type Badge -->
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold text-white bg-gradient-to-r {{ $cfg['gradient'] }}">
+                            <i class="{{ $cfg['icon'] }}"></i> {{ $cfg['label'] }}
+                        </span>
                         @if($project->is_featured)
                         <span class="px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 font-bold">
                             <i class="fas fa-star"></i> Featured
@@ -164,8 +181,8 @@
     
     <!-- Actions -->
     <div class="flex items-center justify-between">
-        <a href="{{ route('dashboard') }}" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold transition">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        <a href="{{ route('projects.index') }}" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold transition">
+            <i class="fas fa-arrow-left"></i> Back to Projects
         </a>
         
         <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this project?');">

@@ -36,8 +36,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Skill Tree
     Route::get('/skill-tree', [SkillTreeController::class, 'index'])->name('skill-tree.index');
+    Route::get('/skill-tree/progress', [SkillTreeController::class, 'progress'])->name('skill-tree.progress');
+    Route::get('/skill-tree/{node}', [SkillTreeController::class, 'show'])->name('skill-tree.show');
     Route::post('/skill-tree/{node}/unlock', [SkillTreeController::class, 'unlock'])->name('skill-tree.unlock');
-    Route::get('/skill-tree/{node}/details', [SkillTreeController::class, 'getNodeDetails'])->name('skill-tree.details');
     
     // Achievements/Badges
     Route::get('/achievements', [BadgeController::class, 'index'])->name('achievements.index');
@@ -54,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/visibility', [ProfileController::class, 'updateVisibility'])->name('profile.visibility');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
     Route::patch('/profile/toggle-visibility', [ProfileController::class, 'toggleVisibility'])->name('profile.toggle-visibility');

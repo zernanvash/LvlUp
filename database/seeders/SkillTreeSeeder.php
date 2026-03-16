@@ -64,7 +64,7 @@ class SkillTreeSeeder extends Seeder
                 'tier' => 'basic',
                 'required_level' => 2,
                 'task_requirements' => [
-                    ['type' => 'skill_projects', 'skill_slug' => 'web-dev', 'required' => 2, 'description' => 'Upload 2 projects tagged with Web Development skills (HTML, CSS, JavaScript, etc.)']
+                    ['type' => 'project_type', 'project_type' => 'web', 'required' => 2, 'description' => 'Upload 2 Web projects (select "Web / Frontend" as project type)']
                 ],
             ],
 
@@ -93,7 +93,7 @@ class SkillTreeSeeder extends Seeder
                 'tier' => 'basic',
                 'required_level' => 3,
                 'task_requirements' => [
-                    ['type' => 'skill_projects', 'skill_slug' => 'web-dev', 'required' => 3, 'description' => 'Upload 3 projects using Web Development skills (React, Vue, or similar frameworks)']
+                    ['type' => 'project_type', 'project_type' => 'web', 'required' => 3, 'description' => 'Upload 3 Web / Frontend projects (React, Vue, or similar)']
                 ],
             ],
 
@@ -122,7 +122,7 @@ class SkillTreeSeeder extends Seeder
                 'tier' => 'advanced',
                 'required_level' => 5,
                 'task_requirements' => [
-                    ['type' => 'skill_projects', 'skill_slug' => 'backend', 'required' => 2, 'description' => 'Upload 2 projects tagged with Backend skills (PHP, Laravel, Node.js, Python, etc.)']
+                    ['type' => 'project_type', 'project_type' => 'backend', 'required' => 2, 'description' => 'Upload 2 Backend projects (select "Backend / API" as project type)']
                 ],
             ],
             [
@@ -165,7 +165,7 @@ class SkillTreeSeeder extends Seeder
                 'required_level' => 8,
                 'task_requirements' => [
                     ['type' => 'level_requirement', 'required' => 8, 'description' => 'Reach Level 8 by earning XP'],
-                    ['type' => 'skill_projects', 'skill_slug' => 'backend', 'required' => 3, 'description' => 'Upload 3 projects using Backend technologies']
+                    ['type' => 'project_type', 'project_type' => 'backend', 'required' => 3, 'description' => 'Upload 3 Backend projects (select "Backend / API" as project type)']
                 ],
             ],
 

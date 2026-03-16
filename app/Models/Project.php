@@ -16,6 +16,7 @@ class Project extends Model
         'url',
         'github_url',
         'language',
+        'project_type',
         'thumbnail',
         'xp_reward',
         'is_featured',

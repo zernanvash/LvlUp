@@ -26,6 +26,23 @@ class User extends Authenticatable
         'rank',
         'is_public',
         'last_login',
+        // Contact (private / resume-only)
+        'phone_number',
+        'home_address',
+        'city',
+        'country',
+        'website_url',
+        // Skills
+        'technical_skills',
+        // Resume details (private)
+        'resume_job_title',
+        'resume_summary',
+        'work_experience',
+        'education',
+        'certifications',
+        'languages',
+        // Visibility toggles
+        'visibility_settings',
     ];
 
     protected $hidden = [
@@ -37,6 +54,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'last_login' => 'date',
         'password' => 'hashed',
+        'visibility_settings' => 'array',
     ];
 
     // Relationships
@@ -169,6 +187,16 @@ class User extends Authenticatable
     {
         $this->is_public = !$this->is_public;
         $this->save();
+    }
+
+    /**
+     * Check if a specific field is visible on the public profile.
+     * Defaults to true if not explicitly set.
+     */
+    public function isVisible(string $field): bool
+    {
+        $settings = $this->visibility_settings ?? [];
+        return $settings[$field] ?? true;
     }
 
     public function getPublicUrl(): string

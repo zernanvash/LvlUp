@@ -9,13 +9,16 @@ use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $projects = auth()->user()->projects()
-            ->with('skills')
-            ->latest()
-            ->paginate(12);
-        
+        $query = auth()->user()->projects()->with('skills')->latest();
+
+        if ($request->filled('type')) {
+            $query->where('project_type', $request->type);
+        }
+
+        $projects = $query->paginate(12);
+
         return view('projects.index', compact('projects'));
     }
     
@@ -33,6 +36,7 @@ class ProjectController extends Controller
             'url' => 'nullable|url',
             'github_url' => 'nullable|url',
             'language' => 'required|string',
+            'project_type' => 'required|string|in:web,backend,fullstack,mobile,devops,ai,other',
             'content' => 'nullable|string',
             'tags' => 'nullable|string',
             'thumbnail' => 'nullable|image|max:2048',
@@ -52,6 +56,7 @@ class ProjectController extends Controller
             'url' => $validated['url'] ?? null,
             'github_url' => $validated['github_url'] ?? null,
             'language' => $validated['language'],
+            'project_type' => $validated['project_type'],
             'xp_reward' => $xpReward,
             'metadata' => [
                 'code_snippet' => $validated['content'] ?? null,
@@ -117,6 +122,7 @@ class ProjectController extends Controller
             'url' => 'nullable|url',
             'github_url' => 'nullable|url',
             'language' => 'required|string',
+            'project_type' => 'required|string|in:web,backend,fullstack,mobile,devops,ai,other',
             'is_featured' => 'boolean',
             'tags' => 'nullable|string',
         ]);

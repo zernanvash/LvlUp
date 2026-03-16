@@ -326,7 +326,7 @@
                 <span class="font-medium {{ Request::is('skill-tree') ? 'text-white' : 'text-gray-300' }}">Skill Tree</span>
             </a>
             
-            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('projects*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
+            <a href="{{ route('projects.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('projects*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
                 <i class="fas fa-folder-open w-5 text-center {{ Request::is('projects*') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
                 <span class="font-medium {{ Request::is('projects*') ? 'text-white' : 'text-gray-300' }}">Projects</span>
             </a>
