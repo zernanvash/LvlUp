@@ -11,6 +11,15 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    private const RANK_TITLES = [
+        'Bronze'   => 'Junior Dev',
+        'Silver'   => 'Mid Dev',
+        'Gold'     => 'Senior Dev',
+        'Platinum' => 'Tech Lead',
+        'Diamond'  => 'Architect',
+        'Master'   => 'Legend',
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -26,6 +35,7 @@ class User extends Authenticatable
         'rank',
         'is_public',
         'last_login',
+        'streak_days',
         // Contact (private / resume-only)
         'phone_number',
         'home_address',
@@ -96,16 +106,80 @@ class User extends Authenticatable
     {
         $this->xp += $amount;
         $this->total_xp += $amount;
-        
+
+        $leveledUp = false;
+        $previousRank = $this->rank;
+
         // Level up logic - calculate XP needed before modifying level
         while ($this->xp >= ($xpNeeded = $this->xpNeededForNextLevel())) {
             $this->xp -= $xpNeeded;
             $this->level++;
-            
-            // Update rank based on level
             $this->updateRank();
+            $leveledUp = true;
         }
-        
+
+        if ($leveledUp) {
+            session()->flash('level_up', [
+                'new_level'  => $this->level,
+                'rank_title' => $this->getRankTitle(),
+                'old_rank'   => $previousRank,
+                'new_rank'   => $this->rank,
+                'is_rank_up' => $previousRank !== $this->rank,
+            ]);
+        }
+
+        $this->save();
+    }
+
+    public function getRankTitle(): string
+    {
+        return self::RANK_TITLES[$this->rank] ?? $this->rank;
+    }
+
+    public static function rankTitleMap(): array
+    {
+        return self::RANK_TITLES;
+    }
+
+    public function streakBonusMultiplier(): float
+    {
+        $tiers = (int) floor(($this->streak_days ?? 0) / 3);
+        return min(1.0 + ($tiers * 0.1), 2.0);
+    }
+
+    public function streakBonusActive(): bool
+    {
+        return ($this->streak_days ?? 0) >= 3;
+    }
+
+    public function shouldShowMilestoneBanner(int $threshold = 100): bool
+    {
+        $gap = $this->xpNeededForNextLevel() - $this->xp;
+        return $gap <= $threshold && $gap > 0;
+    }
+
+    public function xpToNextLevel(): int
+    {
+        return max(0, $this->xpNeededForNextLevel() - $this->xp);
+    }
+
+    public function updateLoginStreak(): void
+    {
+        $today = now()->toDateString();
+        $lastLogin = $this->last_login ? $this->last_login->toDateString() : null;
+
+        if ($lastLogin === $today) {
+            return; // Already logged in today
+        }
+
+        $yesterday = now()->subDay()->toDateString();
+        if ($lastLogin === $yesterday) {
+            $this->streak_days = ($this->streak_days ?? 0) + 1;
+        } else {
+            $this->streak_days = 1; // Reset streak
+        }
+
+        $this->last_login = $today;
         $this->save();
     }
 

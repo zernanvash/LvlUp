@@ -12,13 +12,26 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
-        // Get user's projects
+
+        // Update login streak on dashboard visit
+        $user->updateLoginStreak();
+
         $projects = $user->projects()
             ->with('skills')
             ->latest()
             ->get();
-        
-        return view('dashboard', compact('projects'));
+
+        $xpToNextLevel        = $user->xpToNextLevel();
+        $showMilestoneBanner  = $user->shouldShowMilestoneBanner();
+        $streakBonusActive    = $user->streakBonusActive();
+        $streakBonusMultiplier = $user->streakBonusMultiplier();
+
+        return view('dashboard', compact(
+            'projects',
+            'xpToNextLevel',
+            'showMilestoneBanner',
+            'streakBonusActive',
+            'streakBonusMultiplier'
+        ));
     }
 }

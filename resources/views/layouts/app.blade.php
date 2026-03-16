@@ -234,9 +234,102 @@
 <body class="animated-bg text-gray-100 min-h-screen" x-data="{ 
     sidebarOpen: false, 
     showLevelUp: false,
-    showBadgeUnlock: false,
-    newBadge: null
+    levelUpData: {},
+    init() {
+        if (window._levelUpData) {
+            this.levelUpData = window._levelUpData;
+            this.showLevelUp = true;
+            setTimeout(() => this.showLevelUp = false, 5000);
+        }
+    }
 }">
+
+@if(session('level_up'))
+<script>
+    window._levelUpData = @json(session('level_up'));
+</script>
+@endif
+
+<!-- Level-Up Overlay -->
+<div
+    x-show="showLevelUp"
+    x-transition:enter="transition ease-out duration-500"
+    x-transition:enter-start="opacity-0 scale-75"
+    x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="transition ease-in duration-300"
+    x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-75"
+    @click="showLevelUp = false"
+    class="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer"
+    x-cloak
+>
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+
+    <!-- Particle burst (CSS only) -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <template x-for="i in 20">
+            <div class="absolute w-2 h-2 rounded-full"
+                :style="`
+                    background: hsl(${Math.random()*60+260}, 80%, 65%);
+                    left: 50%; top: 50%;
+                    animation: burst${Math.floor(Math.random()*4)} 1.2s ease-out forwards;
+                    animation-delay: ${Math.random()*0.3}s;
+                `"
+            ></div>
+        </template>
+    </div>
+
+    <!-- Card -->
+    <div class="relative z-10 text-center px-12 py-10 rounded-3xl border-2 border-purple-400/60"
+         style="background: linear-gradient(135deg, #1a1d3e 0%, #2d1b4e 50%, #1a1d3e 100%);
+                box-shadow: 0 0 80px rgba(168,85,247,0.6), 0 0 160px rgba(236,72,153,0.3);">
+
+        <!-- Glow ring -->
+        <div class="absolute inset-0 rounded-3xl animate-pulse"
+             style="box-shadow: inset 0 0 40px rgba(168,85,247,0.2);"></div>
+
+        <div class="relative z-10">
+            <!-- Crown icon -->
+            <div class="text-6xl mb-4 animate-bounce">
+                <i class="fas fa-crown text-amber-400" style="filter: drop-shadow(0 0 20px rgba(245,158,11,0.8))"></i>
+            </div>
+
+            <p class="font-display text-purple-300 text-sm tracking-[0.3em] uppercase mb-2">Achievement Unlocked</p>
+
+            <h1 class="font-display text-5xl font-black text-white mb-2"
+                style="text-shadow: 0 0 30px rgba(168,85,247,0.8)">
+                LEVEL UP!
+            </h1>
+
+            <div class="font-display text-7xl font-black mb-4"
+                 style="background: linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b);
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                <span x-text="levelUpData.new_level"></span>
+            </div>
+
+            <template x-if="levelUpData.is_rank_up">
+                <div class="mb-4 px-6 py-3 rounded-xl border border-amber-400/40 bg-amber-500/10">
+                    <p class="text-amber-300 text-sm font-bold tracking-widest uppercase">Rank Up!</p>
+                    <p class="font-display text-xl font-bold text-white" x-text="levelUpData.rank_title"></p>
+                </div>
+            </template>
+
+            <template x-if="!levelUpData.is_rank_up">
+                <p class="text-purple-300 text-lg mb-4" x-text="levelUpData.rank_title"></p>
+            </template>
+
+            <p class="text-purple-400 text-sm mt-4">Click anywhere to continue</p>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes burst0 { to { transform: translate(-120px, -140px) scale(0); opacity: 0; } }
+@keyframes burst1 { to { transform: translate(130px, -110px) scale(0); opacity: 0; } }
+@keyframes burst2 { to { transform: translate(-90px, 130px) scale(0); opacity: 0; } }
+@keyframes burst3 { to { transform: translate(110px, 120px) scale(0); opacity: 0; } }
+</style>
     <!-- Star field background -->
     <div class="stars"></div>
     
@@ -306,7 +399,7 @@
                         <i class="fas fa-trophy text-amber-400"></i>
                         <div>
                             <p class="text-xs text-purple-300">Rank</p>
-                            <p class="font-display font-bold text-white">{{ auth()->user()->rank }}</p>
+                            <p class="font-display font-bold text-white">{{ auth()->user()->getRankTitle() }}</p>
                         </div>
                     </div>
                 </div>

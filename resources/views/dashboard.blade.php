@@ -7,6 +7,25 @@
 @section('content')
 <div class="max-w-7xl mx-auto space-y-8">
 
+    <!-- XP Milestone Banner -->
+    @if($showMilestoneBanner)
+    <div class="rounded-2xl px-6 py-4 flex items-center gap-4 border border-amber-400/40 bg-gradient-to-r from-amber-900/40 via-yellow-900/30 to-amber-900/40 backdrop-blur animate-pulse-slow">
+        <div class="w-10 h-10 flex-shrink-0 bg-amber-500/20 rounded-xl flex items-center justify-center">
+            <i class="fas fa-bolt text-amber-400 text-lg"></i>
+        </div>
+        <div class="flex-1">
+            <p class="font-display font-bold text-amber-300 text-sm">
+                So close! You're only <span class="text-white">{{ $xpToNextLevel }} XP</span> away from Level {{ auth()->user()->level + 1 }}
+            </p>
+            <p class="text-xs text-amber-400/70 mt-0.5">Add a project to push over the edge.</p>
+        </div>
+        <a href="{{ route('projects.create') }}"
+           class="flex-shrink-0 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 rounded-xl text-amber-300 text-sm font-bold transition">
+            + Project
+        </a>
+    </div>
+    @endif
+
     <!-- XP Progress Section -->
     <div
         class="glow-border rounded-3xl p-5 bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-purple-900/40 backdrop-blur relative overflow-hidden">
@@ -18,7 +37,7 @@
         <div class="flex items-center gap-3">
             {{-- Left: Level + XP --}}
             <div class="text-sm whitespace-nowrap">
-                <span class="font-semibold">Level {{ auth()->user()->level }} {{ auth()->user()->rank }}</span><br>
+                <span class="font-semibold">Level {{ auth()->user()->level }} {{ auth()->user()->getRankTitle() }}</span><br>
                 <span class="text-xs text-gray-400">
                     {{ number_format(auth()->user()->xp) }} /
                     {{ number_format(auth()->user()->xpNeededForNextLevel()) }} XP
@@ -335,17 +354,28 @@
 
         <!-- Node Breakdown by Tier -->
         @php
+        $tierNames = ['core', 'basic', 'advanced', 'master', 'legendary'];
+        $tierLabels = ['Core', 'Basic', 'Advanced', 'Master', 'Legendary'];
+        $tierColors = ['amber', 'blue', 'violet', 'pink', 'orange'];
         $nodesByTier = auth()->user()->unlockedNodes->groupBy('tier');
         @endphp
         <div class="grid grid-cols-5 gap-2">
-            @for($tier = 1; $tier <= 5; $tier++) @php $tierCount=$nodesByTier->get($tier, collect())->count();
-                $tierTotal = \App\Models\SkillNode::where('tier', $tier)->count();
-                @endphp
-                <div class="text-center p-3 bg-black/30 rounded-lg border border-pink-500/20">
-                    <div class="text-xs text-pink-300 mb-1">Tier {{ $tier }}</div>
-                    <div class="font-display font-bold text-white">{{ $tierCount }}/{{ $tierTotal }}</div>
+            @foreach($tierNames as $i => $tierName)
+            @php
+                $tierCount = $nodesByTier->get($tierName, collect())->count();
+                $tierTotal = \App\Models\SkillNode::where('tier', $tierName)->count();
+                $color = $tierColors[$i];
+            @endphp
+            <div class="text-center p-3 bg-black/30 rounded-lg border border-{{ $color }}-500/20">
+                <div class="text-[10px] text-{{ $color }}-300 mb-1 font-bold uppercase tracking-wider">{{ $tierLabels[$i] }}</div>
+                <div class="font-display font-bold text-white text-sm">{{ $tierCount }}<span class="text-gray-500">/{{ $tierTotal }}</span></div>
+                @if($tierTotal > 0)
+                <div class="mt-1 h-1 bg-black/40 rounded-full overflow-hidden">
+                    <div class="h-1 bg-{{ $color }}-500 rounded-full" style="width: {{ ($tierCount / $tierTotal) * 100 }}%"></div>
                 </div>
-                @endfor
+                @endif
+            </div>
+            @endforeach
         </div>
     </div>
 
@@ -386,22 +416,35 @@
             <p class="text-sm text-blue-300">Active Projects</p>
         </div>
 
-        <!-- Skills Unlocked -->
+        <!-- Streak -->
         <div
-            class="glow-border rounded-2xl p-6 bg-gradient-to-br from-pink-900/40 to-pink-950/40 backdrop-blur card-hover">
+            class="glow-border rounded-2xl p-6 bg-gradient-to-br from-orange-900/40 to-orange-950/40 backdrop-blur card-hover">
             <div class="flex items-center justify-between mb-4">
                 <div
-                    class="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-network-wired text-2xl text-white"></i>
+                    class="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-fire text-2xl text-white {{ $streakBonusActive ? 'animate-pulse' : '' }}"></i>
                 </div>
-                <div class="flex items-center gap-1 text-pink-400">
-                    <i class="fas fa-star text-xs"></i>
-                    <span class="text-xs font-bold">{{ auth()->user()->skill_points }}</span>
+                @if($streakBonusActive)
+                <div class="flex items-center gap-1 text-orange-400">
+                    <i class="fas fa-arrow-up text-xs"></i>
+                    <span class="text-xs font-bold">+{{ number_format(($streakBonusMultiplier - 1) * 100) }}% XP</span>
                 </div>
+                @else
+                <div class="flex items-center gap-1 text-gray-500">
+                    <span class="text-xs">No bonus</span>
+                </div>
+                @endif
             </div>
-            <h3 class="text-3xl font-display font-bold text-white mb-1">{{ auth()->user()->unlockedNodes->count() }}
-            </h3>
-            <p class="text-sm text-pink-300">Skills Mastered</p>
+            <h3 class="text-3xl font-display font-bold text-white mb-1">{{ auth()->user()->streak_days ?? 0 }}</h3>
+            <p class="text-sm text-orange-300">
+                @if(($streak = auth()->user()->streak_days ?? 0) === 0)
+                    Start your streak today
+                @elseif($streak === 1)
+                    Day streak — keep going!
+                @else
+                    Day streak 🔥
+                @endif
+            </p>
         </div>
 
         <!-- Achievement Progress -->
@@ -414,7 +457,7 @@
                 </div>
                 <div class="flex items-center gap-1 text-amber-400">
                     <i class="fas fa-award text-xs"></i>
-                    <span class="text-xs font-bold">{{ auth()->user()->rank }}</span>
+                    <span class="text-xs font-bold">{{ auth()->user()->getRankTitle() }}</span>
                 </div>
             </div>
             <h3 class="text-3xl font-display font-bold text-white mb-1">{{ auth()->user()->badges->count() }}</h3>
