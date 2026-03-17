@@ -246,13 +246,17 @@ $tierColors = [
                     <!-- Action -->
                     <div class="px-5 pb-5">
                         <template x-if="modal.data.state === 'available'">
-                            <form :action="`/skill-tree/${modal.data.node.id}/unlock`" method="POST">
-                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="w-full py-3 rounded-xl font-display font-bold text-sm transition shadow-lg text-white"
-                                    style="background: linear-gradient(135deg, #16a34a, #15803d);">
-                                    <i class="fas fa-unlock mr-2"></i> Unlock Skill Node
-                                </button>
-                            </form>
+                            <button @click="unlockNode(modal.data.node.id)"
+                                :disabled="unlocking"
+                                class="w-full py-3 rounded-xl font-display font-bold text-sm transition shadow-lg text-white disabled:opacity-60"
+                                style="background: linear-gradient(135deg, #16a34a, #15803d);">
+                                <template x-if="!unlocking">
+                                    <span><i class="fas fa-unlock mr-2"></i> Unlock Skill Node</span>
+                                </template>
+                                <template x-if="unlocking">
+                                    <span><i class="fas fa-spinner fa-spin mr-2"></i> Unlocking...</span>
+                                </template>
+                            </button>
                         </template>
                         <template x-if="modal.data.state === 'unlocked'">
                             <div class="text-center py-2 text-green-400 text-sm font-bold">
@@ -279,6 +283,7 @@ $tierColors = [
             isDragging: false,
             startX: 0, startY: 0,
             modal: { open: false, loading: false, data: null },
+            unlocking: false,
 
             stateColor(state) {
                 if (state === 'unlocked') return '#a855f7';
@@ -448,7 +453,8 @@ $tierColors = [
                     const res = await fetch(`/skill-tree/${nodeId}`, {
                         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                     });
-                    this.modal.data = await res.json();
+                    const data = await res.json();
+                    this.modal.data = data;
                 } catch(e) {
                     this.modal.open = false;
                 } finally {
@@ -456,7 +462,142 @@ $tierColors = [
                 }
             },
 
-            closeModal() { this.modal.open = false; this.modal.data = null; }
+            closeModal() { this.modal.open = false; this.modal.data = null; },
+
+            async unlockNode(nodeId) {
+                if (this.unlocking) return;
+                this.unlocking = true;
+                try {
+                    const res = await fetch(`/skill-tree/${nodeId}/unlock`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        // Update modal state
+                        if (this.modal.data) this.modal.data.state = 'unlocked';
+
+                        // Update the node element visuals on the canvas
+                        const nodeEl = document.getElementById(`node-${nodeId}`);
+                        if (nodeEl) {
+                            nodeEl.setAttribute('data-state', 'unlocked');
+                            const tier = nodeEl.getAttribute('data-tier') || 'basic';
+                            const tierColors = {
+                                core: '#f59e0b', basic: '#3b82f6', advanced: '#8b5cf6',
+                                master: '#ec4899', legendary: '#f97316'
+                            };
+                            const ring = tierColors[tier] || '#a855f7';
+
+                            // Update outer hex background + glow
+                            const outerHex = nodeEl.querySelector('.node-hex');
+                            if (outerHex) {
+                                outerHex.style.background = `linear-gradient(135deg, ${ring}99, ${ring}44)`;
+                                outerHex.style.boxShadow = `0 0 30px ${ring}b3, inset 0 0 20px ${ring}33`;
+
+                                // Update inner hex (first direct child div of outerHex)
+                                const innerHex = outerHex.querySelector('div');
+                                if (innerHex) {
+                                    innerHex.style.background = `linear-gradient(135deg, ${ring}66, ${ring}22)`;
+
+                                    // Update icon color
+                                    const icon = innerHex.querySelector('i');
+                                    if (icon) {
+                                        // Remove all text-color classes and set inline color
+                                        icon.className = icon.className.replace(/\btext-(?:green|gray|blue|purple|pink|amber|orange|red|violet)-\d+\b/g, '').trim();
+                                        icon.style.color = ring;
+                                    }
+                                }
+                            }
+
+                            // Remove the ping animation (was for available state)
+                            const ping = nodeEl.querySelector('.animate-ping');
+                            if (ping) ping.remove();
+
+                            // Remove lock overlay if present
+                            const lockOverlay = nodeEl.querySelector('.fa-lock')?.closest('div');
+                            if (lockOverlay) lockOverlay.remove();
+
+                            // Add check badge if not already there
+                            const nodeOuter = nodeEl.querySelector('.node-outer');
+                            if (nodeOuter && !nodeOuter.querySelector('.unlock-check')) {
+                                const check = document.createElement('div');
+                                check.className = 'unlock-check absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center border';
+                                check.style.cssText = `background: ${ring}33; border-color: ${ring}88;`;
+                                check.innerHTML = `<i class="fas fa-check text-[8px]" style="color: ${ring}"></i>`;
+                                nodeOuter.appendChild(check);
+                            }
+
+                            // Update label color
+                            const label = nodeEl.querySelector('.-bottom-7 span');
+                            if (label) {
+                                label.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/40';
+                                label.style.color = ring;
+                            }
+                        }
+
+                        // Fire unlock toast
+                        const tierColors = {
+                            core: '#f59e0b', basic: '#3b82f6', advanced: '#8b5cf6',
+                            master: '#ec4899', legendary: '#f97316'
+                        };
+                        window.pushToast({
+                            label: (data.tier || 'skill').toUpperCase() + ' NODE UNLOCKED',
+                            title: data.title,
+                            sub: null,
+                            icon: data.icon || 'fas fa-code',
+                            color: tierColors[data.tier] || '#a855f7',
+                            duration: 4000,
+                        });
+
+                        // Fire badge toasts if any were earned
+                        if (data.new_badges && data.new_badges.length) {
+                            data.new_badges.forEach((badge, idx) => {
+                                setTimeout(() => window.pushToast({
+                                    label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
+                                    title: badge.title,
+                                    sub: '+' + badge.xp_reward + ' XP',
+                                    icon: badge.icon,
+                                    color: badge.rarity_color,
+                                    duration: 5000,
+                                }), (idx + 1) * 600);
+                            });
+                        }
+
+                        // Level-up overlay if leveled up
+                        if (data.level_up) {
+                            setTimeout(() => {
+                                // Dispatch to appShell via a custom event on the body
+                                document.body.dispatchEvent(new CustomEvent('trigger-level-up', { detail: data.level_up }));
+                            }, 300);
+                        }
+                    } else {
+                        window.pushToast({
+                            label: 'UNLOCK FAILED',
+                            title: data.message || 'Could not unlock node',
+                            sub: null,
+                            icon: 'fas fa-times-circle',
+                            color: '#ef4444',
+                            duration: 4000,
+                        });
+                    }
+                } catch(e) {
+                    window.pushToast({
+                        label: 'ERROR',
+                        title: 'Something went wrong',
+                        sub: null,
+                        icon: 'fas fa-exclamation-triangle',
+                        color: '#f59e0b',
+                        duration: 3000,
+                    });
+                } finally {
+                    this.unlocking = false;
+                }
+            },
         }
     }
     </script>

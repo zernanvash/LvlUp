@@ -50,6 +50,10 @@ class ProjectController extends Controller
             $xpReward += min($lines * 2, 400); // Max +400 XP for code
         }
         
+        // Snapshot which nodes are already available BEFORE creating the project
+        $user = auth()->user();
+        $alreadyAvailableIds = $this->getAvailableNodeIds($user);
+
         $project = auth()->user()->projects()->create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
@@ -81,7 +85,16 @@ class ProjectController extends Controller
             $suggestions = $project->analyzeCodeAndSuggestSkills($validated['content']);
             $project->attachSkillsFromTags($suggestions);
         }
-        
+
+        // Check badges ONCE after all skills are attached, then flash
+        $newBadges = $project->fresh()->checkBadgesAndReturn();
+        if (!empty($newBadges)) {
+            session()->flash('new_badges', $newBadges);
+        }
+
+        // Only notify about nodes that NEWLY became available (weren't available before)
+        $this->flashNewlyAvailableNodes($user->fresh(), $alreadyAvailableIds);
+
         return redirect()->route('dashboard')
             ->with('success', "Project created! You earned {$xpReward} XP!");
     }
@@ -126,7 +139,10 @@ class ProjectController extends Controller
             'is_featured' => 'boolean',
             'tags' => 'nullable|string',
         ]);
-        
+
+        $user = auth()->user();
+        $alreadyAvailableIds = $this->getAvailableNodeIds($user);
+
         $project->update($validated);
         
         // Update skills
@@ -135,7 +151,15 @@ class ProjectController extends Controller
             $tags = array_map('trim', explode(',', $request->tags));
             $project->attachSkillsFromTags($tags);
         }
-        
+
+        // Check badges ONCE after all changes, then flash
+        $newBadges = $project->fresh()->checkBadgesAndReturn();
+        if (!empty($newBadges)) {
+            session()->flash('new_badges', $newBadges);
+        }
+
+        $this->flashNewlyAvailableNodes($user->fresh(), $alreadyAvailableIds);
+
         return redirect()->route('projects.show', $project)
             ->with('success', 'Project updated successfully!');
     }
@@ -150,5 +174,56 @@ class ProjectController extends Controller
         
         return redirect()->route('dashboard')
             ->with('success', 'Project deleted successfully!');
+    }
+
+    /**
+     * Get IDs of all nodes currently available (but not yet unlocked) for a user.
+     */
+    private function getAvailableNodeIds($user): array
+    {
+        $user->loadMissing('unlockedNodes');
+        $unlockedIds = $user->unlockedNodes->pluck('id')->toArray();
+
+        return \App\Models\SkillNode::whereNotIn('id', $unlockedIds)
+            ->get()
+            ->filter(fn($node) => $node->canBeUnlockedBy($user))
+            ->pluck('id')
+            ->toArray();
+    }
+
+    /**
+     * Flash only nodes that NEWLY became available after a project change.
+     * $previouslyAvailableIds = snapshot taken before the change.
+     */
+    private function flashNewlyAvailableNodes($user, array $previouslyAvailableIds): void
+    {
+        $user->loadMissing('unlockedNodes');
+        $unlockedIds = $user->unlockedNodes->pluck('id')->toArray();
+
+        $tierColors = [
+            'core'      => '#f59e0b',
+            'basic'     => '#3b82f6',
+            'advanced'  => '#8b5cf6',
+            'master'    => '#ec4899',
+            'legendary' => '#f97316',
+        ];
+
+        $newlyReady = \App\Models\SkillNode::with('skill')
+            ->whereNotIn('id', $unlockedIds)
+            ->whereNotIn('id', $previouslyAvailableIds) // exclude already-available ones
+            ->get()
+            ->filter(fn($node) => $node->canBeUnlockedBy($user))
+            ->map(fn($node) => [
+                'title' => $node->title,
+                'tier'  => $node->tier,
+                'icon'  => $node->skill->icon ?? 'fas fa-code',
+                'color' => $tierColors[$node->tier] ?? '#22c55e',
+            ])
+            ->values()
+            ->toArray();
+
+        if (!empty($newlyReady)) {
+            session()->flash('nodes_ready', $newlyReady);
+        }
     }
 }

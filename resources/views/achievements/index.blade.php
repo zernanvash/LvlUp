@@ -5,56 +5,50 @@
 @section('page_subtitle', 'Your legendary accomplishments')
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-8" x-data="badgeManager()">
-    
-    <!-- Equipped Badges Display -->
-    @php
-        $equippedBadges = auth()->user()->badges()->wherePivot('is_displayed', true)->orderBy('user_badges.created_at', 'asc')->get();
-        $equippedCount = $equippedBadges->count();
-    @endphp
-    
-    @if($equippedCount > 0)
-    <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur">
+@php
+    $equippedBadges = auth()->user()->badges()->wherePivot('is_displayed', true)->orderBy('user_badges.created_at', 'asc')->get();
+    $equippedCount  = $equippedBadges->count();
+
+    // Build JS-safe array of equipped badges for Alpine
+    $equippedJs = $equippedBadges->map(fn($b) => [
+        'id'     => $b->id,
+        'title'  => $b->title,
+        'icon'   => $b->icon,
+        'rarity' => $b->rarity,
+        'color'  => match($b->rarity) {
+            'uncommon'  => 'green',
+            'rare'      => 'blue',
+            'epic'      => 'purple',
+            'legendary' => 'amber',
+            'mythic'    => 'pink',
+            default     => 'gray',
+        },
+    ])->values()->toArray();
+@endphp
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- Equipped Badges Display (fully reactive via Alpine store) -->
+    <div x-data x-show="$store.achievements.equipped.length > 0" class="glow-border rounded-2xl p-6 bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-display text-xl font-bold text-white flex items-center gap-3">
                 <i class="fas fa-crown text-amber-400"></i>
                 Equipped Badges
-                <span class="text-sm text-purple-300 font-normal">({{ $equippedCount }}/6)</span>
+                <span class="text-sm text-purple-300 font-normal">(<span x-text="$store.achievements.equipped.length"></span>/6)</span>
             </h2>
         </div>
-        
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            @foreach($equippedBadges as $badge)
-            @php
-                $rarityColors = [
-                    'common' => 'gray',
-                    'uncommon' => 'green',
-                    'rare' => 'blue',
-                    'epic' => 'purple',
-                    'legendary' => 'amber',
-                    'mythic' => 'pink'
-                ];
-                $color = $rarityColors[$badge->rarity];
-            @endphp
-            <div class="relative group">
-                <div class="glow-border rounded-xl p-4 bg-gradient-to-br from-{{ $color }}-900/40 to-{{ $color }}-950/40 backdrop-blur text-center transition-transform hover:scale-105">
-                    <div class="text-4xl mb-2"><i class="{{ $badge->icon }}"></i></div>
-                    <p class="text-xs text-white font-bold truncate">{{ $badge->title }}</p>
-                    <p class="text-xs text-{{ $color }}-300 uppercase">{{ $badge->rarity }}</p>
-                </div>
-                
-                <!-- Tooltip -->
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                    <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-xl border border-{{ $color }}-500/30">
-                        {{ $badge->title }}
-                        <div class="text-{{ $color }}-300">{{ $badge->description }}</div>
+            <template x-for="b in $store.achievements.equipped" :key="b.id">
+                <div class="relative group">
+                    <div class="glow-border rounded-xl p-4 backdrop-blur text-center transition-transform hover:scale-105"
+                         :class="`bg-gradient-to-br from-${b.color}-900/40 to-${b.color}-950/40`">
+                        <div class="text-4xl mb-2"><i :class="b.icon"></i></div>
+                        <p class="text-xs text-white font-bold truncate" x-text="b.title"></p>
+                        <p class="text-xs uppercase" :class="`text-${b.color}-300`" x-text="b.rarity"></p>
                     </div>
                 </div>
-            </div>
-            @endforeach
+            </template>
         </div>
     </div>
-    @endif
 
     <!-- Progress Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -65,7 +59,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-amber-300">Total Badges</p>
-                    <p class="font-display text-3xl font-bold text-white">{{ $badgesByCategory->flatten()->where('earned', true)->count() }}</p>
+                    <p class="font-display text-3xl font-bold text-white">{{ $badgesByCategory->flatten(1)->filter(fn($b) => $b['earned'])->count() }}</p>
                 </div>
             </div>
         </div>
@@ -79,8 +73,8 @@
                     <p class="text-sm text-purple-300">Completion</p>
                     <p class="font-display text-3xl font-bold text-white">
                         @php
-                            $totalBadges = $badgesByCategory->flatten()->count();
-                            $earnedBadges = $badgesByCategory->flatten()->where('earned', true)->count();
+                            $totalBadges = $badgesByCategory->flatten(1)->count();
+                            $earnedBadges = $badgesByCategory->flatten(1)->filter(fn($b) => $b['earned'])->count();
                         @endphp
                         {{ $totalBadges > 0 ? round(($earnedBadges / $totalBadges) * 100) : 0 }}%
                     </p>
@@ -111,9 +105,9 @@
                 <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-crown text-2xl text-white"></i>
                 </div>
-                <div>
+                <div x-data>
                     <p class="text-sm text-pink-300">Equipped</p>
-                    <p class="font-display text-3xl font-bold text-white">{{ $equippedCount }}/6</p>
+                    <p class="font-display text-3xl font-bold text-white" x-text="$store.achievements.equipped.length + '/6'"></p>
                 </div>
             </div>
         </div>
@@ -216,25 +210,74 @@
                 
                 <!-- Action Buttons (for earned badges) -->
                 @if($isEarned)
-                <div class="bg-gradient-to-t from-black/20 to-transparent p-4">
-                    @if($isDisplayed)
-                        <form method="POST" action="{{ route('badges.unequip', $badge) }}" class="w-full">
-                            @csrf
-                            <button type="submit" 
-                                    class="w-full px-4 py-2 bg-red-500/30 hover:bg-red-500/50 border border-red-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors">
-                                <i class="fas fa-times-circle"></i> Unequip Badge
-                            </button>
-                        </form>
-                    @else
-                        <form method="POST" action="{{ route('badges.equip', $badge) }}" class="w-full">
-                            @csrf
-                            <button type="submit" 
-                                    class="w-full px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 border border-purple-500/50 rounded-lg text-xs font-bold text-white uppercase transition-colors {{ $equippedCount >= 6 ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                    {{ $equippedCount >= 6 ? 'disabled' : '' }}>
-                                <i class="fas fa-crown"></i> Equip Badge
-                            </button>
-                        </form>
-                    @endif
+                @php
+                    $badgeJs = [
+                        'id'     => $badge->id,
+                        'title'  => $badge->title,
+                        'icon'   => $badge->icon,
+                        'rarity' => $badge->rarity,
+                        'color'  => $color,
+                    ];
+                @endphp
+                <div class="bg-gradient-to-t from-black/20 to-transparent p-4"
+                     x-data="{ equipped: {{ $isDisplayed ? 'true' : 'false' }}, loading: false, badge: {{ Js::from($badgeJs) }} }">
+                    <button
+                        @click.prevent="
+                            if (loading) return;
+                            loading = true;
+                            fetch('{{ route('badges.toggle-display', $badge) }}', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                }
+                            })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.success) {
+                                    equipped = !equipped;
+                                    if (equipped) {
+                                        $store.achievements.add(badge);
+                                    } else {
+                                        $store.achievements.remove(badge.id);
+                                    }
+                                    window.pushToast({
+                                        label: equipped ? 'BADGE EQUIPPED' : 'BADGE UNEQUIPPED',
+                                        title: badge.title,
+                                        sub: null,
+                                        icon: badge.icon,
+                                        color: '{{ $badge->rarity_color }}',
+                                        duration: 2500,
+                                    });
+                                } else {
+                                    window.pushToast({
+                                        label: 'LIMIT REACHED',
+                                        title: data.message,
+                                        sub: null,
+                                        icon: 'fas fa-exclamation-triangle',
+                                        color: '#f59e0b',
+                                        duration: 3500,
+                                    });
+                                }
+                            })
+                            .finally(() => loading = false)
+                        "
+                        :disabled="loading || (!equipped && $store.achievements.equipped.length >= 6)"
+                        class="w-full px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all border"
+                        :class="equipped
+                            ? 'bg-red-500/20 hover:bg-red-500/40 border-red-500/50 text-red-300'
+                            : 'bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/50 text-purple-300 disabled:opacity-40 disabled:cursor-not-allowed'">
+                        <template x-if="loading">
+                            <span><i class="fas fa-spinner fa-spin mr-1"></i> ...</span>
+                        </template>
+                        <template x-if="!loading && equipped">
+                            <span><i class="fas fa-times-circle mr-1"></i> Unequip</span>
+                        </template>
+                        <template x-if="!loading && !equipped">
+                            <span><i class="fas fa-crown mr-1"></i> Equip</span>
+                        </template>
+                    </button>
                 </div>
                 @endif
             </div>
@@ -244,18 +287,24 @@
     @endforeach
 </div>
 
-<script>
-function badgeManager() {
-    return {
-        equippedCount: {{ $equippedCount }},
-        
-        init() {
-            // Listen for badge equip/unequip events
-            this.$watch('equippedCount', value => {
-                console.log('Equipped badges:', value);
-            });
-        }
-    }
-}
-</script>
+
 @endsection
+
+@push('scripts')
+<script>
+// Seed the Alpine store so nested badge components can access it
+document.addEventListener('alpine:init', () => {
+    Alpine.store('achievements', {
+        equipped: @json($equippedJs),
+        add(badge) {
+            if (!this.equipped.find(b => b.id === badge.id)) {
+                this.equipped.push(badge);
+            }
+        },
+        remove(id) {
+            this.equipped = this.equipped.filter(b => b.id !== id);
+        },
+    });
+});
+</script>
+@endpush

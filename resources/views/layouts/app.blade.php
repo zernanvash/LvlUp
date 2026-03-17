@@ -229,25 +229,22 @@
                 starsContainer.appendChild(star);
             }
         });
+
+        // Pre-Alpine toast queue — captures any calls before appShell.init() runs
+        window._toastQueue = [];
+        window.pushToast = (opts) => window._toastQueue.push(opts);
     </script>
 </head>
-<body class="animated-bg text-gray-100 min-h-screen" x-data="{ 
-    sidebarOpen: false, 
-    showLevelUp: false,
-    levelUpData: {},
-    init() {
-        if (window._levelUpData) {
-            this.levelUpData = window._levelUpData;
-            this.showLevelUp = true;
-            setTimeout(() => this.showLevelUp = false, 5000);
-        }
-    }
-}">
+<body class="animated-bg text-gray-100 min-h-screen" x-data="appShell()">
 
 @if(session('level_up'))
-<script>
-    window._levelUpData = @json(session('level_up'));
-</script>
+<script>window._levelUpData = @json(session('level_up'));</script>
+@endif
+@if(session('new_badges'))
+<script>window._newBadges = @json(session('new_badges'));</script>
+@endif
+@if(session('nodes_ready'))
+<script>window._nodesReady = @json(session('nodes_ready'));</script>
 @endif
 
 <!-- Level-Up Overlay -->
@@ -487,5 +484,123 @@
     <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"></div>
 
     @yield('modals')
+    @stack('scripts')
+
+    <!-- ── Toast Notification Stack ─────────────────────────────────────── -->
+    <div class="fixed bottom-6 right-6 z-[9998] flex flex-col gap-3 pointer-events-none" id="toastStack">
+        <template x-for="(toast, i) in toasts" :key="toast.id">
+            <div class="pointer-events-auto flex items-start gap-4 px-5 py-4 rounded-2xl border shadow-2xl backdrop-blur-xl w-80"
+                x-show="toast.visible"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-x-10 scale-90"
+                x-transition:enter-end="opacity-100 translate-x-0 scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-x-0 scale-100"
+                x-transition:leave-end="opacity-0 translate-x-10 scale-90"
+                :style="`background: linear-gradient(135deg, #12152e f0, #1e1040 d0); border-color: ${toast.color}66;
+                         box-shadow: 0 0 40px ${toast.color}55, 0 8px 32px rgba(0,0,0,0.6);`"
+                @click="dismissToast(toast.id)">
+                <!-- Icon -->
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
+                    :style="`background: ${toast.color}22; border: 1.5px solid ${toast.color}66; color: ${toast.color};
+                             box-shadow: 0 0 16px ${toast.color}44;`">
+                    <i :class="toast.icon"></i>
+                </div>
+                <!-- Text -->
+                <div class="flex-1 min-w-0">
+                    <p class="text-[11px] uppercase tracking-widest font-bold mb-1" :style="`color: ${toast.color}`" x-text="toast.label"></p>
+                    <p class="text-white font-bold text-base leading-tight" x-text="toast.title"></p>
+                    <p x-show="toast.sub" class="text-gray-300 text-sm mt-1" x-text="toast.sub"></p>
+                </div>
+                <!-- Progress bar -->
+                <div class="absolute bottom-0 left-0 h-1 rounded-b-2xl"
+                    :style="`width: ${toast.progress}%; background: linear-gradient(90deg, ${toast.color}, ${toast.color}88); transition: width ${toast.duration}ms linear;`"></div>
+            </div>
+        </template>
+    </div>
+
+    <script>
+    function appShell() {
+        return {
+            sidebarOpen: false,
+            showLevelUp: false,
+            levelUpData: {},
+            toasts: [],
+            _toastId: 0,
+
+            init() {
+                // Replace the pre-Alpine stub FIRST so session toasts use the real impl
+                window.pushToast = (opts) => this.pushToast(opts);
+                if (window._toastQueue && window._toastQueue.length) {
+                    window._toastQueue.forEach(opts => this.pushToast(opts));
+                    window._toastQueue = [];
+                }
+
+                // Level-up overlay
+                if (window._levelUpData) {
+                    this.levelUpData = window._levelUpData;
+                    this.showLevelUp = true;
+                    setTimeout(() => this.showLevelUp = false, 5000);
+                }
+                // Badge unlock toasts — queue them with stagger
+                if (window._newBadges && window._newBadges.length) {
+                    window._newBadges.forEach((badge, idx) => {
+                        setTimeout(() => this.pushToast({
+                            label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
+                            title: badge.title,
+                            sub: '+' + badge.xp_reward + ' XP',
+                            icon: badge.icon,
+                            color: badge.rarity_color,
+                            duration: 5000,
+                        }), idx * 600);
+                    });
+                }
+
+                // Skill nodes that just became available to unlock
+                if (window._nodesReady && window._nodesReady.length) {
+                    const badgeDelay = window._newBadges ? window._newBadges.length * 600 : 0;
+                    window._nodesReady.forEach((node, idx) => {
+                        setTimeout(() => this.pushToast({
+                            label: '⚡ SKILL READY TO UNLOCK',
+                            title: node.title,
+                            sub: 'Head to the Skill Tree to claim it!',
+                            icon: node.icon,
+                            color: node.color,
+                            duration: 6000,
+                        }), badgeDelay + idx * 700);
+                    });
+                }
+
+                // Listen for AJAX-triggered level-up (e.g. from skill tree unlock)
+                document.body.addEventListener('trigger-level-up', (e) => {
+                    this.levelUpData = e.detail;
+                    this.showLevelUp = true;
+                    setTimeout(() => this.showLevelUp = false, 5000);
+                });
+            },
+
+            pushToast({ label, title, sub, icon, color, duration = 4000 }) {
+                const id = ++this._toastId;
+                const toast = { id, label, title, sub, icon, color, duration, visible: true, progress: 100 };
+                this.toasts.push(toast);
+                // Animate progress bar down
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        const t = this.toasts.find(x => x.id === id);
+                        if (t) t.progress = 0;
+                    }, 50);
+                });
+                // Auto-dismiss
+                setTimeout(() => this.dismissToast(id), duration + 300);
+            },
+
+            dismissToast(id) {
+                const t = this.toasts.find(x => x.id === id);
+                if (t) t.visible = false;
+                setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id); }, 300);
+            },
+        };
+    }
+    </script>
 </body>
 </html>
