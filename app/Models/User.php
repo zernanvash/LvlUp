@@ -35,6 +35,7 @@ class User extends Authenticatable
         'rank',
         'is_public',
         'last_login',
+        'last_activity_date',
         'streak_days',
         // Contact (private / resume-only)
         'phone_number',
@@ -63,6 +64,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login' => 'date',
+        'last_activity_date' => 'date',
         'password' => 'hashed',
         'visibility_settings' => 'array',
     ];
@@ -163,23 +165,31 @@ class User extends Authenticatable
         return max(0, $this->xpNeededForNextLevel() - $this->xp);
     }
 
-    public function updateLoginStreak(): void
+    /**
+     * Called when a user completes a meaningful activity (project created/updated,
+     * skill node unlocked). Increments streak by at most 1 per calendar day.
+     */
+    public function recordActivityStreak(): void
     {
         $today = now()->toDateString();
-        $lastLogin = $this->last_login ? $this->last_login->toDateString() : null;
+        $lastActivity = $this->last_activity_date
+            ? $this->last_activity_date->toDateString()
+            : null;
 
-        if ($lastLogin === $today) {
-            return; // Already logged in today
+        // Already recorded activity today — no change
+        if ($lastActivity === $today) {
+            return;
         }
 
         $yesterday = now()->subDay()->toDateString();
-        if ($lastLogin === $yesterday) {
+        if ($lastActivity === $yesterday) {
             $this->streak_days = ($this->streak_days ?? 0) + 1;
         } else {
-            $this->streak_days = 1; // Reset streak
+            // Missed a day (or first ever activity) — reset to 1
+            $this->streak_days = 1;
         }
 
-        $this->last_login = $today;
+        $this->last_activity_date = $today;
         $this->save();
     }
 

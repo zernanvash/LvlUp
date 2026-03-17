@@ -36,13 +36,6 @@
             {{ $t['label'] }}
         </button>
         @endforeach
-
-        @if($user->is_public)
-        <a href="{{ $user->getPublicUrl() }}" target="_blank"
-           class="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 border border-emerald-500/30 transition-all whitespace-nowrap">
-            <i class="fas fa-external-link-alt text-xs"></i> View Public Profile
-        </a>
-        @endif
     </div>
 
     {{-- Flash Messages --}}

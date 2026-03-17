@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SkillTreeController;
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\UserSearchController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -55,11 +56,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/visibility', [ProfileController::class, 'updateVisibility'])->name('profile.visibility');
+    Route::post('/profile/visibility', [ProfileController::class, 'updateVisibility'])->name('profile.visibility');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
     Route::patch('/profile/toggle-visibility', [ProfileController::class, 'toggleVisibility'])->name('profile.toggle-visibility');
     
+    // Discover / User Search
+    Route::get('/users', [UserSearchController::class, 'index'])->name('users.index');
+
     // Public Profile
     Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 });

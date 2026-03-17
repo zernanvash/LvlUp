@@ -13,8 +13,11 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Update login streak on dashboard visit
-        $user->updateLoginStreak();
+        // Track last login date (separate from activity streak)
+        if (!$user->last_login || $user->last_login->toDateString() !== now()->toDateString()) {
+            $user->last_login = now()->toDateString();
+            $user->save();
+        }
 
         $projects = $user->projects()
             ->with('skills')

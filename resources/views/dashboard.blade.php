@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Your knowledge empire at a glance')
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-8">
+<div class="max-w-7xl mx-auto space-y-8" x-data="{ guideOpen: false }">
 
     <!-- XP Milestone Banner -->
     @if($showMilestoneBanner)
@@ -27,14 +27,11 @@
     @endif
 
     <!-- XP Progress Section -->
-    <div
-        class="glow-border rounded-3xl p-5 bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-purple-900/40 backdrop-blur relative overflow-hidden">
+    <div class="glow-border rounded-3xl p-5 bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-purple-900/40 backdrop-blur relative">
         <!-- Animated Background -->
-        <div
-            class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-purple-600/10 animate-pulse">
-        </div>
+        <div class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-purple-600/10 animate-pulse rounded-3xl"></div>
 
-        <div class="flex items-center gap-3">
+        <div class="relative flex items-center gap-3">
             {{-- Left: Level + XP --}}
             <div class="text-sm whitespace-nowrap">
                 <span class="font-semibold">Level {{ auth()->user()->level }} {{ auth()->user()->getRankTitle() }}</span><br>
@@ -47,23 +44,105 @@
 
             {{-- Middle: Progress Bar --}}
             <div class="flex-1">
-                <div class="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 ">
+                <div class="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full">
                     <div class="bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full h-2 transition-all duration-1000 ease-out" style="width: {{ auth()->user()->xpProgress() }}%"></div>
-                </div>
-                <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <span class="font-display font-bold text-white text-sm drop-shadow-lg">
-                        {{ number_format(auth()->user()->xpProgress(), 1) }}%
-                    </span>
                 </div>
             </div>
 
-            {{-- Right: Next Level --}}
-            <div class="text-sm text-right whitespace-nowrap">
-                <span class="font-semibold">Next Level</span><br>
-                <span class="text-xs text-gray-400">
-                    {{ number_format(auth()->user()->xpNeededForNextLevel() - auth()->user()->xp) }} XP
-                    to Level {{ auth()->user()->level + 1 }}
-                </span>
+            {{-- Right: Next Level + Guide Button --}}
+            <div class="text-sm text-right whitespace-nowrap flex items-center gap-3">
+                <div>
+                    <span class="font-semibold">Next Level</span><br>
+                    <span class="text-xs text-gray-400">
+                        {{ number_format(auth()->user()->xpNeededForNextLevel() - auth()->user()->xp) }} XP
+                        to Level {{ auth()->user()->level + 1 }}
+                    </span>
+                </div>
+                <button @click="guideOpen = true"
+                    class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/60 hover:text-white text-xs font-bold transition flex items-center justify-center flex-shrink-0"
+                    title="Progression Guide">?</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progression Guide Modal -->
+    <div x-show="guideOpen" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        @keydown.escape.window="guideOpen = false">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="guideOpen = false"></div>
+        <div class="relative z-10 w-full max-w-lg bg-[#1a1040] border border-purple-500/30 rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[85vh]">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="font-display text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-book-open text-purple-400"></i> Progression Guide
+                </h2>
+                <button @click="guideOpen = false" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- XP Sources -->
+            <div class="mb-5">
+                <h3 class="text-sm font-bold text-purple-300 uppercase tracking-wider mb-2">XP Sources</h3>
+                <div class="space-y-1 text-sm">
+                    <div class="flex justify-between py-1 border-b border-white/5">
+                        <span class="text-gray-300">Create a project</span>
+                        <span class="text-purple-300 font-bold">100 XP base</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-white/5">
+                        <span class="text-gray-300">Code lines (+2/line)</span>
+                        <span class="text-purple-300 font-bold">up to +400 XP</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-white/5">
+                        <span class="text-gray-300">Common badge</span>
+                        <span class="text-gray-300 font-bold">50 XP</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-white/5">
+                        <span class="text-gray-300">Rare badge</span>
+                        <span class="text-blue-300 font-bold">150 XP</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-white/5">
+                        <span class="text-gray-300">Epic badge</span>
+                        <span class="text-purple-300 font-bold">300 XP</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-gray-300">Legendary badge</span>
+                        <span class="text-amber-300 font-bold">500 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rank Thresholds -->
+            <div class="mb-5">
+                <h3 class="text-sm font-bold text-purple-300 uppercase tracking-wider mb-2">Ranks</h3>
+                <div class="grid grid-cols-2 gap-1 text-sm">
+                    @foreach([['Bronze','Junior Dev','L1','gray'],['Silver','Mid Dev','L10','blue'],['Gold','Senior Dev','L25','yellow'],['Platinum','Tech Lead','L50','cyan'],['Diamond','Architect','L75','violet'],['Master','Legend','L100','pink']] as [$rank,$title,$level,$color])
+                    <div class="flex items-center gap-2 py-1 px-2 rounded bg-white/5">
+                        <span class="text-{{ $color }}-400 font-bold text-xs w-8">{{ $level }}</span>
+                        <span class="text-gray-300">{{ $rank }}</span>
+                        <span class="text-gray-500 text-xs ml-auto">{{ $title }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Streak -->
+            <div>
+                <h3 class="text-sm font-bold text-purple-300 uppercase tracking-wider mb-2">Activity Streak</h3>
+                <div class="space-y-1 text-sm text-gray-300">
+                    <p>Earn +1 streak day by adding/editing a project or unlocking a skill node. Max once per calendar day.</p>
+                    <div class="mt-2 space-y-1">
+                        <div class="flex justify-between py-1 border-b border-white/5">
+                            <span>3+ day streak</span><span class="text-orange-300 font-bold">+10% XP</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-white/5">
+                            <span>6+ day streak</span><span class="text-orange-300 font-bold">+20% XP</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span>Max (30 days)</span><span class="text-orange-300 font-bold">+100% XP (2×)</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Missing a day resets your streak to 1.</p>
+                </div>
             </div>
         </div>
     </div>

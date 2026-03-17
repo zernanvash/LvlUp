@@ -426,6 +426,11 @@
                 <span class="font-medium {{ Request::is('achievements') ? 'text-white' : 'text-gray-300' }}">Achievements</span>
             </a>
             
+            <a href="{{ route('users.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('users*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
+                <i class="fas fa-users w-5 text-center {{ Request::is('users*') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
+                <span class="font-medium {{ Request::is('users*') ? 'text-white' : 'text-gray-300' }}">Discover</span>
+            </a>
+            
             <a href="/resume" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('resume') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
                 <i class="fas fa-file-alt w-5 text-center {{ Request::is('resume') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
                 <span class="font-medium {{ Request::is('resume') ? 'text-white' : 'text-gray-300' }}">Resume Builder</span>

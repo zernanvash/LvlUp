@@ -115,6 +115,9 @@ class SkillTreeController extends Controller
         try {
             $user->unlockedNodes()->attach($node->id, ['unlocked_at' => now()]);
 
+            // Record activity streak (max +1 per calendar day)
+            $user->fresh()->recordActivityStreak();
+
             // Collect any badges earned (via XP from skill unlock)
             // We check badges manually here since no Project event fires
             $newBadges = $this->checkSkillNodeBadges($user);

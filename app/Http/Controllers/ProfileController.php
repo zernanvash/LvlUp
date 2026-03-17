@@ -101,7 +101,7 @@ class ProfileController extends Controller
 
         $request->user()->update(['visibility_settings' => $settings]);
 
-        return Redirect::route('profile.edit')->with('status', 'visibility-updated');
+        return Redirect::route('profile.edit')->with('status', 'visibility-updated')->with('active_tab', 'visibility');
     }
 
     /**

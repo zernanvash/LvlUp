@@ -92,6 +92,9 @@ class ProjectController extends Controller
             session()->flash('new_badges', $newBadges);
         }
 
+        // Record activity streak (max +1 per calendar day regardless of project count)
+        $user->fresh()->recordActivityStreak();
+
         // Only notify about nodes that NEWLY became available (weren't available before)
         $this->flashNewlyAvailableNodes($user->fresh(), $alreadyAvailableIds);
 
@@ -157,6 +160,9 @@ class ProjectController extends Controller
         if (!empty($newBadges)) {
             session()->flash('new_badges', $newBadges);
         }
+
+        // Record activity streak (max +1 per calendar day)
+        $user->fresh()->recordActivityStreak();
 
         $this->flashNewlyAvailableNodes($user->fresh(), $alreadyAvailableIds);
 
