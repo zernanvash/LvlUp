@@ -2,14 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
+use App\Models\Badge;
+use App\Models\Skill;
 use Illuminate\Http\Request;
-use App\Models\Project; // make sure this is here
 
 class DashboardController extends Controller
 {
-    public function dashboard()
+    public function index()
     {
-        $projects = Project::where('is_published', true)->get();
+        $user = auth()->user();
+        
+        // Get user's projects
+        $projects = $user->projects()
+            ->with('skills')
+            ->latest()
+            ->get();
+        
         return view('dashboard', compact('projects'));
     }
 }

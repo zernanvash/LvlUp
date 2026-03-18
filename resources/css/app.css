@@ -1,11 +1,299 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* Gamification Styles */
+@layer components {
+    /* Rarity-based node colors with enhanced glow effects */
+    .rarity-common {
+        @apply bg-gradient-to-br from-gray-500 to-gray-600;
+        box-shadow: 0 0 15px rgba(107, 114, 128, 0.3);
+    }
+    
+    .rarity-uncommon {
+        @apply bg-gradient-to-br from-green-500 to-green-600;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+    }
+    
+    .rarity-rare {
+        @apply bg-gradient-to-br from-blue-500 to-blue-600;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    
+    .rarity-epic {
+        @apply bg-gradient-to-br from-purple-500 to-purple-600;
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.6);
+    }
+    
+    .rarity-legendary {
+        @apply bg-gradient-to-br from-amber-500 to-orange-600;
+        box-shadow: 0 0 30px rgba(245, 158, 11, 0.7);
+        animation: legendary-pulse 3s ease-in-out infinite;
+    }
+    
+    .rarity-mythic {
+        @apply bg-gradient-to-br from-pink-500 to-rose-600;
+        box-shadow: 0 0 35px rgba(236, 72, 153, 0.8);
+        animation: mythic-glow 2s ease-in-out infinite;
+    }
+    
+    /* Animations for high-rarity items */
+    @keyframes legendary-pulse {
+        0%, 100% {
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.7);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.9);
+            transform: scale(1.02);
+        }
+    }
+    
+    @keyframes mythic-glow {
+        0%, 100% {
+            box-shadow: 0 0 35px rgba(236, 72, 153, 0.8);
+        }
+        50% {
+            box-shadow: 0 0 50px rgba(236, 72, 153, 1);
+        }
+    }
+    
+    /* Animated gradient background */
+    @keyframes gradient-shift {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+    
+    .animated-gradient {
+        background: linear-gradient(-45deg, #1a1d3e, #2d1b4e, #1a1d3e, #3d1b5e);
+        background-size: 400% 400%;
+        animation: gradient-shift 15s ease infinite;
+    }
+    
+    /* Particle effect container */
+    .particles-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+    }
+    
+    /* Floating particles */
+    @keyframes float-particle {
+        0% {
+            transform: translateY(100vh) translateX(0) scale(0);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100vh) translateX(100px) scale(1);
+            opacity: 0;
+        }
+    }
+    
+    .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.8), transparent);
+        border-radius: 50%;
+        animation: float-particle 20s linear infinite;
+    }
+    
+    .particle:nth-child(2n) {
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.6), transparent);
+        animation-duration: 25s;
+        animation-delay: 2s;
+    }
+    
+    .particle:nth-child(3n) {
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.5), transparent);
+        animation-duration: 30s;
+        animation-delay: 4s;
+    }
+    
+    /* Glow border effect */
+    .glow-border {
+        @apply border border-purple-500/30;
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .glow-border:hover {
+        border-color: rgba(168, 85, 247, 0.5);
+        box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+    }
+    
+    /* Button glow effect with shimmer */
+    .btn-glow {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-glow::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-glow:hover::before {
+        left: 100%;
+    }
+    
+    .btn-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Skill node hover effects */
+    .skill-node {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .skill-node:hover {
+        z-index: 10;
+    }
+    
+    /* Smooth fade-in animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* Card hover effect */
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Starfield background effect */
+    @keyframes twinkle {
+        0%, 100% {
+            opacity: 0.3;
+        }
+        50% {
+            opacity: 1;
+        }
+    }
+    
+    .star {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: white;
+        border-radius: 50%;
+        animation: twinkle 3s ease-in-out infinite;
+    }
+    
+    .star:nth-child(2n) {
+        animation-duration: 4s;
+        animation-delay: 1s;
+    }
+    
+    .star:nth-child(3n) {
+        animation-duration: 5s;
+        animation-delay: 2s;
+    }
+    
+    /* XP bar fill animation */
+    @keyframes xp-fill {
+        from {
+            width: 0%;
+        }
+    }
+    
+    .xp-bar-fill {
+        animation: xp-fill 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Shimmer effect for loading states */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+    
+    .shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite;
+    }
+}
+
+/* Alpine.js cloak */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Responsive adjustments for skill tree */
+@media (max-width: 768px) {
+    #skillTreeCanvas,
+    #skillNodes {
+        width: 100% !important;
+        min-width: 600px;
+    }
+    
+    .skill-node .w-20 {
+        @apply w-16 h-16;
+    }
+    
+    .skill-node .text-2xl {
+        @apply text-xl;
+    }
+    
+    .skill-node .text-xs {
+        @apply text-[10px];
+    }
+}
+
+@media (max-width: 640px) {
+    .skill-node .w-20 {
+        @apply w-14 h-14;
+    }
+    
+    .skill-node .text-2xl {
+        @apply text-lg;
+    }
 }
