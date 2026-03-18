@@ -66,7 +66,7 @@
     @endif
 
     <!-- Settings Panel -->
-    <div x-show="showSettings" x-transition class="space-y-6">
+    <div x-show="showSettings" x-transition x-cloak class="space-y-6">
 
         <!-- Profile Photo Upload -->
         <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur">
