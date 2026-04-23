@@ -139,21 +139,21 @@
             @if($resume->github_url ?? $user->github_url)<div class="contact-item">GitHub: {{ str_replace('https://', '', $resume->github_url ?? $user->github_url) }}</div>@endif
         </div>
 
-        @if(!empty($resumeData['skills']))
+        @if(!empty($ai_content['skills']))
         <div class="avoid-break">
             <div class="section-title-left">Skills</div>
             <div style="line-height: 1.9;">
-                @foreach(array_filter(array_map('trim', explode(',', $resumeData['skills']))) as $skill)
+                @foreach(array_filter(array_map('trim', explode(',', $ai_content['skills']))) as $skill)
                 <span class="skill-pill">{{ $skill }}</span>
                 @endforeach
             </div>
         </div>
         @endif
 
-        @if(!empty($resumeData['certifications']))
+        @if(!empty($ai_content['certifications']))
         <div class="avoid-break">
             <div class="section-title-left">Certifications</div>
-            <div style="white-space: pre-wrap; color: #d0d5dd; font-size: 10.5px; line-height: 1.6;">{{ $resumeData['certifications'] }}</div>
+            <div style="white-space: pre-wrap; color: #d0d5dd; font-size: 10.5px; line-height: 1.6;">{{ $ai_content['certifications'] }}</div>
         </div>
         @endif
 
@@ -173,28 +173,28 @@
         <div class="header-name">{{ $user->name }}</div>
         <div class="header-title">{{ $resume->job_title ?? $user->title ?? '' }}</div>
 
-        @if(!empty($resumeData['summary']))
-        <div class="summary-text">{{ $resumeData['summary'] }}</div>
+        @if(!empty($ai_content['summary']))
+        <div class="summary-text">{{ $ai_content['summary'] }}</div>
         @endif
 
-        @if(!empty($resumeData['experience']))
+        @if(!empty($ai_content['experience']))
         <div class="section-title-right">Work Experience</div>
-        <div class="content-body">{{ $resumeData['experience'] }}</div>
+        <div class="content-body">{{ $ai_content['experience'] }}</div>
         @endif
 
-        @if(!empty($resumeData['projects']))
+        @if(!empty($ai_content['projects']))
         <div class="section-title-right">Projects</div>
-        <div class="content-body">{{ $resumeData['projects'] }}</div>
+        <div class="content-body">{{ $ai_content['projects'] }}</div>
         @endif
 
-        @if(!empty($resumeData['education']))
+        @if(!empty($ai_content['education']))
         <div class="section-title-right">Education</div>
-        <div class="content-body">{{ $resumeData['education'] }}</div>
+        <div class="content-body">{{ $ai_content['education'] }}</div>
         @endif
 
-        @if(!empty($resumeData['achievements']))
+        @if(!empty($ai_content['achievements']))
         <div class="section-title-right">Achievements</div>
-        <div class="content-body">{{ $resumeData['achievements'] }}</div>
+        <div class="content-body">{{ $ai_content['achievements'] }}</div>
         @endif
     </div>
 </div>
