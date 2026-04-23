@@ -260,18 +260,23 @@ class ProjectController extends Controller
             $parsed    = parse_url($cloudinaryUrl);
             $cloudName = $parsed['host'];
             $apiKey    = $parsed['user'];
+            $apiSecret = $parsed['pass'];
 
             $endpoint = "https://api.cloudinary.com/v1_1/{$cloudName}/image/upload";
+
+            $timestamp = time();
+            $folder = 'projects';
+            $signature = sha1("folder={$folder}&timestamp={$timestamp}{$apiSecret}");
 
             $response = Http::attach(
                 'file',
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
             )->post($endpoint, [
-                'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'ml_preset'),
                 'api_key'       => $apiKey,
-                'folder'        => 'projects',
-                'resource_type' => 'image',
+                'timestamp'     => $timestamp,
+                'signature'     => $signature,
+                'folder'        => $folder,
             ]);
 
             if ($response->successful()) {

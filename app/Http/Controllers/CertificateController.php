@@ -117,15 +117,19 @@ class CertificateController extends Controller
             $resourceType = $isPdf ? 'raw' : 'image';
             $endpoint = "https://api.cloudinary.com/v1_1/{$cloudName}/{$resourceType}/upload";
 
+            $timestamp = time();
+            $folder = 'certificates';
+            $signature = sha1("folder={$folder}&timestamp={$timestamp}{$apiSecret}");
+
             $response = Http::attach(
                 'file',
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
             )->post($endpoint, [
-                'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'ml_preset'),
                 'api_key'       => $apiKey,
-                'folder'        => 'certificates',
-                'resource_type' => $resourceType,
+                'timestamp'     => $timestamp,
+                'signature'     => $signature,
+                'folder'        => $folder,
             ]);
 
             if ($response->successful()) {
