@@ -36,4 +36,22 @@ class Certificate extends Model
     {
         return $this->file_type === 'pdf';
     }
+
+    /**
+     * Get the PDF version of the file via Cloudinary format transformation.
+     */
+    public function getPdfUrlAttribute()
+    {
+        if ($this->isPdf()) return $this->file_path;
+        return preg_replace('/\.[^.]+$/', '.pdf', $this->file_path);
+    }
+
+    /**
+     * Get the PNG version of the file.
+     */
+    public function getPngUrlAttribute()
+    {
+        if ($this->isPdf()) return $this->file_path;
+        return preg_replace('/\.[^.]+$/', '.png', $this->file_path);
+    }
 }

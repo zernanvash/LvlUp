@@ -138,6 +138,32 @@
             </div>
         </div>
 
+        <!-- Thumbnail Upload -->
+        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-pink-900/40 to-pink-950/40 backdrop-blur">
+            <h2 class="font-display text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-image"></i>
+                </div>
+                Project Thumbnail
+            </h2>
+            
+            <div class="flex items-center gap-4">
+                @if($project->thumbnail)
+                    <div class="w-24 h-24 rounded-lg overflow-hidden border-2 border-pink-500/30 shrink-0">
+                        <img src="{{ $project->thumbnail }}" class="w-full h-full object-cover" alt="Current Thumbnail">
+                    </div>
+                @endif
+                <label class="flex-1 cursor-pointer">
+                    <div class="border-2 border-dashed border-pink-500/30 rounded-xl p-8 hover:border-pink-400 transition text-center">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-pink-400 mb-3"></i>
+                        <p class="text-pink-200 font-bold mb-1">Click to upload new thumbnail</p>
+                        <p class="text-xs text-pink-400">PNG, JPG up to 2MB (Replaces old image)</p>
+                    </div>
+                    <input type="file" name="thumbnail" accept="image/*" class="hidden">
+                </label>
+            </div>
+        </div>
+
         <!-- Submit -->
         <div class="flex items-center justify-between">
             <a href="{{ route('projects.show', $project) }}" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold transition">

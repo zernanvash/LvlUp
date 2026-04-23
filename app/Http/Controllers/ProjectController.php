@@ -6,6 +6,8 @@ use App\Models\Project;
 use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
@@ -70,8 +72,10 @@ class ProjectController extends Controller
         
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('projects', 'public');
-            $project->update(['thumbnail' => '/storage/' . $path]);
+            $cloudinaryData = $this->uploadToCloudinary($request->file('thumbnail'));
+            if ($cloudinaryData) {
+                $project->update(['thumbnail' => $cloudinaryData['secure_url']]);
+            }
         }
         
         // Attach skills from tags
@@ -141,12 +145,24 @@ class ProjectController extends Controller
             'project_type' => 'required|string|in:web,backend,fullstack,mobile,devops,ai,other',
             'is_featured' => 'boolean',
             'tags' => 'nullable|string',
+            'thumbnail' => 'nullable|image|max:2048',
         ]);
+        
+        $thumbnailFile = $validated['thumbnail'] ?? null;
+        unset($validated['thumbnail']);
 
         $user = auth()->user();
         $alreadyAvailableIds = $this->getAvailableNodeIds($user);
 
         $project->update($validated);
+        
+        // Handle thumbnail upload updates
+        if ($thumbnailFile) {
+            $cloudinaryData = $this->uploadToCloudinary($thumbnailFile);
+            if ($cloudinaryData) {
+                $project->update(['thumbnail' => $cloudinaryData['secure_url']]);
+            }
+        }
         
         // Update skills
         if ($request->has('tags')) {
@@ -230,6 +246,44 @@ class ProjectController extends Controller
 
         if (!empty($newlyReady)) {
             session()->flash('nodes_ready', $newlyReady);
+        }
+    }
+
+    /**
+     * Upload an image file to Cloudinary using the REST API.
+     */
+    private function uploadToCloudinary($file): ?array
+    {
+        try {
+            $cloudinaryUrl = config('services.cloudinary.url') ?? env('CLOUDINARY_URL');
+
+            $parsed    = parse_url($cloudinaryUrl);
+            $cloudName = $parsed['host'];
+            $apiKey    = $parsed['user'];
+
+            $endpoint = "https://api.cloudinary.com/v1_1/{$cloudName}/image/upload";
+
+            $response = Http::attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->post($endpoint, [
+                'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'ml_preset'),
+                'api_key'       => $apiKey,
+                'folder'        => 'projects',
+                'resource_type' => 'image',
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('Cloudinary project upload failed', ['response' => $response->body()]);
+            return null;
+
+        } catch (\Throwable $e) {
+            Log::error('Cloudinary project upload exception', ['error' => $e->getMessage()]);
+            return null;
         }
     }
 }

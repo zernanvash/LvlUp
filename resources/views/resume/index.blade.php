@@ -268,10 +268,21 @@
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                                    <a href="{{ $cert->file_path }}" target="_blank"
-                                       class="w-6 h-6 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition" title="View">
-                                        <i class="fas fa-external-link-alt text-blue-400 text-xs"></i>
-                                    </a>
+                                    @if($cert->isPdf())
+                                        <a href="{{ $cert->file_path }}" target="_blank"
+                                           class="w-6 h-6 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center hover:bg-red-500/30 transition" title="View PDF">
+                                            <i class="fas fa-file-pdf text-red-400 text-xs"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{ $cert->png_url }}" download target="_blank"
+                                           class="w-6 h-6 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition" title="View / Download as PNG">
+                                            <i class="fas fa-image text-blue-400 text-xs"></i>
+                                        </a>
+                                        <a href="{{ $cert->pdf_url }}" download target="_blank"
+                                           class="w-6 h-6 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center hover:bg-red-500/30 transition" title="View / Download as PDF">
+                                            <i class="fas fa-file-pdf text-red-400 text-xs"></i>
+                                        </a>
+                                    @endif
                                     <form method="POST" action="{{ route('certificates.regenerate-summary', $cert) }}" class="inline">
                                         @csrf
                                         <button type="submit" class="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center hover:bg-purple-500/30 transition" title="Re-summarize with AI">
