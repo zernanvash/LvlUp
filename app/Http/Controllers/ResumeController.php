@@ -3,180 +3,207 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resume;
-use App\Models\Project;
-use App\Models\Skill;
+use App\Services\AiResumeWriter;
 use App\Services\ResumeAnalyzer;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
+use Spatie\Browsershot\Browsershot;
 
 class ResumeController extends Controller
 {
     protected $analyzer;
+    protected $writer;
 
-    public function __construct(ResumeAnalyzer $analyzer)
+    public function __construct(ResumeAnalyzer $analyzer, AiResumeWriter $writer)
     {
         $this->analyzer = $analyzer;
+        $this->writer   = $writer;
     }
 
+    /**
+     * Show the full resume builder page at /resume.
+     * Loads all user profile data automatically.
+     */
     public function index()
     {
-        $user = auth()->user();
-        $resumes = $user->resumes()->latest()->paginate(10);
-        
-        return view('resumes.index', compact('resumes'));
+        $user = auth()->user()->load([
+            'projects.skills',
+            'certificates',
+            'unlockedNodes.skill',
+        ]);
+
+        // Latest resume (if any)
+        $resume = $user->resumes()->latest()->first();
+
+        return view('resume.index', compact('user', 'resume'));
     }
 
-    public function create()
-    {
-        return view('resumes.create');
-    }
-
-    public function show(Resume $resume)
-    {
-        // Ensure user owns this resume
-        if ($resume->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        $projects = $resume->getSelectedProjects();
-        $skills = $resume->getSelectedSkills();
-
-        return view('resumes.show', compact('resume', 'projects', 'skills'));
-    }
-
-    
+    /**
+     * Analyze a job description — returns ranked projects + keywords.
+     */
     public function analyze(Request $request)
     {
         $validated = $request->validate([
             'job_description' => 'required|string',
         ]);
-        
-        $user = auth()->user();
-        
-        // Extract keywords from job description
-        $keywords = $this->analyzer->extractKeywords($validated['job_description']);
-        
-        // Rank user's projects by relevance
+
+        $user = auth()->user()->load('projects.skills');
+
+        $keywords      = $this->analyzer->extractKeywords($validated['job_description']);
         $rankedProjects = $this->analyzer->rankProjects($user->projects, $keywords);
-        
-        // Calculate match score
-        $matchScore = $this->analyzer->calculateMatchScore($user, $keywords);
-        
+        $matchScore    = $this->analyzer->calculateMatchScore($user, $keywords);
+
         return response()->json([
-            'success' => true,
-            'keywords' => $keywords,
-            'projects' => $rankedProjects->map(function ($project) {
-                return [
-                    'id' => $project->id,
-                    'name' => $project->name,
-                    'description' => $project->description,
-                    'relevance_score' => $project->relevance_score ?? 0,
-                    'skills' => $project->skills->pluck('name'),
-                ];
-            }),
+            'success'     => true,
+            'keywords'    => $keywords,
             'match_score' => $matchScore,
+            'projects'    => $rankedProjects->map(fn($p) => [
+                'id'              => $p->id,
+                'name'            => $p->name,
+                'description'     => $p->description,
+                'relevance_score' => round($p->relevance_score ?? 0),
+                'skills'          => $p->skills->pluck('name'),
+            ]),
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * Generate an AI-written resume from all user profile data.
+     */
+    public function generate(Request $request)
     {
         $validated = $request->validate([
-            'job_title' => 'required|string|max:255',
-            'job_description' => 'required|string',
-            'selected_project_ids' => 'required|array',
-            'selected_project_ids.*' => 'exists:projects,id',
-            'selected_skill_ids' => 'nullable|array',
-            'selected_skill_ids.*' => 'exists:skills,id',
-            'template' => 'nullable|string|in:modern,classic,minimal,creative',
+            'job_title'           => 'required|string|max:255',
+            'job_description'     => 'nullable|string',
+            'selected_project_ids'=> 'nullable|array',
+            'template'            => 'nullable|string|in:modern,classic,minimal,creative',
         ]);
-        
-        $user = auth()->user();
-        
-        // Extract keywords for storage
-        $keywords = $this->analyzer->extractKeywords($validated['job_description']);
-        
-        // Calculate match score
-        $matchScore = $this->analyzer->calculateMatchScore($user, $keywords);
-        
-        // Create resume record
-        $resume = $user->resumes()->create([
-            'job_title' => $validated['job_title'],
-            'job_description' => $validated['job_description'],
-            'selected_project_ids' => $validated['selected_project_ids'],
-            'selected_skill_ids' => $validated['selected_skill_ids'] ?? [],
-            'target_keywords' => implode(', ', $keywords),
-            'match_score' => $matchScore,
-            'template' => $validated['template'] ?? 'modern',
+
+        $user = auth()->user()->load([
+            'projects.skills',
+            'certificates',
+            'unlockedNodes.skill',
         ]);
-        
-        return redirect()->route('resumes.show', $resume)
-            ->with('success', 'Resume configuration saved successfully!');
+
+        $selectedIds = $validated['selected_project_ids'] ?? $user->projects->pluck('id')->toArray();
+        $projects    = $user->projects->whereIn('id', $selectedIds);
+        $skills      = $user->unlockedNodes->map(fn($n) => $n->skill)->filter();
+        $certificates= $user->certificates;
+
+        // Extract keywords for match scoring
+        $jobDesc  = $validated['job_description'] ?? '';
+        $keywords = $jobDesc ? $this->analyzer->extractKeywords($jobDesc) : [];
+        $matchScore = $keywords ? $this->analyzer->calculateMatchScore($user, $keywords) : 0;
+
+        // Generate AI content
+        $aiContent = $this->writer->generate($user, (object)[
+            'job_title'       => $validated['job_title'],
+            'job_description' => $jobDesc,
+        ], $projects, $skills, $certificates);
+
+        // Save/update the resume record
+        $resume = $user->resumes()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'job_title'            => $validated['job_title'],
+                'job_description'      => $jobDesc,
+                'selected_project_ids' => $selectedIds,
+                'target_keywords'      => implode(', ', $keywords),
+                'match_score'          => $matchScore,
+                'template'             => $validated['template'] ?? 'modern',
+                'ai_content'           => json_encode($aiContent),
+            ]
+        );
+
+        return response()->json([
+            'success'    => true,
+            'ai_content' => $aiContent,
+            'resume_id'  => $resume->id,
+            'match_score'=> round($matchScore),
+        ]);
     }
 
-    public function update(Request $request, Resume $resume)
+    /**
+     * Download the resume as PDF.
+     */
+    public function download(Request $request)
     {
-        // Ensure user owns this resume
-        if ($resume->user_id !== auth()->id()) {
-            abort(403);
+        $user = auth()->user()->load([
+            'projects.skills',
+            'certificates',
+            'unlockedNodes.skill',
+        ]);
+
+        $resume = $user->resumes()->latest()->first();
+
+        if (!$resume) {
+            return back()->with('error', 'Please generate your resume first.');
         }
 
-        $validated = $request->validate([
-            'job_title' => 'sometimes|string|max:255',
-            'job_description' => 'sometimes|string',
-            'selected_project_ids' => 'sometimes|array',
-            'selected_project_ids.*' => 'exists:projects,id',
-            'selected_skill_ids' => 'sometimes|array',
-            'selected_skill_ids.*' => 'exists:skills,id',
+        $aiContent   = json_decode($resume->ai_content ?? '{}', true);
+        $selectedIds = $resume->selected_project_ids ?? [];
+        $projects    = $user->projects->whereIn('id', $selectedIds);
+        $template    = $request->input('template', $resume->template ?? 'modern');
+
+        $html = view('resume.pdf.' . $template, [
+            'user'       => $user,
+            'resume'     => $resume,
+            'projects'   => $projects,
+            'ai_content' => $aiContent,
+        ])->render();
+
+        $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
+
+        return response()->streamDownload(function () use ($html) {
+            echo Browsershot::html($html)
+                ->format('A4')
+                ->margins(0, 0, 0, 0)
+                ->showBackground()
+                ->waitUntilNetworkIdle()
+                ->pdf();
+        }, $filename);
+    }
+
+    /**
+     * Preview the resume as PDF inline.
+     */
+    public function preview(Request $request)
+    {
+        $user = auth()->user()->load([
+            'projects.skills',
+            'certificates',
+            'unlockedNodes.skill',
         ]);
-        
-        // Update resume
-        $resume->update($validated);
-        
-        // Recalculate match score if job description changed
-        if (isset($validated['job_description'])) {
-            $keywords = $this->analyzer->extractKeywords($validated['job_description']);
-            $matchScore = $this->analyzer->calculateMatchScore(auth()->user(), $keywords);
-            $resume->update([
-                'target_keywords' => implode(', ', $keywords),
-                'match_score' => $matchScore,
-            ]);
+
+        $resume = $user->resumes()->latest()->first();
+
+        if (!$resume) {
+            return response('Please generate your resume first.', 404);
         }
-        
-        return redirect()->route('resumes.show', $resume)
-            ->with('success', 'Resume updated successfully!');
-    }
-    
-    public function generate(Resume $resume)
-    {
-        // Ensure user owns this resume
-        if ($resume->user_id !== auth()->id()) {
-            abort(403);
-        }
-        
-        // Generate PDF using Resume model method
-        $path = $resume->generatePDF('modern');
-        
-        return redirect()->route('resumes.show', $resume)
-            ->with('success', 'Resume PDF generated successfully!');
-    }
-    
-    public function download(Resume $resume)
-    {
-        // Ensure user owns this resume
-        if ($resume->user_id !== auth()->id()) {
-            abort(403);
-        }
-        
-        if (!$resume->pdf_path) {
-            return redirect()->back()->with('error', 'Resume PDF has not been generated yet.');
-        }
-        
-        $fullPath = storage_path('app/' . $resume->pdf_path);
-        
-        if (!file_exists($fullPath)) {
-            return redirect()->back()->with('error', 'Resume file not found.');
-        }
-        
-        return response()->download($fullPath, 'resume_' . $resume->job_title . '.pdf');
+
+        $aiContent   = json_decode($resume->ai_content ?? '{}', true);
+        $selectedIds = $resume->selected_project_ids ?? [];
+        $projects    = $user->projects->whereIn('id', $selectedIds);
+        $template    = $request->input('template', $resume->template ?? 'modern');
+
+        $html = view('resume.pdf.' . $template, [
+            'user'       => $user,
+            'resume'     => $resume,
+            'projects'   => $projects,
+            'ai_content' => $aiContent,
+        ])->render();
+
+        $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
+
+        $pdf = Browsershot::html($html)
+            ->format('A4')
+            ->margins(0, 0, 0, 0)
+            ->showBackground()
+            ->waitUntilNetworkIdle()
+            ->pdf();
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 }

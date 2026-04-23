@@ -7,26 +7,66 @@ use Illuminate\Support\Facades\Log;
 
 class AiResumeWriter
 {
-    /**
-     * The Gemini model to use.
-     */
     private string $model = 'gemini-1.5-flash';
-
-    /**
-     * How many times to retry on failure.
-     */
     private int $maxRetries = 2;
 
-    public function generate($user, $resume, $projects, $skills): array
+    /**
+     * Generate resume content from all user profile data.
+     *
+     * @param  \App\Models\User        $user
+     * @param  object                  $resume  Has job_title, job_description
+     * @param  \Illuminate\Support\Collection $projects
+     * @param  \Illuminate\Support\Collection $skills
+     * @param  \Illuminate\Support\Collection $certificates
+     * @return array
+     */
+    public function generate($user, $resume, $projects, $skills, $certificates = null): array
     {
-        // 1. Prepare data
-        $projectsList = $projects->map(fn($p) => "- {$p->name}: {$p->description}")->join("\n");
-        $skillsList   = $skills->pluck('name')->join(', ');
+        $projectsList = $projects->map(function ($p) {
+            $skillList = $p->skills ? $p->skills->pluck('name')->join(', ') : '';
+            return "- {$p->name}: {$p->description}" . ($skillList ? " [{$skillList}]" : '');
+        })->join("\n");
 
-        // 2. Build prompt — candidate data FIRST, schema instructions LAST
-        $prompt = $this->buildPrompt($user, $resume, $projectsList, $skillsList);
+        $skillsList = $skills->map(fn($s) => $s?->name ?? '')->filter()->join(', ');
 
-        // 3. Attempt generation with retries
+        // Include technical_skills from profile
+        $technicalSkills = $user->technical_skills ?? '';
+        if ($technicalSkills) {
+            $skillsList = $technicalSkills . ($skillsList ? ', ' . $skillsList : '');
+        }
+
+        // Certificates
+        $certsList = '';
+        if ($certificates && $certificates->count() > 0) {
+            $certsList = $certificates->map(function ($c) {
+                $line = "- {$c->title}";
+                if ($c->issuer) $line .= " ({$c->issuer})";
+                if ($c->issued_date) $line .= " — " . $c->issued_date->format('M Y');
+                if ($c->ai_summary) $line .= ": {$c->ai_summary}";
+                return $line;
+            })->join("\n");
+        }
+
+        // Work experience
+        $workExperience = $user->work_experience ?? '';
+
+        // Education
+        $education = $user->education ?? '';
+
+        // Bio / summary hint
+        $bio = $user->bio ?? '';
+
+        $prompt = $this->buildPrompt(
+            $user,
+            $resume,
+            $projectsList,
+            $skillsList,
+            $certsList,
+            $workExperience,
+            $education,
+            $bio
+        );
+
         $lastException = null;
 
         for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
@@ -39,86 +79,89 @@ class AiResumeWriter
                 $data      = json_decode($cleanJson, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new \RuntimeException(
-                        'JSON decode error: ' . json_last_error_msg() . ' | Raw: ' . $text
-                    );
+                    throw new \RuntimeException('JSON decode error: ' . json_last_error_msg());
                 }
 
-                // 4. Validate all expected keys are present
                 $this->validateStructure($data);
-
                 return $data;
 
             } catch (\Throwable $e) {
                 $lastException = $e;
                 Log::warning("AiResumeWriter attempt {$attempt} failed: " . $e->getMessage());
-
-                // Small backoff before retrying
-                if ($attempt < $this->maxRetries) {
-                    sleep(1);
-                }
+                if ($attempt < $this->maxRetries) sleep(1);
             }
         }
 
-        // All retries exhausted — log full trace and return fallback
         Log::error('AiResumeWriter: all attempts failed', [
             'message' => $lastException?->getMessage(),
-            'trace'   => $lastException?->getTraceAsString(),
         ]);
 
-        return $this->fallback($skillsList, $projectsList);
+        return $this->fallback($user, $skillsList, $projectsList, $certsList);
     }
 
     // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
 
-    private function buildPrompt($user, $resume, string $projectsList, string $skillsList): string
-    {
+    private function buildPrompt(
+        $user,
+        $resume,
+        string $projectsList,
+        string $skillsList,
+        string $certsList,
+        string $workExperience,
+        string $education,
+        string $bio
+    ): string {
+        $name    = $user->name ?? '';
+        $title   = $resume->job_title ?? '';
+        $jobDesc = $resume->job_description ?? '';
+
         return <<<PROMPT
-        You are an expert resume writer specialising in ATS-optimised resumes.
-
-        Below is the candidate's information. Use it to generate professional resume content.
+        You are an expert ATS-optimised resume writer. Use the candidate's information below to generate polished, professional resume content tailored to the target role.
 
         ---
-        Candidate Name   : {$user->name}
-        Target Role      : {$resume->job_title}
-        Job Description  :
-        {$resume->job_description}
+        Candidate Name    : {$name}
+        Target Role       : {$title}
+        Bio / About Me    : {$bio}
+        Job Description   :
+        {$jobDesc}
 
-        Projects         :
+        Projects:
         {$projectsList}
 
-        Skills           : {$skillsList}
+        Skills: {$skillsList}
+
+        Work Experience:
+        {$workExperience}
+
+        Education:
+        {$education}
+
+        Certificates & Achievements:
+        {$certsList}
         ---
 
         INSTRUCTIONS:
-        - Return ONLY a single, raw JSON object — no markdown, no code fences, no explanations.
-        - Do NOT wrap the JSON in ```json ... ``` or any other block.
-        - Every value must be a plain string (no nested arrays or objects).
+        - Return ONLY a single raw JSON object — no markdown, no code fences, no explanations.
+        - Do NOT wrap the JSON in ```json ... ```.
+        - Every value must be a plain string.
+        - Tailor content to the target role using keywords from the job description.
+        - Keep summary to 3–5 sentences. Be specific and quantify achievements where you can infer them.
         - Use the EXACT keys shown below.
 
         Required JSON format:
         {
-          "summary": "A 3–5 sentence professional summary tailored to the target role.",
-          "skills": "Comma-separated list of relevant technical and soft skills.",
-          "projects": "Formatted project highlights relevant to the target role.",
-          "experience": "Work experience entries with achievements, quantified where possible.",
-          "education": "Degree, institution, and graduation year."
+          "summary": "Professional 3–5 sentence summary tailored to the target role.",
+          "skills": "Comma-separated relevant technical and soft skills.",
+          "experience": "Formatted work experience entries with bullet-point achievements.",
+          "projects": "Formatted project highlights showing relevant impact.",
+          "education": "Degree, institution, and graduation year.",
+          "certifications": "Formatted list of certifications with issuers and dates."
         }
         PROMPT;
     }
 
-    /**
-     * Call the Gemini API, preferring JSON response mode when available.
-     *
-     * @throws \Throwable
-     */
     private function callGemini(string $prompt): string
     {
-        // Attempt to use response_mime_type for guaranteed JSON output.
-        // If the installed package version doesn't support withGenerationConfig,
-        // it will throw and we fall back to the plain generateContent call.
         try {
             $response = Gemini::generativeModel($this->model)
                 ->withGenerationConfig([
@@ -126,29 +169,21 @@ class AiResumeWriter
                 ])
                 ->generateContent($prompt);
         } catch (\BadMethodCallException | \Error $e) {
-            // Package version doesn't support withGenerationConfig — fall back
-            Log::debug('AiResumeWriter: withGenerationConfig not supported, using plain call');
+            Log::debug('AiResumeWriter: withGenerationConfig not supported, plain call');
             $response = Gemini::generativeModel($this->model)->generateContent($prompt);
         }
 
         $text = $response->text();
 
         if (empty(trim($text))) {
-            throw new \RuntimeException('Gemini returned an empty response.');
+            throw new \RuntimeException('Gemini returned empty response.');
         }
 
         return $text;
     }
 
-    /**
-     * Robustly extract a JSON object from the response string.
-     * Handles markdown code fences and any surrounding prose.
-     *
-     * @throws \RuntimeException
-     */
     private function extractJson(string $text): string
     {
-        // Strategy 1: find the outermost { ... } block
         $start = strpos($text, '{');
         $end   = strrpos($text, '}');
 
@@ -156,10 +191,8 @@ class AiResumeWriter
             return substr($text, $start, $end - $start + 1);
         }
 
-        // Strategy 2: strip markdown fences and try again
         $stripped = preg_replace('/^```(?:json)?\s*|\s*```$/m', '', $text);
         $stripped = trim($stripped);
-
         $start = strpos($stripped, '{');
         $end   = strrpos($stripped, '}');
 
@@ -167,37 +200,28 @@ class AiResumeWriter
             return substr($stripped, $start, $end - $start + 1);
         }
 
-        throw new \RuntimeException('Could not locate a JSON object in the response: ' . $text);
+        throw new \RuntimeException('Could not locate JSON in Gemini response: ' . $text);
     }
 
-    /**
-     * Ensure the decoded array has all required resume keys.
-     *
-     * @throws \RuntimeException
-     */
     private function validateStructure(array $data): void
     {
-        $required = ['summary', 'skills', 'projects', 'experience', 'education'];
+        $required = ['summary', 'skills', 'experience', 'projects', 'education', 'certifications'];
         $missing  = array_diff($required, array_keys($data));
 
         if (!empty($missing)) {
-            throw new \RuntimeException(
-                'Gemini response is missing keys: ' . implode(', ', $missing)
-            );
+            throw new \RuntimeException('Gemini response missing keys: ' . implode(', ', $missing));
         }
     }
 
-    /**
-     * Safe fallback returned when all attempts fail.
-     */
-    private function fallback(string $skillsList, string $projectsList): array
+    private function fallback($user, string $skillsList, string $projectsList, string $certsList): array
     {
         return [
-            'summary'    => 'AI summary currently unavailable. Please update manually.',
-            'skills'     => $skillsList,
-            'projects'   => $projectsList,
-            'experience' => 'Please update your experience manually.',
-            'education'  => '',
+            'summary'        => ($user->bio ?? '') ?: 'AI summary currently unavailable. Please update manually.',
+            'skills'         => $skillsList ?: 'Please list your skills.',
+            'experience'     => $user->work_experience ?? 'Please add your work experience.',
+            'projects'       => $projectsList ?: 'No projects listed.',
+            'education'      => $user->education ?? 'Please add your education.',
+            'certifications' => $certsList ?: 'No certifications listed.',
         ];
     }
 }

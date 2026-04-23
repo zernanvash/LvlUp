@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SkillTreeController;
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\UserSearchController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -47,11 +48,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/badges/{badge}/unequip', [BadgeController::class, 'unequip'])->name('badges.unequip');
     Route::post('/badges/{badge}/toggle-display', [BadgeController::class, 'toggleDisplay'])->name('badges.toggle-display');
     
-    // Resume Builder
-    Route::get('/resume-builder', [ResumeController::class, 'index'])->name('resume.index');
-    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])->name('resume.analyze');
+    // Resume Builder (single page at /resume)
+    Route::get('/resume', [ResumeController::class, 'index'])->name('resume.index');
     Route::post('/resume/generate', [ResumeController::class, 'generate'])->name('resume.generate');
-    Route::get('/resume/{resume}/download', [ResumeController::class, 'download'])->name('resume.download');
+    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])->name('resume.analyze');
+    Route::get('/resume/download', [ResumeController::class, 'download'])->name('resume.download');
+    Route::get('/resume/preview', [ResumeController::class, 'preview'])->name('resume.preview');
+
+    // Certificates (uploaded to profile, used in resume)
+    Route::post('/resume/certificates', [CertificateController::class, 'store'])->name('certificates.store');
+    Route::post('/resume/certificates/{certificate}/summary', [CertificateController::class, 'regenerateSummary'])->name('certificates.regenerate-summary');
+    Route::delete('/resume/certificates/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

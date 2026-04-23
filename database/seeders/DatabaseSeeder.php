@@ -13,13 +13,19 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->seedTestUser();
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+
+        if (User::where('email', 'test@lvlup.dev')->doesntExist()) {
+            $this->seedTestUser();
+        }
         
         // Call dedicated seeders
         $this->call([
             SkillTreeSeeder::class,
             BadgeSeeder::class,
         ]);
+
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
     }
     
     private function seedTestUser()

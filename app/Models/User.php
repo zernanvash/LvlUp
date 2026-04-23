@@ -103,6 +103,11 @@ class User extends Authenticatable
         return $this->hasMany(Resume::class);
     }
 
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class)->latest();
+    }
+
     // Gamification Methods
     public function addXP(int $amount): void
     {
