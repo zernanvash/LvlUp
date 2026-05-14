@@ -90,6 +90,22 @@ VITE_API_BASE_URL=https://your-render-backend-url.onrender.com
 
 Do not put backend secrets in Vercel.
 
+## Vercel Build Settings
+
+This Laravel Vite app builds assets into `public/build`, not `dist`.
+
+Use:
+
+```txt
+Build Command: npm run build
+Output Directory: public/build
+Install Command: npm install
+```
+
+The repository includes `vercel.json` with those settings.
+
+Important: deploying this whole Laravel repository to Vercel only publishes static built assets. The Laravel app itself should run on Render. Use Vercel only for a separate/static frontend that calls the Render backend.
+
 ## Render Settings
 
 Use a Render Web Service:
