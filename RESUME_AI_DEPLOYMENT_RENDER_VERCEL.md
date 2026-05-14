@@ -44,7 +44,7 @@ APP_NAME=LvlUp
 APP_ENV=production
 APP_KEY=
 APP_DEBUG=false
-APP_URL=https://your-render-backend-url.onrender.com
+APP_URL=https://lvlup-v7yh.onrender.com
 FRONTEND_URL=https://your-vercel-frontend-url.vercel.app
 
 LOG_CHANNEL=stack
@@ -85,7 +85,7 @@ Important:
 ## Vercel Frontend Environment
 
 ```env
-VITE_API_BASE_URL=https://your-render-backend-url.onrender.com
+VITE_API_BASE_URL=https://lvlup-v7yh.onrender.com
 ```
 
 Do not put backend secrets in Vercel.
@@ -126,9 +126,9 @@ The Docker image installs:
 
 ## Startup Script
 
-`start.sh` clears and rebuilds config/view caches, optionally runs migrations, then starts Apache.
+`start.sh` clears and rebuilds config, route, and view caches, optionally runs migrations, then starts Apache.
 
-Route caching is intentionally skipped because the current app still contains closure routes. Add route caching later after closure routes are moved to controllers.
+Route closures have been moved to controllers so `php artisan route:cache` is safe in production.
 
 ## CORS
 
@@ -204,6 +204,7 @@ curl -X POST http://127.0.0.1:8000/api/resume/generate \
 [ ] CLOUDINARY_URL is set on Render
 [ ] NVIDIA_API_KEY is set only on Render
 [ ] php artisan migrate --force works
+[ ] php artisan route:cache works
 [ ] Resume generation works
 [ ] PDF preview/download works
 [ ] Uploads go to Cloudinary, not local permanent disk

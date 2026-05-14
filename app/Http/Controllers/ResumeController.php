@@ -3,20 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resume;
+use App\Services\CloudinaryStorageService;
 use App\Services\ResumeAiPipeline;
 use App\Services\ResumeAnalyzer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
 
 class ResumeController extends Controller
 {
     protected $analyzer;
     protected $pipeline;
+    protected $cloudinary;
 
-    public function __construct(ResumeAnalyzer $analyzer, ResumeAiPipeline $pipeline)
+    public function __construct(ResumeAnalyzer $analyzer, ResumeAiPipeline $pipeline, CloudinaryStorageService $cloudinary)
     {
         $this->analyzer = $analyzer;
         $this->pipeline = $pipeline;
+        $this->cloudinary = $cloudinary;
     }
 
     /**
@@ -122,6 +127,10 @@ class ResumeController extends Controller
                 'match_score'          => $matchScore,
                 'template'             => $validated['template'] ?? 'modern',
                 'ai_content'           => json_encode($aiContent),
+                'pdf_path'             => null,
+                'pdf_public_id'        => null,
+                'pdf_template'         => null,
+                'pdf_generated_at'     => null,
             ]
         );
 
@@ -156,23 +165,13 @@ class ResumeController extends Controller
         $projects    = $user->projects->whereIn('id', $selectedIds);
         $template    = $request->input('template', $resume->template ?? 'modern');
 
-        $html = view('resume.pdf.' . $template, [
-            'user'       => $user,
-            'resume'     => $resume,
-            'projects'   => $projects,
-            'ai_content' => $aiContent,
-        ])->render();
-
         $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
+        $pdf = $this->cachedPdf($resume, $user, $projects, $aiContent, $template);
 
-        return response()->streamDownload(function () use ($html) {
-            echo Browsershot::html($html)
-                ->format('A4')
-                ->margins(0, 0, 0, 0)
-                ->showBackground()
-                ->waitUntilNetworkIdle()
-                ->pdf();
-        }, $filename);
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Cache-Control', 'private, max-age=300');
     }
 
     /**
@@ -197,6 +196,46 @@ class ResumeController extends Controller
         $projects    = $user->projects->whereIn('id', $selectedIds);
         $template    = $request->input('template', $resume->template ?? 'modern');
 
+        $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
+        $pdf = $this->cachedPdf($resume, $user, $projects, $aiContent, $template);
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"')
+            ->header('Cache-Control', 'private, max-age=300');
+    }
+
+    private function cachedPdf(Resume $resume, $user, $projects, array $aiContent, string $template): string
+    {
+        if ($resume->pdf_path && $resume->pdf_template === $template) {
+            $cached = $this->readCachedPdf($resume->pdf_path);
+
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
+        $pdf = $this->renderPdf($user, $resume, $projects, $aiContent, $template);
+        $this->storeCachedPdf($resume, $user, $template, $pdf);
+
+        return $pdf;
+    }
+
+    private function readCachedPdf(string $path): ?string
+    {
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            $response = Http::timeout(20)->get($path);
+
+            return $response->successful() ? $response->body() : null;
+        }
+
+        return Storage::disk('local')->exists($path)
+            ? Storage::disk('local')->get($path)
+            : null;
+    }
+
+    private function renderPdf($user, Resume $resume, $projects, array $aiContent, string $template): string
+    {
         $html = view('resume.pdf.' . $template, [
             'user'       => $user,
             'resume'     => $resume,
@@ -204,17 +243,40 @@ class ResumeController extends Controller
             'ai_content' => $aiContent,
         ])->render();
 
-        $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
-
-        $pdf = Browsershot::html($html)
+        return Browsershot::html($html)
             ->format('A4')
             ->margins(0, 0, 0, 0)
             ->showBackground()
             ->waitUntilNetworkIdle()
             ->pdf();
+    }
 
-        return response($pdf)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+    private function storeCachedPdf(Resume $resume, $user, string $template, string $pdf): void
+    {
+        $filename = 'resume_' . $resume->id . '_' . $template . '.pdf';
+        $publicId = 'resume_' . $resume->id . '_' . $template;
+
+        if ($this->cloudinary->configured()) {
+            $uploaded = $this->cloudinary->uploadPdf($pdf, 'lvlup/resumes', $publicId, $filename);
+
+            $resume->update([
+                'pdf_path' => $uploaded['secure_url'],
+                'pdf_public_id' => $uploaded['public_id'],
+                'pdf_template' => $template,
+                'pdf_generated_at' => now(),
+            ]);
+
+            return;
+        }
+
+        $path = 'resume/' . $user->id . '/' . $filename;
+        Storage::disk('local')->put($path, $pdf);
+
+        $resume->update([
+            'pdf_path' => $path,
+            'pdf_public_id' => null,
+            'pdf_template' => $template,
+            'pdf_generated_at' => now(),
+        ]);
     }
 }

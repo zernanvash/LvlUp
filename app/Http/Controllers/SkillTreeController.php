@@ -114,6 +114,7 @@ class SkillTreeController extends Controller
 
         try {
             $user->unlockedNodes()->attach($node->id, ['unlocked_at' => now()]);
+            $user->clearFastUiCaches();
 
             // Record activity streak (max +1 per calendar day)
             $user->fresh()->recordActivityStreak();

@@ -43,6 +43,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 RUN if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm install; fi \

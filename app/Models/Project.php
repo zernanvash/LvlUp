@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Project extends Model
 {
@@ -98,6 +99,16 @@ class Project extends Model
         // to avoid double-firing when thumbnail/skills are updated in the same request.
         static::created(function ($project) {
             $project->user->addXP($project->xp_reward);
+        });
+
+        static::saved(function ($project) {
+            Cache::forget("dashboard.projects.{$project->user_id}");
+            Cache::forget("api.stats.{$project->user_id}");
+        });
+
+        static::deleted(function ($project) {
+            Cache::forget("dashboard.projects.{$project->user_id}");
+            Cache::forget("api.stats.{$project->user_id}");
         });
     }
 

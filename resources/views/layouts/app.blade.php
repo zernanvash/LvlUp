@@ -138,6 +138,28 @@
         .card-hover:hover { transform: translateY(-2px) !important; box-shadow: var(--lvl-hover-shadow) !important; }
         .btn-glow { position: relative; overflow: hidden; }
         .btn-glow:hover { transform: translateY(-1px); }
+        .page-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            width: 100%;
+            height: 3px;
+            pointer-events: none;
+            opacity: 0;
+            transform-origin: left;
+            transform: scaleX(.08);
+            background: linear-gradient(90deg, var(--lvl-p600), var(--lvl-gold));
+            transition: opacity .16s ease, transform .7s ease;
+        }
+        body.is-navigating .page-progress,
+        body.is-submitting .page-progress {
+            opacity: 1;
+            transform: scaleX(.72);
+        }
+        body.is-loaded .page-progress {
+            transform: scaleX(1);
+        }
         .animated-bg, .stars, .star { display: none !important; }
 
         main .glow-border .text-white,
@@ -170,6 +192,7 @@
     </script>
 </head>
 <body x-data="appShell()" class="min-h-screen">
+<div class="page-progress" aria-hidden="true"></div>
 @if(session('level_up'))
 <script>window._levelUpData = @json(session('level_up'));</script>
 @endif
@@ -422,6 +445,77 @@ function appShell() {
         },
     };
 }
+</script>
+<script>
+(() => {
+    const prefetched = new Set();
+
+    const sameOrigin = (url) => {
+        try {
+            const parsed = new URL(url, window.location.href);
+            return parsed.origin === window.location.origin;
+        } catch {
+            return false;
+        }
+    };
+
+    const shouldPrefetch = (anchor) => {
+        if (!anchor || !anchor.href || anchor.target || anchor.hasAttribute('download')) return false;
+        if (!sameOrigin(anchor.href)) return false;
+        if (anchor.href.includes('#') || anchor.href === window.location.href) return false;
+        return true;
+    };
+
+    const prefetch = (anchor) => {
+        if (!shouldPrefetch(anchor) || prefetched.has(anchor.href)) return;
+        prefetched.add(anchor.href);
+
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = anchor.href;
+        link.as = 'document';
+        document.head.appendChild(link);
+    };
+
+    document.addEventListener('mouseover', (event) => {
+        const anchor = event.target.closest('a');
+        if (anchor) prefetch(anchor);
+    }, { passive: true });
+
+    document.addEventListener('touchstart', (event) => {
+        const anchor = event.target.closest('a');
+        if (anchor) prefetch(anchor);
+    }, { passive: true });
+
+    document.addEventListener('click', (event) => {
+        const anchor = event.target.closest('a');
+        if (shouldPrefetch(anchor)) {
+            document.body.classList.add('is-navigating');
+        }
+    });
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || form.dataset.noBusy === 'true') return;
+
+        document.body.classList.add('is-submitting');
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((button) => {
+            button.dataset.originalText = button.value || button.textContent || '';
+            button.disabled = true;
+            if (button.tagName === 'BUTTON') {
+                button.textContent = button.dataset.loadingText || 'Working...';
+            }
+        });
+    });
+
+    window.addEventListener('pageshow', () => {
+        document.body.classList.remove('is-navigating', 'is-submitting');
+        requestAnimationFrame(() => {
+            document.body.classList.add('is-loaded');
+            setTimeout(() => document.body.classList.remove('is-loaded'), 260);
+        });
+    });
+})();
 </script>
 </body>
 </html>

@@ -169,6 +169,7 @@ class BadgeController extends Controller
             'is_displayed' => !$currentStatus,
             'updated_at' => now()
         ]);
+        $user->clearFastUiCaches();
         
         return response()->json([
             'success' => true,
