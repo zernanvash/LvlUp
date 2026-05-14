@@ -1,0 +1,15 @@
+.git
+.github
+.kiro
+.env
+.env.*
+node_modules
+vendor
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+public/build
+database/database.sqlite
+npm-debug.log
+yarn-error.log
