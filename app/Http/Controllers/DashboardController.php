@@ -12,13 +12,29 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
-        // Get user's projects
+
+        // Track last login date (separate from activity streak)
+        if (!$user->last_login || $user->last_login->toDateString() !== now()->toDateString()) {
+            $user->last_login = now()->toDateString();
+            $user->save();
+        }
+
         $projects = $user->projects()
             ->with('skills')
             ->latest()
             ->get();
-        
-        return view('dashboard', compact('projects'));
+
+        $xpToNextLevel        = $user->xpToNextLevel();
+        $showMilestoneBanner  = $user->shouldShowMilestoneBanner();
+        $streakBonusActive    = $user->streakBonusActive();
+        $streakBonusMultiplier = $user->streakBonusMultiplier();
+
+        return view('dashboard', compact(
+            'projects',
+            'xpToNextLevel',
+            'showMilestoneBanner',
+            'streakBonusActive',
+            'streakBonusMultiplier'
+        ));
     }
 }

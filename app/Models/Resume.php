@@ -19,6 +19,7 @@ class Resume extends Model
         'pdf_path',
         'match_score',
         'template',
+        'ai_content',
     ];
 
     protected $casts = [

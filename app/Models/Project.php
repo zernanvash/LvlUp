@@ -16,6 +16,7 @@ class Project extends Model
         'url',
         'github_url',
         'language',
+        'project_type',
         'thumbnail',
         'xp_reward',
         'is_featured',
@@ -93,59 +94,79 @@ class Project extends Model
 
     protected static function booted()
     {
+        // XP award only — badge checking is handled explicitly in the controller
+        // to avoid double-firing when thumbnail/skills are updated in the same request.
         static::created(function ($project) {
-            // Award XP to user when project is created
             $project->user->addXP($project->xp_reward);
-            
-            // Check for badge achievements
-            $project->checkBadges();
         });
     }
 
-    private function checkBadges(): void
+    /**
+     * Check all eligible badges for the project's user and return newly earned ones.
+     * Does NOT flash to session — caller is responsible for that.
+     */
+    public function checkBadgesAndReturn(): array
     {
-        $user = $this->user;
-        
-        // Check skill-based badges
+        // Always fetch a fresh user instance so project counts are accurate
+        $user = User::with('badges')->find($this->user_id);
+
+        if (!$user) {
+            return [];
+        }
+
+        $newlyEarned = [];
+
+        // Check all non-skill-specific badges
+        $allBadges = Badge::whereNull('required_skill_id')->get();
+
+        foreach ($allBadges as $badge) {
+            if ($user->badges()->where('badge_id', $badge->id)->exists()) {
+                continue;
+            }
+
+            if ($badge->checkEligibility($user)) {
+                $user->badges()->attach($badge->id, [
+                    'earned_at'    => now(),
+                    'is_displayed' => false,
+                ]);
+                $user->addXP($badge->xp_reward);
+                $user->load('badges');
+                $newlyEarned[] = [
+                    'title'        => $badge->title,
+                    'icon'         => $badge->icon,
+                    'rarity'       => $badge->rarity,
+                    'rarity_color' => $badge->rarity_color,
+                    'xp_reward'    => $badge->xp_reward,
+                ];
+            }
+        }
+
+        // Also check skill-based badges (after skills have been attached)
+        $this->load('skills');
         foreach ($this->skills as $skill) {
-            $projectsWithSkill = $user->projects()
-                ->whereHas('skills', fn($q) => $q->where('skills.id', $skill->id))
-                ->count();
-                
-            $badges = Badge::where('required_skill_id', $skill->id)
-                ->where('threshold', '<=', $projectsWithSkill)
-                ->get();
-                
-            foreach ($badges as $badge) {
-                if (!$user->badges->contains($badge->id)) {
+            $skillBadges = Badge::where('required_skill_id', $skill->id)->get();
+            foreach ($skillBadges as $badge) {
+                if ($user->badges()->where('badge_id', $badge->id)->exists()) {
+                    continue;
+                }
+                if ($badge->checkEligibility($user)) {
                     $user->badges()->attach($badge->id, [
-                        'earned_at' => now(),
-                        'is_displayed' => false
+                        'earned_at'    => now(),
+                        'is_displayed' => false,
                     ]);
-                    
-                    // Award badge XP reward
                     $user->addXP($badge->xp_reward);
+                    $user->load('badges');
+                    $newlyEarned[] = [
+                        'title'        => $badge->title,
+                        'icon'         => $badge->icon,
+                        'rarity'       => $badge->rarity,
+                        'rarity_color' => $badge->rarity_color,
+                        'xp_reward'    => $badge->xp_reward,
+                    ];
                 }
             }
         }
-        
-        // Check total project count badges
-        $totalProjects = $user->projects()->count();
-        $projectBadges = Badge::whereNull('required_skill_id')
-            ->where('category', 'project')
-            ->where('threshold', '<=', $totalProjects)
-            ->get();
-            
-        foreach ($projectBadges as $badge) {
-            if (!$user->badges->contains($badge->id)) {
-                $user->badges()->attach($badge->id, [
-                    'earned_at' => now(),
-                    'is_displayed' => false
-                ]);
-                
-                // Award badge XP reward
-                $user->addXP($badge->xp_reward);
-            }
-        }
+
+        return $newlyEarned;
     }
 }

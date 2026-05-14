@@ -116,6 +116,52 @@
             </div>
         </div>
 
+        <!-- Project Type Card -->
+        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-indigo-900/40 to-indigo-950/40 backdrop-blur">
+            <h2 class="font-display text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                Project Type
+            </h2>
+            <p class="text-indigo-300 text-sm mb-6">This determines which skill tree nodes you can unlock. Choose the one that best fits your project.</p>
+
+            @error('project_type')
+                <p class="text-red-400 text-sm mb-4">{{ $message }}</p>
+            @enderror
+
+            <input type="hidden" name="project_type" id="project_type_input" value="{{ old('project_type') }}" required>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" x-data="{ selected: '{{ old('project_type') }}' }">
+                @php
+                $types = [
+                    ['value' => 'web',        'label' => 'Web / Frontend', 'icon' => 'fas fa-globe',         'color' => 'from-blue-500 to-cyan-500'],
+                    ['value' => 'backend',    'label' => 'Backend / API',  'icon' => 'fas fa-server',        'color' => 'from-violet-500 to-purple-500'],
+                    ['value' => 'fullstack',  'label' => 'Full Stack',     'icon' => 'fas fa-layer-group',   'color' => 'from-pink-500 to-rose-500'],
+                    ['value' => 'mobile',     'label' => 'Mobile',         'icon' => 'fas fa-mobile-alt',    'color' => 'from-green-500 to-emerald-500'],
+                    ['value' => 'devops',     'label' => 'DevOps / Cloud', 'icon' => 'fas fa-cloud',         'color' => 'from-amber-500 to-orange-500'],
+                    ['value' => 'ai',         'label' => 'AI / ML',        'icon' => 'fas fa-brain',         'color' => 'from-red-500 to-pink-500'],
+                    ['value' => 'other',      'label' => 'Other',          'icon' => 'fas fa-code',          'color' => 'from-gray-500 to-slate-500'],
+                ];
+                @endphp
+
+                @foreach($types as $type)
+                <button
+                    type="button"
+                    x-on:click="selected = '{{ $type['value'] }}'; document.getElementById('project_type_input').value = '{{ $type['value'] }}';"
+                    :class="selected === '{{ $type['value'] }}' ? 'ring-2 ring-white scale-105 opacity-100' : 'opacity-60 hover:opacity-90'"
+                    class="relative flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br {{ $type['color'] }} bg-opacity-20 border border-white/10 transition-all duration-200 cursor-pointer"
+                >
+                    <i class="{{ $type['icon'] }} text-2xl text-white"></i>
+                    <span class="text-xs font-bold text-white text-center leading-tight">{{ $type['label'] }}</span>
+                    <span x-show="selected === '{{ $type['value'] }}'" class="absolute top-2 right-2 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                        <i class="fas fa-check text-indigo-600 text-xs"></i>
+                    </span>
+                </button>
+                @endforeach
+            </div>
+        </div>
+
         <!-- Code & Skills Card -->
         <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-blue-900/40 to-blue-950/40 backdrop-blur">
             <h2 class="font-display text-2xl font-bold text-white mb-6 flex items-center gap-3">

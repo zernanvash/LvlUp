@@ -93,30 +93,104 @@ class SkillTreeController extends Controller
     public function unlock(SkillNode $node)
     {
         $user = auth()->user();
-        
+
         // Check if already unlocked
         if ($node->isUnlockedBy($user)) {
-            return back()->with('error', 'You have already unlocked this skill node.');
+            $msg = 'You have already unlocked this skill node.';
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
         }
-        
+
         // Check if node can be unlocked
         if (!$node->canBeUnlockedBy($user)) {
-            // Determine which requirement failed
-            $failureReason = $this->getUnlockFailureReason($node, $user);
-            
-            return back()->with('error', $failureReason);
+            $msg = $this->getUnlockFailureReason($node, $user);
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
         }
-        
+
         try {
-            // Unlock the node
-            $user->unlockedNodes()->attach($node->id, [
-                'unlocked_at' => now(),
+            $user->unlockedNodes()->attach($node->id, ['unlocked_at' => now()]);
+
+            // Record activity streak (max +1 per calendar day)
+            $user->fresh()->recordActivityStreak();
+
+            // Collect any badges earned (via XP from skill unlock)
+            // We check badges manually here since no Project event fires
+            $newBadges = $this->checkSkillNodeBadges($user);
+
+            // Check if leveled up (addXP may have been called via badge rewards)
+            $levelUpData = session()->get('level_up');
+            session()->forget('level_up'); // consume it — we'll return it in JSON
+
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success'    => true,
+                    'title'      => $node->title,
+                    'tier'       => $node->tier,
+                    'icon'       => $node->skill->icon ?? 'fas fa-code',
+                    'new_badges' => $newBadges,
+                    'level_up'   => $levelUpData,
+                ]);
+            }
+
+            // Fallback for non-AJAX (shouldn't happen with new frontend)
+            session()->flash('node_unlocked', [
+                'title' => $node->title,
+                'tier'  => $node->tier,
+                'icon'  => $node->skill->icon ?? 'fas fa-code',
             ]);
-            
+            if (!empty($newBadges)) {
+                session()->flash('new_badges', $newBadges);
+            }
+
             return back()->with('success', "Skill node '{$node->title}' unlocked successfully!");
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to unlock skill node. Please try again.');
+            $msg = 'Failed to unlock skill node. Please try again.';
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 500);
+            }
+            return back()->with('error', $msg);
         }
+    }
+
+    /**
+     * Check and award badges related to skill node unlocks
+     */
+    private function checkSkillNodeBadges($user): array
+    {
+        $user = \App\Models\User::with('badges')->find($user->id);
+        $newlyEarned = [];
+
+        $badges = \App\Models\Badge::whereNull('required_skill_id')
+            ->whereIn('category', ['skill_node', 'level'])
+            ->get();
+
+        foreach ($badges as $badge) {
+            if ($user->badges()->where('badge_id', $badge->id)->exists()) {
+                continue;
+            }
+            if ($badge->checkEligibility($user)) {
+                $user->badges()->attach($badge->id, [
+                    'earned_at'    => now(),
+                    'is_displayed' => false,
+                ]);
+                $user->addXP($badge->xp_reward);
+                $user->load('badges');
+                $newlyEarned[] = [
+                    'title'        => $badge->title,
+                    'icon'         => $badge->icon,
+                    'rarity'       => $badge->rarity,
+                    'rarity_color' => $badge->rarity_color,
+                    'xp_reward'    => $badge->xp_reward,
+                ];
+            }
+        }
+
+        return $newlyEarned;
     }
     
     /**

@@ -100,13 +100,44 @@ class SkillNode extends Model
                     $current = $user->projects()->count();
                     break;
 
+                // Match projects by their project_type field (e.g. 'web', 'backend', 'fullstack')
+                case 'project_type':
+                    $projectType = $task['project_type'];
+                    $current = $user->projects()
+                        ->where('project_type', $projectType)
+                        ->count();
+                    break;
+
+                // Match projects by skill slug OR by skill category — whichever finds more
                 case 'skill_projects':
                     $skillSlug = $task['skill_slug'];
                     $skill = Skill::where('slug', $skillSlug)->first();
+
                     if ($skill) {
-                        $current = $user->projects()
+                        // Direct skill attachment match
+                        $bySkill = $user->projects()
                             ->whereHas('skills', fn($q) => $q->where('skills.id', $skill->id))
                             ->count();
+
+                        // Also match by skill category (catches user-created tags in same category)
+                        $byCategory = $user->projects()
+                            ->whereHas('skills', fn($q) => $q->where('skills.category', $skill->category))
+                            ->count();
+
+                        // Also match by project_type mapped from skill category
+                        $typeMap = [
+                            'frontend' => 'web',
+                            'backend'  => 'backend',
+                            'devops'   => 'devops',
+                            'mobile'   => 'mobile',
+                            'ai'       => 'ai',
+                        ];
+                        $mappedType = $typeMap[$skill->category] ?? null;
+                        $byType = $mappedType
+                            ? $user->projects()->where('project_type', $mappedType)->count()
+                            : 0;
+
+                        $current = max($bySkill, $byCategory, $byType);
                     }
                     break;
 

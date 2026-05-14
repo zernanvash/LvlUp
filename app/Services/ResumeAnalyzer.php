@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Collection;
-use App\Services\AiResumeWriter;
+
 class ResumeAnalyzer
 {
     /**

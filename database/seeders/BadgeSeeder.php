@@ -2,16 +2,321 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Badge;
 use Illuminate\Database\Seeder;
 
 class BadgeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
+        Badge::truncate();
+
+        $badges = [
+            // ── COMMON ────────────────────────────────────────────────────────
+            [
+                'title'       => 'Hello, World!',
+                'slug'        => 'hello-world',
+                'description' => 'You shipped your first project. The hardest part is starting — and you did it.',
+                'icon'        => 'fas fa-rocket',
+                'rarity'      => 'common',
+                'category'    => 'project',
+                'threshold'   => 1,
+                'xp_reward'   => 50,
+            ],
+            [
+                'title'       => 'Pixel Pusher',
+                'slug'        => 'pixel-pusher',
+                'description' => 'Built your first web / frontend project. You made something a browser can render.',
+                'icon'        => 'fas fa-paint-brush',
+                'rarity'      => 'common',
+                'category'    => 'web',
+                'threshold'   => 1,
+                'xp_reward'   => 75,
+            ],
+            [
+                'title'       => 'Server Whisperer',
+                'slug'        => 'server-whisperer',
+                'description' => 'Shipped your first backend project. You know what happens on the other side of the request.',
+                'icon'        => 'fas fa-server',
+                'rarity'      => 'common',
+                'category'    => 'backend',
+                'threshold'   => 1,
+                'xp_reward'   => 75,
+            ],
+            [
+                'title'       => 'On a Roll',
+                'slug'        => 'on-a-roll',
+                'description' => 'Logged in 3 days in a row. Consistency is the real skill.',
+                'icon'        => 'fas fa-fire',
+                'rarity'      => 'common',
+                'category'    => 'streak',
+                'threshold'   => 3,
+                'xp_reward'   => 60,
+            ],
+
+            // ── UNCOMMON ──────────────────────────────────────────────────────
+            [
+                'title'       => 'API Craftsman',
+                'slug'        => 'api-craftsman',
+                'description' => 'Built 2 backend projects. You understand request/response cycles and you\'re not afraid of HTTP status codes.',
+                'icon'        => 'fas fa-plug',
+                'rarity'      => 'uncommon',
+                'category'    => 'backend',
+                'threshold'   => 2,
+                'xp_reward'   => 150,
+            ],
+            [
+                'title'       => 'Style Architect',
+                'slug'        => 'style-architect',
+                'description' => 'Built 2 web projects. Your layouts don\'t break on mobile and your colors don\'t hurt eyes.',
+                'icon'        => 'fas fa-palette',
+                'rarity'      => 'uncommon',
+                'category'    => 'web',
+                'threshold'   => 2,
+                'xp_reward'   => 150,
+            ],
+            [
+                'title'       => 'Streak Keeper',
+                'slug'        => 'streak-keeper',
+                'description' => 'Logged in 7 days straight. A week of showing up — that\'s how habits form.',
+                'icon'        => 'fas fa-calendar-check',
+                'rarity'      => 'uncommon',
+                'category'    => 'streak',
+                'threshold'   => 7,
+                'xp_reward'   => 200,
+            ],
+            [
+                'title'       => 'Portfolio Builder',
+                'slug'        => 'portfolio-builder',
+                'description' => 'Added 5 projects. You have enough to show a recruiter something real.',
+                'icon'        => 'fas fa-briefcase',
+                'rarity'      => 'uncommon',
+                'category'    => 'project',
+                'threshold'   => 5,
+                'xp_reward'   => 200,
+            ],
+            [
+                'title'       => 'Mobile Curious',
+                'slug'        => 'mobile-curious',
+                'description' => 'Shipped your first mobile project. You\'re building for the device in everyone\'s pocket.',
+                'icon'        => 'fas fa-mobile-alt',
+                'rarity'      => 'uncommon',
+                'category'    => 'mobile',
+                'threshold'   => 1,
+                'xp_reward'   => 175,
+            ],
+
+            // ── RARE ──────────────────────────────────────────────────────────
+            [
+                'title'       => 'Full Stack Initiate',
+                'slug'        => 'fullstack-initiate',
+                'description' => 'Shipped your first full stack project — frontend, backend, and database all talking to each other.',
+                'icon'        => 'fas fa-layer-group',
+                'rarity'      => 'rare',
+                'category'    => 'fullstack',
+                'threshold'   => 1,
+                'xp_reward'   => 300,
+            ],
+            [
+                'title'       => 'Database Architect',
+                'slug'        => 'database-architect',
+                'description' => 'Built 3 backend projects with real data models. You think in schemas and relationships.',
+                'icon'        => 'fas fa-database',
+                'rarity'      => 'rare',
+                'category'    => 'backend',
+                'threshold'   => 3,
+                'xp_reward'   => 350,
+            ],
+            [
+                'title'       => 'Component Thinker',
+                'slug'        => 'component-thinker',
+                'description' => 'Built 3 web projects. You\'re writing reusable components, not spaghetti HTML.',
+                'icon'        => 'fas fa-cubes',
+                'rarity'      => 'rare',
+                'category'    => 'web',
+                'threshold'   => 3,
+                'xp_reward'   => 350,
+            ],
+            [
+                'title'       => 'Automation Adept',
+                'slug'        => 'automation-adept',
+                'description' => 'Shipped your first DevOps project. You\'re automating things instead of doing them manually.',
+                'icon'        => 'fas fa-cogs',
+                'rarity'      => 'rare',
+                'category'    => 'devops',
+                'threshold'   => 1,
+                'xp_reward'   => 300,
+            ],
+            [
+                'title'       => 'Skill Collector',
+                'slug'        => 'skill-collector',
+                'description' => 'Unlocked 5 skill tree nodes. You\'re not just building — you\'re growing.',
+                'icon'        => 'fas fa-network-wired',
+                'rarity'      => 'rare',
+                'category'    => 'skill_node',
+                'threshold'   => 5,
+                'xp_reward'   => 400,
+            ],
+            [
+                'title'       => 'Fortnight Grind',
+                'slug'        => 'fortnight-grind',
+                'description' => '14-day login streak. Two weeks of consistent effort. That\'s discipline.',
+                'icon'        => 'fas fa-bolt',
+                'rarity'      => 'rare',
+                'category'    => 'streak',
+                'threshold'   => 14,
+                'xp_reward'   => 400,
+            ],
+
+            // ── EPIC ──────────────────────────────────────────────────────────
+            [
+                'title'       => 'Backend Boss',
+                'slug'        => 'backend-boss',
+                'description' => 'Built 5 backend projects. APIs, auth, databases — you own the server side.',
+                'icon'        => 'fas fa-crown',
+                'rarity'      => 'epic',
+                'category'    => 'backend',
+                'threshold'   => 5,
+                'xp_reward'   => 600,
+            ],
+            [
+                'title'       => 'Frontend Virtuoso',
+                'slug'        => 'frontend-virtuoso',
+                'description' => 'Built 5 web projects. Your UIs are clean, responsive, and actually pleasant to use.',
+                'icon'        => 'fas fa-wand-magic-sparkles',
+                'rarity'      => 'epic',
+                'category'    => 'web',
+                'threshold'   => 5,
+                'xp_reward'   => 600,
+            ],
+            [
+                'title'       => 'Full Stack Engineer',
+                'slug'        => 'fullstack-engineer',
+                'description' => 'Built 3 full stack projects. You can take a feature from design to deployment solo.',
+                'icon'        => 'fas fa-code-branch',
+                'rarity'      => 'epic',
+                'category'    => 'fullstack',
+                'threshold'   => 3,
+                'xp_reward'   => 750,
+            ],
+            [
+                'title'       => 'Container Captain',
+                'slug'        => 'container-captain',
+                'description' => 'Built 3 DevOps projects. Your apps run in containers and your deploys are repeatable.',
+                'icon'        => 'fas fa-ship',
+                'rarity'      => 'epic',
+                'category'    => 'devops',
+                'threshold'   => 3,
+                'xp_reward'   => 700,
+            ],
+            [
+                'title'       => 'AI Explorer',
+                'slug'        => 'ai-explorer',
+                'description' => 'Shipped your first AI / ML project. You\'re building with intelligence, not just logic.',
+                'icon'        => 'fas fa-brain',
+                'rarity'      => 'epic',
+                'category'    => 'ai',
+                'threshold'   => 1,
+                'xp_reward'   => 650,
+            ],
+            [
+                'title'       => 'Mobile Craftsman',
+                'slug'        => 'mobile-craftsman',
+                'description' => 'Built 3 mobile projects. You understand touch targets, offline states, and app store submissions.',
+                'icon'        => 'fas fa-tablet-alt',
+                'rarity'      => 'epic',
+                'category'    => 'mobile',
+                'threshold'   => 3,
+                'xp_reward'   => 650,
+            ],
+            [
+                'title'       => 'Skill Tree Sage',
+                'slug'        => 'skill-tree-sage',
+                'description' => 'Unlocked 10 skill tree nodes. Your knowledge graph is taking real shape.',
+                'icon'        => 'fas fa-sitemap',
+                'rarity'      => 'epic',
+                'category'    => 'skill_node',
+                'threshold'   => 10,
+                'xp_reward'   => 800,
+            ],
+
+            // ── LEGENDARY ─────────────────────────────────────────────────────
+            [
+                'title'       => 'Polyglot Engineer',
+                'slug'        => 'polyglot-engineer',
+                'description' => 'Projects across 4+ different domains. You don\'t have a comfort zone — you have a whole map.',
+                'icon'        => 'fas fa-globe-americas',
+                'rarity'      => 'legendary',
+                'category'    => 'project',
+                'threshold'   => 15,
+                'xp_reward'   => 1200,
+            ],
+            [
+                'title'       => 'AI Architect',
+                'slug'        => 'ai-architect',
+                'description' => 'Built 4 AI / ML projects. You\'re not using AI as a buzzword — you\'re building real intelligent systems.',
+                'icon'        => 'fas fa-microchip',
+                'rarity'      => 'legendary',
+                'category'    => 'ai',
+                'threshold'   => 4,
+                'xp_reward'   => 1500,
+            ],
+            [
+                'title'       => 'Cloud Native',
+                'slug'        => 'cloud-native',
+                'description' => 'Built 5 DevOps projects. Your infrastructure is code, your deploys are automated, your uptime is a point of pride.',
+                'icon'        => 'fas fa-cloud-upload-alt',
+                'rarity'      => 'legendary',
+                'category'    => 'devops',
+                'threshold'   => 5,
+                'xp_reward'   => 1500,
+            ],
+            [
+                'title'       => 'The Whole Stack',
+                'slug'        => 'the-whole-stack',
+                'description' => 'Built 5 full stack projects. You are the frontend, the backend, the database, and the deployment pipeline.',
+                'icon'        => 'fas fa-infinity',
+                'rarity'      => 'legendary',
+                'category'    => 'fullstack',
+                'threshold'   => 5,
+                'xp_reward'   => 2000,
+            ],
+            [
+                'title'       => 'Iron Streak',
+                'slug'        => 'iron-streak',
+                'description' => '30-day login streak. A full month of showing up. Most people quit before this.',
+                'icon'        => 'fas fa-fire-flame-curved',
+                'rarity'      => 'legendary',
+                'category'    => 'streak',
+                'threshold'   => 30,
+                'xp_reward'   => 1000,
+            ],
+
+            // ── MYTHIC ────────────────────────────────────────────────────────
+            [
+                'title'       => 'Full Stack Legend',
+                'slug'        => 'full-stack-legend',
+                'description' => 'You\'ve shipped across every domain — web, backend, fullstack, mobile, DevOps, and AI. You are the whole team.',
+                'icon'        => 'fas fa-dragon',
+                'rarity'      => 'mythic',
+                'category'    => 'project',
+                'threshold'   => 25,
+                'xp_reward'   => 5000,
+            ],
+            [
+                'title'       => 'Eternal Flame',
+                'slug'        => 'eternal-flame',
+                'description' => '100-day login streak. You didn\'t just build a habit — you built a practice.',
+                'icon'        => 'fas fa-sun',
+                'rarity'      => 'mythic',
+                'category'    => 'streak',
+                'threshold'   => 100,
+                'xp_reward'   => 3000,
+            ],
+        ];
+
+        foreach ($badges as $badgeData) {
+            Badge::firstOrCreate(['slug' => $badgeData['slug']], $badgeData);
+        }
     }
 }

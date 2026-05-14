@@ -11,6 +11,15 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    private const RANK_TITLES = [
+        'Bronze'   => 'Junior Dev',
+        'Silver'   => 'Mid Dev',
+        'Gold'     => 'Senior Dev',
+        'Platinum' => 'Tech Lead',
+        'Diamond'  => 'Architect',
+        'Master'   => 'Legend',
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -18,12 +27,33 @@ class User extends Authenticatable
         'avatar',
         'bio',
         'title',
+        'linkedin_url',
+        'github_url',
         'level',
         'xp',
         'total_xp',
         'rank',
         'is_public',
         'last_login',
+        'last_activity_date',
+        'streak_days',
+        // Contact (private / resume-only)
+        'phone_number',
+        'home_address',
+        'city',
+        'country',
+        'website_url',
+        // Skills
+        'technical_skills',
+        // Resume details (private)
+        'resume_job_title',
+        'resume_summary',
+        'work_experience',
+        'education',
+        'certifications',
+        'languages',
+        // Visibility toggles
+        'visibility_settings',
     ];
 
     protected $hidden = [
@@ -34,7 +64,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login' => 'date',
+        'last_activity_date' => 'date',
         'password' => 'hashed',
+        'visibility_settings' => 'array',
     ];
 
     // Relationships
@@ -71,21 +103,98 @@ class User extends Authenticatable
         return $this->hasMany(Resume::class);
     }
 
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class)->latest();
+    }
+
     // Gamification Methods
     public function addXP(int $amount): void
     {
         $this->xp += $amount;
         $this->total_xp += $amount;
-        
+
+        $leveledUp = false;
+        $previousRank = $this->rank;
+
         // Level up logic - calculate XP needed before modifying level
         while ($this->xp >= ($xpNeeded = $this->xpNeededForNextLevel())) {
             $this->xp -= $xpNeeded;
             $this->level++;
-            
-            // Update rank based on level
             $this->updateRank();
+            $leveledUp = true;
         }
-        
+
+        if ($leveledUp) {
+            session()->flash('level_up', [
+                'new_level'  => $this->level,
+                'rank_title' => $this->getRankTitle(),
+                'old_rank'   => $previousRank,
+                'new_rank'   => $this->rank,
+                'is_rank_up' => $previousRank !== $this->rank,
+            ]);
+        }
+
+        $this->save();
+    }
+
+    public function getRankTitle(): string
+    {
+        return self::RANK_TITLES[$this->rank] ?? $this->rank;
+    }
+
+    public static function rankTitleMap(): array
+    {
+        return self::RANK_TITLES;
+    }
+
+    public function streakBonusMultiplier(): float
+    {
+        $tiers = (int) floor(($this->streak_days ?? 0) / 3);
+        return min(1.0 + ($tiers * 0.1), 2.0);
+    }
+
+    public function streakBonusActive(): bool
+    {
+        return ($this->streak_days ?? 0) >= 3;
+    }
+
+    public function shouldShowMilestoneBanner(int $threshold = 100): bool
+    {
+        $gap = $this->xpNeededForNextLevel() - $this->xp;
+        return $gap <= $threshold && $gap > 0;
+    }
+
+    public function xpToNextLevel(): int
+    {
+        return max(0, $this->xpNeededForNextLevel() - $this->xp);
+    }
+
+    /**
+     * Called when a user completes a meaningful activity (project created/updated,
+     * skill node unlocked). Increments streak by at most 1 per calendar day.
+     */
+    public function recordActivityStreak(): void
+    {
+        $today = now()->toDateString();
+        $lastActivity = $this->last_activity_date
+            ? $this->last_activity_date->toDateString()
+            : null;
+
+        // Already recorded activity today — no change
+        if ($lastActivity === $today) {
+            return;
+        }
+
+        $yesterday = now()->subDay()->toDateString();
+        if ($lastActivity === $yesterday) {
+            $this->streak_days = ($this->streak_days ?? 0) + 1;
+        } else {
+            // Missed a day (or first ever activity) — reset to 1
+            $this->streak_days = 1;
+        }
+
+        $this->last_activity_date = $today;
         $this->save();
     }
 
@@ -167,6 +276,16 @@ class User extends Authenticatable
     {
         $this->is_public = !$this->is_public;
         $this->save();
+    }
+
+    /**
+     * Check if a specific field is visible on the public profile.
+     * Defaults to true if not explicitly set.
+     */
+    public function isVisible(string $field): bool
+    {
+        $settings = $this->visibility_settings ?? [];
+        return $settings[$field] ?? true;
     }
 
     public function getPublicUrl(): string

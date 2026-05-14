@@ -55,9 +55,10 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+        $vis = $user->visibility_settings ?? [];
+
+        return view('profile.edit', compact('user', 'vis'));
     }
 
     /**
@@ -65,7 +66,12 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+
+        // Never overwrite visibility_settings from the profile form
+        unset($data['visibility_settings']);
+
+        $request->user()->fill($data);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -74,6 +80,28 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Update only the visibility settings.
+     */
+    public function updateVisibility(Request $request): RedirectResponse
+    {
+        $visibilityFields = [
+            'show_email', 'show_badges', 'show_linkedin', 'show_github',
+            'show_skills', 'show_achievements', 'show_projects', 'show_rank',
+            'show_technical_skills', 'show_certifications',
+        ];
+
+        $settings = [];
+        foreach ($visibilityFields as $field) {
+            // Checkbox sends '1' when checked, absent when unchecked
+            $settings[$field] = $request->input('visibility_settings.' . $field) === '1';
+        }
+
+        $request->user()->update(['visibility_settings' => $settings]);
+
+        return Redirect::route('profile.edit')->with('status', 'visibility-updated')->with('active_tab', 'visibility');
     }
 
     /**
