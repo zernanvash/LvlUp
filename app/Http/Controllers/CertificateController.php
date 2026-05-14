@@ -6,12 +6,12 @@ use App\Models\Certificate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Gemini\Laravel\Facades\Gemini;
+use Illuminate\Support\Str;
 
 class CertificateController extends Controller
 {
     /**
-     * Upload a certificate, store on Cloudinary, summarize with Gemini.
+     * Upload a certificate, store on Cloudinary, and summarize it for resume use.
      */
     public function store(Request $request)
     {
@@ -33,7 +33,7 @@ class CertificateController extends Controller
             return back()->with('cert_error', 'Failed to upload file to Cloudinary. Please try again.');
         }
 
-        // --- Build title for Gemini summary ---
+        // --- Build title for AI/local summary ---
         $titleForAI = $request->title;
         if ($request->issuer) {
             $titleForAI .= ' issued by ' . $request->issuer;
@@ -151,7 +151,7 @@ class CertificateController extends Controller
     private function deleteFromCloudinary(string $publicId, string $fileType): void
     {
         try {
-            $cloudinaryUrl = env('CLOUDINARY_URL');
+            $cloudinaryUrl = config('services.cloudinary.url') ?? env('CLOUDINARY_URL');
             $parsed    = parse_url($cloudinaryUrl);
             $cloudName = $parsed['host'];
             $apiKey    = $parsed['user'];
@@ -173,11 +173,14 @@ class CertificateController extends Controller
     }
 
     /**
-     * Generate an AI summary of the certificate using Gemini.
-     * For images, we use vision; for PDFs, we use title/context.
+     * Generate an AI summary of the certificate using the resume AI provider.
      */
     private function generateSummary(string $titleContext, string $fileUrl): string
     {
+        if (!filled(config('resume_ai.nvidia.api_key')) || !filled(config('resume_ai.nvidia.base_url'))) {
+            return $this->fallbackSummary($titleContext);
+        }
+
         try {
             $prompt = <<<PROMPT
             You are a professional resume assistant. Based on the following certificate information, write a single concise sentence (max 40 words) that summarizes what this certificate demonstrates about the holder's skills and qualifications. Be specific and professional.
@@ -188,15 +191,28 @@ class CertificateController extends Controller
             Return ONLY the summary sentence, no extra text or punctuation beyond the sentence.
             PROMPT;
 
-            $response = Gemini::generativeModel('gemini-1.5-flash')
-                ->generateContent($prompt);
+            $response = Http::withToken(config('resume_ai.nvidia.api_key'))
+                ->acceptJson()
+                ->timeout((int) config('resume_ai.nvidia.timeout'))
+                ->post(config('resume_ai.nvidia.base_url') . '/chat/completions', [
+                    'model' => config('resume_ai.models.content'),
+                    'messages' => [
+                        ['role' => 'system', 'content' => 'You write concise resume-ready certificate summaries.'],
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                    'temperature' => 0.2,
+                ]);
 
-            $text = trim($response->text());
+            if (!$response->successful()) {
+                throw new \RuntimeException('NVIDIA certificate summary failed: ' . $response->status() . ' ' . Str::limit($response->body(), 300));
+            }
+
+            $text = trim((string) data_get($response->json(), 'choices.0.message.content'));
 
             return !empty($text) ? $text : $this->fallbackSummary($titleContext);
 
         } catch (\Throwable $e) {
-            Log::warning('Gemini certificate summary failed', ['error' => $e->getMessage()]);
+            Log::warning('Certificate summary generation failed', ['error' => $e->getMessage()]);
             return $this->fallbackSummary($titleContext);
         }
     }

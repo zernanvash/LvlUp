@@ -4,240 +4,172 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>LvlUp - @yield('title')</title>
+    <title>LvlUp - @yield('title', 'Dashboard')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
+        :root {
+            color-scheme: dark;
+            --lvl-bg: #11101f;
+            --lvl-surface: #19172b;
+            --lvl-surface-raised: #211f35;
+            --lvl-surface-soft: #25223a;
+            --lvl-border: #3c375d;
+            --lvl-border-soft: #302c4a;
+            --lvl-text: #f7f4ff;
+            --lvl-muted: #c5bed8;
+            --lvl-faint: #928aa8;
+            --lvl-p50: #2a2551;
+            --lvl-p100: #3c3489;
+            --lvl-p200: #534ab7;
+            --lvl-p400: #7f77dd;
+            --lvl-p600: #afa9ec;
+            --lvl-p800: #eeedfe;
+            --lvl-gold: #ef9f27;
+            --lvl-green: #9bcf5a;
+            --lvl-red: #ef6b6b;
+            --lvl-body-bg:
+                radial-gradient(circle at top left, rgba(127, 119, 221, 0.22), transparent 28rem),
+                linear-gradient(180deg, rgba(17, 16, 31, 0.96), rgba(11, 10, 21, 1)),
+                var(--lvl-bg);
+            --lvl-sidebar-bg: rgba(18, 16, 32, 0.94);
+            --lvl-topbar-bg: rgba(18, 16, 32, 0.84);
+            --lvl-panel-bg: rgba(25, 23, 43, 0.94);
+            --lvl-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+            --lvl-hover-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+            --lvl-overlay: rgba(7, 6, 16, 0.72);
+        }
+
         [x-cloak] { display: none !important; }
-        
-        * {
-            font-family: 'Rajdhani', sans-serif;
+        * { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body {
+            min-height: 100vh;
+            color: var(--lvl-text);
+            background: var(--lvl-body-bg);
         }
-        
-        .font-display {
-            font-family: 'Orbitron', monospace;
-        }
-        
-        /* Animated gradient background */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .animated-bg {
-            background: linear-gradient(-45deg, #0a0e27, #1a1d3e, #2d1b4e, #1e0a3c);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-        
-        #skillTreeContainer {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-            touch-action: none;
-        }
+        .font-display { font-family: Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0; }
 
-        #skillTreeCanvas {
-            transform-origin: top left;
+        .lvl-sidebar {
+            background: var(--lvl-sidebar-bg);
+            border-right: 1px solid var(--lvl-border-soft);
+            box-shadow: var(--lvl-shadow);
         }
+        .lvl-topbar {
+            background: var(--lvl-topbar-bg);
+            border-bottom: 1px solid var(--lvl-border-soft);
+            backdrop-filter: blur(18px);
+        }
+        .lvl-nav-link {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            border-radius: .5rem;
+            padding: .62rem .75rem;
+            color: var(--lvl-muted);
+            font-size: .9rem;
+            font-weight: 600;
+            transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+            border: 1px solid transparent;
+        }
+        .lvl-nav-link:hover {
+            background: var(--lvl-surface-soft);
+            color: var(--lvl-p800);
+            border-color: var(--lvl-border-soft);
+        }
+        .lvl-nav-link.active {
+            background: var(--lvl-p50);
+            border-color: var(--lvl-p100);
+            color: var(--lvl-p800);
+        }
+        .lvl-nav-link i { width: 1rem; text-align: center; color: currentColor; }
 
-        #skillTreeViewport {
-            user-select: none;
-            cursor: grab;
-        }
-
-        #skillTreeViewport:active {
-            cursor: grabbing;
-        }
-        
-        /* Star field background */
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0;
-            animation: twinkle 3s infinite;
-        }
-        
-        @keyframes twinkle {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
-        
-        /* Glowing borders */
+        .lvl-panel,
         .glow-border {
-            position: relative;
-            border: 2px solid transparent;
-            background: linear-gradient(#1a1d3e, #1a1d3e) padding-box,
-                        linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b) border-box;
+            background: var(--lvl-panel-bg) !important;
+            border: 1px solid var(--lvl-border-soft) !important;
+            border-radius: .75rem !important;
+            box-shadow: var(--lvl-shadow) !important;
+            backdrop-filter: blur(12px);
         }
-        
-        .glow-border-gold {
-            border: 2px solid transparent;
-            background: linear-gradient(#1a1d3e, #1a1d3e) padding-box,
-                        linear-gradient(135deg, #fbbf24, #f59e0b, #d97706) border-box;
+        .lvl-panel-tight { padding: 1rem 1.25rem; }
+        .lvl-label {
+            color: var(--lvl-faint);
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
         }
-        
-        /* Rarity glows */
-        .rarity-common { box-shadow: 0 0 20px rgba(156, 163, 175, 0.3); }
-        .rarity-rare { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-        .rarity-epic { box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); }
-        .rarity-legendary { box-shadow: 0 0 40px rgba(245, 158, 11, 0.7); }
-        .rarity-mythic { box-shadow: 0 0 50px rgba(236, 72, 153, 0.8); }
-        
-        /* XP Bar animation */
-        .xp-bar {
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        .lvl-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            border-radius: 999px;
+            border: 1px solid var(--lvl-p100);
+            background: var(--lvl-p50);
+            color: var(--lvl-p800);
+            padding: .2rem .55rem;
+            font-size: .72rem;
+            font-weight: 700;
+            line-height: 1.2;
         }
-        
-        /* Card hover effect */
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-8px) scale(1.02);
-        }
-        
-        /* Particle effect */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .floating {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        /* Button glow */
-        .btn-glow {
-            position: relative;
+        .lvl-chip.gold { background: #faeeda; border-color: #f3cf91; color: #754706; }
+        .lvl-chip.green { background: #eaf3de; border-color: #c7dda5; color: #31560c; }
+        .lvl-chip.gray { background: var(--lvl-surface-soft); border-color: var(--lvl-border); color: var(--lvl-muted); }
+        .lvl-action { color: #ffffff !important; }
+        .lvl-xp-bg {
+            height: .5rem;
             overflow: hidden;
+            border-radius: 999px;
+            background: var(--lvl-surface-soft);
+            border: 1px solid var(--lvl-border-soft);
         }
-        
-        .btn-glow::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+        .lvl-xp-fill,
+        .xp-bar,
+        .xp-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--lvl-p600), var(--lvl-p400)) !important;
+            transition: width .8s ease;
         }
-        
-        .btn-glow:hover::before {
-            width: 300px;
-            height: 300px;
+
+        .card-hover { transition: transform .16s ease, box-shadow .16s ease; }
+        .card-hover:hover { transform: translateY(-2px) !important; box-shadow: var(--lvl-hover-shadow) !important; }
+        .btn-glow { position: relative; overflow: hidden; }
+        .btn-glow:hover { transform: translateY(-1px); }
+        .animated-bg, .stars, .star { display: none !important; }
+
+        main .glow-border .text-white,
+        main .lvl-panel .text-white { color: var(--lvl-text) !important; }
+        main .glow-border .lvl-action,
+        main .lvl-panel .lvl-action { color: #ffffff !important; }
+        main .text-gray-100, main .text-gray-200, main .text-gray-300 { color: var(--lvl-muted) !important; }
+        main .text-gray-400, main .text-gray-500, main .text-purple-300, main .text-purple-400 { color: var(--lvl-muted) !important; }
+        main .border-white\/10, main .border-white\/20, main .border-purple-500\/30 { border-color: var(--lvl-border-soft) !important; }
+        main .bg-white,
+        .lvl-topbar .bg-white,
+        .lvl-sidebar .bg-white,
+        main .bg-white\/5,
+        main .bg-white\/10,
+        main .bg-black\/30,
+        main .bg-black\/40 {
+            background: var(--lvl-surface-raised) !important;
         }
-        
-        /* Shimmer effect */
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-        
-        .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            background-size: 1000px 100%;
-            animation: shimmer 3s infinite;
-        }
-        
-        /* Level badge */
+
         .level-badge {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            clip-path: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
-        }
-
-            /* ===== SKILL TREE DESIGN IMPROVEMENTS ===== */
-
-        .skill-node::before {
-            content: "";
-            position: absolute;
-            inset: -10px;
-            border-radius: 50%;
-            border: 2px dashed rgba(139,92,246,0.3);
-            animation: rotate 20s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .skill-node[data-state="unlocked"] {
-            animation: unlockPop 0.5s ease;
-        }
-
-        @keyframes unlockPop {
-            0% { transform: scale(0.5); }
-            100% { transform: scale(1); }
-        }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #1a1d3e;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #a78bfa, #ec4899);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #c4b5fd, #f9a8d4);
+            background: var(--lvl-p600);
+            color: white;
+            border-radius: 999px;
         }
     </style>
-    
-    <script>
-        // Generate random stars on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const starsContainer = document.querySelector('.stars');
-            const starCount = 50;
-            
-            for (let i = 0; i < starCount; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.animationDelay = `${Math.random() * 3}s`;
-                starsContainer.appendChild(star);
-            }
-        });
 
-        // Pre-Alpine toast queue — captures any calls before appShell.init() runs
+    <script>
         window._toastQueue = [];
         window.pushToast = (opts) => window._toastQueue.push(opts);
     </script>
 </head>
-<body class="animated-bg text-gray-100 min-h-screen" x-data="appShell()">
-
+<body x-data="appShell()" class="min-h-screen">
 @if(session('level_up'))
 <script>window._levelUpData = @json(session('level_up'));</script>
 @endif
@@ -248,365 +180,248 @@
 <script>window._nodesReady = @json(session('nodes_ready'));</script>
 @endif
 
+@php
+    $navItems = [
+        ['href' => route('dashboard'), 'match' => 'dashboard', 'icon' => 'fas fa-gauge-high', 'label' => 'Dashboard'],
+        ['href' => route('skill-tree.index'), 'match' => 'skill-tree*', 'icon' => 'fas fa-network-wired', 'label' => 'Skill Tree'],
+        ['href' => route('projects.index'), 'match' => 'projects*', 'icon' => 'fas fa-folder-open', 'label' => 'Projects'],
+        ['href' => route('resume.index'), 'match' => 'resume*', 'icon' => 'fas fa-file-alt', 'label' => 'Resume'],
+        ['href' => route('achievements.index'), 'match' => 'achievements', 'icon' => 'fas fa-trophy', 'label' => 'Achievements'],
+        ['href' => route('users.index'), 'match' => 'users*', 'icon' => 'fas fa-users', 'label' => 'Discover'],
+    ];
+@endphp
+
 <!-- Level-Up Overlay -->
 <div
     x-show="showLevelUp"
-    x-transition:enter="transition ease-out duration-500"
-    x-transition:enter-start="opacity-0 scale-75"
-    x-transition:enter-end="opacity-100 scale-100"
-    x-transition:leave="transition ease-in duration-300"
-    x-transition:leave-start="opacity-100 scale-100"
-    x-transition:leave-end="opacity-0 scale-75"
+    x-transition
     @click="showLevelUp = false"
-    class="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer"
+    class="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer p-4"
     x-cloak
 >
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
-
-    <!-- Particle burst (CSS only) -->
-    <div class="absolute inset-0 pointer-events-none overflow-hidden">
-        <template x-for="i in 20">
-            <div class="absolute w-2 h-2 rounded-full"
-                :style="`
-                    background: hsl(${Math.random()*60+260}, 80%, 65%);
-                    left: 50%; top: 50%;
-                    animation: burst${Math.floor(Math.random()*4)} 1.2s ease-out forwards;
-                    animation-delay: ${Math.random()*0.3}s;
-                `"
-            ></div>
-        </template>
-    </div>
-
-    <!-- Card -->
-    <div class="relative z-10 text-center px-12 py-10 rounded-3xl border-2 border-purple-400/60"
-         style="background: linear-gradient(135deg, #1a1d3e 0%, #2d1b4e 50%, #1a1d3e 100%);
-                box-shadow: 0 0 80px rgba(168,85,247,0.6), 0 0 160px rgba(236,72,153,0.3);">
-
-        <!-- Glow ring -->
-        <div class="absolute inset-0 rounded-3xl animate-pulse"
-             style="box-shadow: inset 0 0 40px rgba(168,85,247,0.2);"></div>
-
-        <div class="relative z-10">
-            <!-- Crown icon -->
-            <div class="text-6xl mb-4 animate-bounce">
-                <i class="fas fa-crown text-amber-400" style="filter: drop-shadow(0 0 20px rgba(245,158,11,0.8))"></i>
-            </div>
-
-            <p class="font-display text-purple-300 text-sm tracking-[0.3em] uppercase mb-2">Achievement Unlocked</p>
-
-            <h1 class="font-display text-5xl font-black text-white mb-2"
-                style="text-shadow: 0 0 30px rgba(168,85,247,0.8)">
-                LEVEL UP!
-            </h1>
-
-            <div class="font-display text-7xl font-black mb-4"
-                 style="background: linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b);
-                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                <span x-text="levelUpData.new_level"></span>
-            </div>
-
-            <template x-if="levelUpData.is_rank_up">
-                <div class="mb-4 px-6 py-3 rounded-xl border border-amber-400/40 bg-amber-500/10">
-                    <p class="text-amber-300 text-sm font-bold tracking-widest uppercase">Rank Up!</p>
-                    <p class="font-display text-xl font-bold text-white" x-text="levelUpData.rank_title"></p>
-                </div>
-            </template>
-
-            <template x-if="!levelUpData.is_rank_up">
-                <p class="text-purple-300 text-lg mb-4" x-text="levelUpData.rank_title"></p>
-            </template>
-
-            <p class="text-purple-400 text-sm mt-4">Click anywhere to continue</p>
+    <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--lvl-overlay);"></div>
+    <div class="lvl-panel relative z-10 w-full max-w-md p-8 text-center border-l-4" style="border-left-color: var(--lvl-p600) !important;">
+        <div class="mx-auto mb-4 h-16 w-16 rounded-full bg-[var(--lvl-p50)] border border-[var(--lvl-p100)] flex items-center justify-center text-[var(--lvl-p600)]">
+            <i class="fas fa-crown text-2xl"></i>
         </div>
+        <p class="lvl-label mb-2">Achievement Unlocked</p>
+        <h1 class="text-3xl font-black text-[var(--lvl-text)]">LEVEL UP</h1>
+        <div class="text-6xl font-black text-[var(--lvl-p600)] mt-2" x-text="levelUpData.new_level"></div>
+        <p class="text-sm text-[var(--lvl-muted)] mt-2" x-text="levelUpData.rank_title"></p>
+        <p class="text-xs text-[var(--lvl-faint)] mt-5">Click anywhere to continue</p>
     </div>
 </div>
 
-<style>
-@keyframes burst0 { to { transform: translate(-120px, -140px) scale(0); opacity: 0; } }
-@keyframes burst1 { to { transform: translate(130px, -110px) scale(0); opacity: 0; } }
-@keyframes burst2 { to { transform: translate(-90px, 130px) scale(0); opacity: 0; } }
-@keyframes burst3 { to { transform: translate(110px, 120px) scale(0); opacity: 0; } }
-</style>
-    <!-- Star field background -->
-    <div class="stars"></div>
-    
-    <!-- Sidebar -->
-    <aside 
-        x-show="sidebarOpen" 
-        x-transition:enter="transition ease-out duration-300 transform"
-        x-transition:enter-start="-translate-x-full"
-        x-transition:enter-end="translate-x-0"
-        x-transition:leave="transition ease-in duration-200 transform"
-        x-transition:leave-start="translate-x-0"
-        x-transition:leave-end="-translate-x-full"
-        class="fixed inset-y-0 left-0 w-80 bg-gradient-to-b from-[#1a1d3e]/95 to-[#0a0e27]/95 backdrop-blur-xl border-r-2 border-purple-500/30 z-50 flex flex-col shadow-2xl"
-        style="box-shadow: 0 0 60px rgba(168, 85, 247, 0.2);"
-    >
-        <!-- Sidebar Header -->
-        <div class="h-20 flex items-center justify-between px-6 border-b-2 border-purple-500/30">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-crown text-2xl text-yellow-300"></i>
-                </div>
-                <div>
-                    <h1 class="font-display text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                        LvlUp
-                    </h1>
-                    <p class="text-xs text-purple-300">Knowledge Mastery System</p>
+<!-- Desktop Sidebar -->
+<aside class="lvl-sidebar fixed inset-y-0 left-0 z-40 hidden w-72 flex-col md:flex">
+    <div class="h-20 px-6 flex items-center border-b border-[var(--lvl-border-soft)]">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+            <x-application-logo class="h-10 w-32" />
+        </a>
+    </div>
+
+    @auth
+    <div class="p-5">
+        <div class="lvl-panel lvl-panel-tight border-l-4" style="border-left-color: var(--lvl-p400) !important;">
+            <div class="flex items-center gap-3">
+                <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=534ab7&color=fff&size=64' }}"
+                     class="h-12 w-12 rounded-full border border-[var(--lvl-p100)] object-cover"
+                     alt="{{ auth()->user()->name }}">
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-bold text-[var(--lvl-text)]">{{ auth()->user()->name }}</p>
+                    <span class="lvl-chip">{{ auth()->user()->getRankTitle() }}</span>
                 </div>
             </div>
-            <button @click="sidebarOpen = false" class="p-2 hover:bg-purple-500/20 rounded-lg transition">
-                <i class="fas fa-times text-xl text-purple-300"></i>
+            <div class="mt-4">
+                <div class="mb-1 flex justify-between text-[11px] font-semibold text-[var(--lvl-muted)]">
+                    <span>Level {{ auth()->user()->level }}</span>
+                    <span>{{ number_format(auth()->user()->xpProgress(), 1) }}%</span>
+                </div>
+                <div class="lvl-xp-bg">
+                    <div class="lvl-xp-fill" style="width: {{ auth()->user()->xpProgress() }}%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endauth
+
+    <nav class="flex-1 space-y-1 px-4">
+        @foreach($navItems as $item)
+            <a href="{{ $item['href'] }}" class="lvl-nav-link {{ Request::is($item['match']) ? 'active' : '' }}">
+                <i class="{{ $item['icon'] }}"></i>
+                <span>{{ $item['label'] }}</span>
+            </a>
+        @endforeach
+    </nav>
+
+    @auth
+    <div class="p-4 border-t border-[var(--lvl-border-soft)]">
+        <a href="{{ route('profile.edit') }}" class="lvl-nav-link {{ Request::is('profile') ? 'active' : '' }}">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+        <form method="POST" action="{{ route('logout') }}" class="mt-1">
+            @csrf
+            <button type="submit" class="lvl-nav-link w-full">
+                <i class="fas fa-right-from-bracket text-[var(--lvl-red)]"></i>
+                <span>Logout</span>
+            </button>
+        </form>
+    </div>
+    @endauth
+</aside>
+
+<!-- Mobile Sidebar -->
+<div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-50 md:hidden">
+    <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--lvl-overlay);" @click="sidebarOpen = false"></div>
+    <aside class="lvl-sidebar absolute inset-y-0 left-0 flex w-72 flex-col">
+        <div class="h-20 px-5 flex items-center justify-between border-b border-[var(--lvl-border-soft)]">
+            <x-application-logo class="h-10 w-32" />
+            <button @click="sidebarOpen = false" class="h-9 w-9 rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-muted)]">
+                <i class="fas fa-times"></i>
             </button>
         </div>
-
-        <!-- User Stats Card -->
-        @auth
-        <div class="p-6">
-            <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-[#2d1b4e]/50 to-[#1a1d3e]/50 backdrop-blur">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="relative">
-                        <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=a78bfa&color=fff&size=64' }}" 
-                             class="w-16 h-16 rounded-2xl border-2 border-purple-400 shadow-lg">
-                        <div class="level-badge absolute -bottom-2 -right-2 w-8 h-8 flex items-center justify-center">
-                            <span class="font-display text-xs font-bold text-white">{{ auth()->user()->level }}</span>
-                        </div>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-bold text-white text-lg">{{ auth()->user()->name }}</h3>
-                        <p class="text-sm text-purple-300">{{ auth()->user()->title }}</p>
-                    </div>
-                </div>
-                
-                <!-- XP Bar -->
-                <div class="mb-4">
-                    <div class="flex justify-between text-xs text-purple-300 mb-1">
-                        <span>Level {{ auth()->user()->level }}</span>
-                        <span>{{ auth()->user()->xp }} / {{ auth()->user()->xpNeededForNextLevel() }} XP</span>
-                    </div>
-                    <div class="h-3 bg-purple-950/50 rounded-full overflow-hidden border border-purple-500/30">
-                        <div class="xp-bar h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 shimmer" 
-                             style="width: {{ auth()->user()->xpProgress() }}%;"></div>
-                    </div>
-                </div>
-                
-                <!-- Rank Display -->
-                <div class="bg-purple-950/30 rounded-lg p-3 border border-purple-500/20">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-trophy text-amber-400"></i>
-                        <div>
-                            <p class="text-xs text-purple-300">Rank</p>
-                            <p class="font-display font-bold text-white">{{ auth()->user()->getRankTitle() }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endauth
-
-        <!-- Navigation -->
-        <nav class="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
-            <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('dashboard') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-home w-5 text-center {{ Request::is('dashboard') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('dashboard') ? 'text-white' : 'text-gray-300' }}">Dashboard</span>
-            </a>
-            
-            <a href="/skill-tree" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('skill-tree') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-network-wired w-5 text-center {{ Request::is('skill-tree') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('skill-tree') ? 'text-white' : 'text-gray-300' }}">Skill Tree</span>
-            </a>
-            
-            <a href="{{ route('projects.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('projects*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-folder-open w-5 text-center {{ Request::is('projects*') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('projects*') ? 'text-white' : 'text-gray-300' }}">Projects</span>
-            </a>
-            
-            <a href="/achievements" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('achievements') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-trophy w-5 text-center {{ Request::is('achievements') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('achievements') ? 'text-white' : 'text-gray-300' }}">Achievements</span>
-            </a>
-            
-            <a href="{{ route('users.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('users*') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-users w-5 text-center {{ Request::is('users*') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('users*') ? 'text-white' : 'text-gray-300' }}">Discover</span>
-            </a>
-            
-            <a href="/resume" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-500/20 transition group {{ Request::is('resume') ? 'bg-purple-500/30 border-l-4 border-purple-400' : '' }}">
-                <i class="fas fa-file-alt w-5 text-center {{ Request::is('resume') ? 'text-purple-300' : 'text-gray-400 group-hover:text-purple-300' }}"></i>
-                <span class="font-medium {{ Request::is('resume') ? 'text-white' : 'text-gray-300' }}">Resume Builder</span>
-            </a>
-        </nav>
-        
-        <!-- Logout -->
-        <div class="p-4 border-t-2 border-purple-500/30">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 transition group">
-                    <i class="fas fa-sign-out-alt w-5 text-center text-red-400"></i>
-                    <span class="font-medium text-red-300">Logout</span>
-                </button>
-            </form>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex flex-col min-h-screen relative z-10">
-        <!-- Top Header -->
-        <header class="h-20 border-b-2 border-purple-500/30 backdrop-blur-xl bg-[#1a1d3e]/50 sticky top-0 z-40 px-6 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <button 
-                    x-show="!sidebarOpen" 
-                    @click="sidebarOpen = true" 
-                    class="p-3 hover:bg-purple-500/20 rounded-xl border-2 border-purple-500/30 transition btn-glow"
-                >
-                    <i class="fas fa-bars text-purple-300"></i>
-                </button>
-
-                <div x-show="!sidebarOpen" class="hidden md:block">
-                    <h2 class="font-display text-xl font-bold text-white">@yield('page_title', 'Dashboard')</h2>
-                    <p class="text-xs text-purple-300">@yield('page_subtitle', 'Manage your journey')</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-4">
-                @auth
-                <!-- Profile Avatar -->
-                <a href="/profile" class="w-12 h-12 rounded-2xl border-2 border-purple-400 overflow-hidden hover:border-pink-400 transition shadow-lg">
-                    <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=a78bfa&color=fff&size=48' }}" 
-                         class="w-full h-full object-cover">
+        <nav class="flex-1 space-y-1 p-4">
+            @foreach($navItems as $item)
+                <a href="{{ $item['href'] }}" class="lvl-nav-link {{ Request::is($item['match']) ? 'active' : '' }}">
+                    <i class="{{ $item['icon'] }}"></i>
+                    <span>{{ $item['label'] }}</span>
                 </a>
-                @endauth
+            @endforeach
+        </nav>
+    </aside>
+</div>
+
+<div class="min-h-screen md:pl-72">
+    <header class="lvl-topbar sticky top-0 z-30 h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div class="flex items-center gap-4 min-w-0">
+            <button @click="sidebarOpen = true" class="md:hidden h-10 w-10 rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-p600)]">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="min-w-0">
+                <h1 class="text-lg sm:text-xl font-bold text-[var(--lvl-text)] truncate">@yield('page_title', 'Dashboard')</h1>
+                <p class="text-xs sm:text-sm text-[var(--lvl-muted)] truncate">@yield('page_subtitle', 'Manage your progression')</p>
             </div>
-        </header>
+        </div>
 
-        <!-- Page Content -->
-        <main class="flex-1 p-6 relative z-10">
-            @yield('content')
-        </main>
-    </div>
+        @auth
+        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 rounded-full border border-[var(--lvl-border-soft)] bg-white px-2 py-1.5 hover:border-[var(--lvl-p100)] transition">
+            <span class="hidden sm:block text-right">
+                <span class="block text-xs font-bold text-[var(--lvl-text)]">{{ auth()->user()->name }}</span>
+                <span class="block text-[11px] text-[var(--lvl-muted)]">Lv. {{ auth()->user()->level }}</span>
+            </span>
+            <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=534ab7&color=fff&size=48' }}"
+                 class="h-9 w-9 rounded-full object-cover"
+                 alt="{{ auth()->user()->name }}">
+        </a>
+        @endauth
+    </header>
 
-    <!-- Backdrop -->
-    <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"></div>
+    <main class="px-4 py-6 sm:px-6 lg:px-8">
+        @yield('content')
+    </main>
+</div>
 
-    @yield('modals')
-    @stack('scripts')
+@yield('modals')
+@stack('scripts')
 
-    <!-- ── Toast Notification Stack ─────────────────────────────────────── -->
-    <div class="fixed bottom-6 right-6 z-[9998] flex flex-col gap-3 pointer-events-none" id="toastStack">
-        <template x-for="(toast, i) in toasts" :key="toast.id">
-            <div class="pointer-events-auto flex items-start gap-4 px-5 py-4 rounded-2xl border shadow-2xl backdrop-blur-xl w-80"
-                x-show="toast.visible"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-x-10 scale-90"
-                x-transition:enter-end="opacity-100 translate-x-0 scale-100"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100 translate-x-0 scale-100"
-                x-transition:leave-end="opacity-0 translate-x-10 scale-90"
-                :style="`background: linear-gradient(135deg, #12152e f0, #1e1040 d0); border-color: ${toast.color}66;
-                         box-shadow: 0 0 40px ${toast.color}55, 0 8px 32px rgba(0,0,0,0.6);`"
-                @click="dismissToast(toast.id)">
-                <!-- Icon -->
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
-                    :style="`background: ${toast.color}22; border: 1.5px solid ${toast.color}66; color: ${toast.color};
-                             box-shadow: 0 0 16px ${toast.color}44;`">
-                    <i :class="toast.icon"></i>
-                </div>
-                <!-- Text -->
-                <div class="flex-1 min-w-0">
-                    <p class="text-[11px] uppercase tracking-widest font-bold mb-1" :style="`color: ${toast.color}`" x-text="toast.label"></p>
-                    <p class="text-white font-bold text-base leading-tight" x-text="toast.title"></p>
-                    <p x-show="toast.sub" class="text-gray-300 text-sm mt-1" x-text="toast.sub"></p>
-                </div>
-                <!-- Progress bar -->
-                <div class="absolute bottom-0 left-0 h-1 rounded-b-2xl"
-                    :style="`width: ${toast.progress}%; background: linear-gradient(90deg, ${toast.color}, ${toast.color}88); transition: width ${toast.duration}ms linear;`"></div>
+<div class="fixed bottom-6 right-6 z-[9998] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3 pointer-events-none" id="toastStack">
+    <template x-for="toast in toasts" :key="toast.id">
+        <div class="pointer-events-auto lvl-panel relative overflow-hidden p-4 flex items-start gap-3"
+            x-show="toast.visible"
+            x-transition
+            @click="dismissToast(toast.id)">
+            <div class="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                :style="`background: ${toast.color || '#534ab7'}22; color: ${toast.color || '#534ab7'}; border: 1px solid ${toast.color || '#534ab7'}44`">
+                <i :class="toast.icon || 'fas fa-bell'"></i>
             </div>
-        </template>
-    </div>
+            <div class="min-w-0 flex-1">
+                <p class="lvl-label" x-text="toast.label"></p>
+                <p class="text-sm font-bold text-[var(--lvl-text)]" x-text="toast.title"></p>
+                <p x-show="toast.sub" class="text-xs text-[var(--lvl-muted)] mt-0.5" x-text="toast.sub"></p>
+            </div>
+            <div class="absolute bottom-0 left-0 h-1"
+                :style="`width: ${toast.progress}%; background: ${toast.color || '#534ab7'}; transition: width ${toast.duration}ms linear;`"></div>
+        </div>
+    </template>
+</div>
 
-    <script>
-    function appShell() {
-        return {
-            sidebarOpen: false,
-            showLevelUp: false,
-            levelUpData: {},
-            toasts: [],
-            _toastId: 0,
+<script>
+function appShell() {
+    return {
+        sidebarOpen: false,
+        showLevelUp: false,
+        levelUpData: {},
+        toasts: [],
+        _toastId: 0,
 
-            init() {
-                // Replace the pre-Alpine stub FIRST so session toasts use the real impl
-                window.pushToast = (opts) => this.pushToast(opts);
-                if (window._toastQueue && window._toastQueue.length) {
-                    window._toastQueue.forEach(opts => this.pushToast(opts));
-                    window._toastQueue = [];
-                }
+        init() {
+            window.pushToast = (opts) => this.pushToast(opts);
+            if (window._toastQueue && window._toastQueue.length) {
+                window._toastQueue.forEach(opts => this.pushToast(opts));
+                window._toastQueue = [];
+            }
 
-                // Level-up overlay
-                if (window._levelUpData) {
-                    this.levelUpData = window._levelUpData;
-                    this.showLevelUp = true;
-                    setTimeout(() => this.showLevelUp = false, 5000);
-                }
-                // Badge unlock toasts — queue them with stagger
-                if (window._newBadges && window._newBadges.length) {
-                    window._newBadges.forEach((badge, idx) => {
-                        setTimeout(() => this.pushToast({
-                            label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
-                            title: badge.title,
-                            sub: '+' + badge.xp_reward + ' XP',
-                            icon: badge.icon,
-                            color: badge.rarity_color,
-                            duration: 5000,
-                        }), idx * 600);
-                    });
-                }
+            if (window._levelUpData) {
+                this.levelUpData = window._levelUpData;
+                this.showLevelUp = true;
+                setTimeout(() => this.showLevelUp = false, 5000);
+            }
 
-                // Skill nodes that just became available to unlock
-                if (window._nodesReady && window._nodesReady.length) {
-                    const badgeDelay = window._newBadges ? window._newBadges.length * 600 : 0;
-                    window._nodesReady.forEach((node, idx) => {
-                        setTimeout(() => this.pushToast({
-                            label: '⚡ SKILL READY TO UNLOCK',
-                            title: node.title,
-                            sub: 'Head to the Skill Tree to claim it!',
-                            icon: node.icon,
-                            color: node.color,
-                            duration: 6000,
-                        }), badgeDelay + idx * 700);
-                    });
-                }
-
-                // Listen for AJAX-triggered level-up (e.g. from skill tree unlock)
-                document.body.addEventListener('trigger-level-up', (e) => {
-                    this.levelUpData = e.detail;
-                    this.showLevelUp = true;
-                    setTimeout(() => this.showLevelUp = false, 5000);
+            if (window._newBadges && window._newBadges.length) {
+                window._newBadges.forEach((badge, idx) => {
+                    setTimeout(() => this.pushToast({
+                        label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
+                        title: badge.title,
+                        sub: '+' + badge.xp_reward + ' XP',
+                        icon: badge.icon,
+                        color: badge.rarity_color,
+                        duration: 5000,
+                    }), idx * 600);
                 });
-            },
+            }
 
-            pushToast({ label, title, sub, icon, color, duration = 4000 }) {
-                const id = ++this._toastId;
-                const toast = { id, label, title, sub, icon, color, duration, visible: true, progress: 100 };
-                this.toasts.push(toast);
-                // Animate progress bar down
-                this.$nextTick(() => {
-                    setTimeout(() => {
-                        const t = this.toasts.find(x => x.id === id);
-                        if (t) t.progress = 0;
-                    }, 50);
+            if (window._nodesReady && window._nodesReady.length) {
+                const badgeDelay = window._newBadges ? window._newBadges.length * 600 : 0;
+                window._nodesReady.forEach((node, idx) => {
+                    setTimeout(() => this.pushToast({
+                        label: 'SKILL READY TO UNLOCK',
+                        title: node.title,
+                        sub: 'Head to the Skill Tree to claim it.',
+                        icon: node.icon,
+                        color: node.color,
+                        duration: 6000,
+                    }), badgeDelay + idx * 700);
                 });
-                // Auto-dismiss
-                setTimeout(() => this.dismissToast(id), duration + 300);
-            },
+            }
 
-            dismissToast(id) {
-                const t = this.toasts.find(x => x.id === id);
-                if (t) t.visible = false;
-                setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id); }, 300);
-            },
-        };
-    }
-    </script>
+            document.body.addEventListener('trigger-level-up', (e) => {
+                this.levelUpData = e.detail;
+                this.showLevelUp = true;
+                setTimeout(() => this.showLevelUp = false, 5000);
+            });
+        },
+
+        pushToast({ label, title, sub, icon, color, duration = 4000 }) {
+            const id = ++this._toastId;
+            const toast = { id, label, title, sub, icon, color, duration, visible: true, progress: 100 };
+            this.toasts.push(toast);
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    const t = this.toasts.find(x => x.id === id);
+                    if (t) t.progress = 0;
+                }, 50);
+            });
+            setTimeout(() => this.dismissToast(id), duration + 300);
+        },
+
+        dismissToast(id) {
+            const t = this.toasts.find(x => x.id === id);
+            if (t) t.visible = false;
+            setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id); }, 300);
+        },
+    };
+}
+</script>
 </body>
 </html>

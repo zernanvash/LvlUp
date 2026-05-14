@@ -3,21 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resume;
-use App\Services\AiResumeWriter;
+use App\Services\ResumeAiPipeline;
 use App\Services\ResumeAnalyzer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
 
 class ResumeController extends Controller
 {
     protected $analyzer;
-    protected $writer;
+    protected $pipeline;
 
-    public function __construct(ResumeAnalyzer $analyzer, AiResumeWriter $writer)
+    public function __construct(ResumeAnalyzer $analyzer, ResumeAiPipeline $pipeline)
     {
         $this->analyzer = $analyzer;
-        $this->writer   = $writer;
+        $this->pipeline = $pipeline;
     }
 
     /**
@@ -95,11 +94,22 @@ class ResumeController extends Controller
         $keywords = $jobDesc ? $this->analyzer->extractKeywords($jobDesc) : [];
         $matchScore = $keywords ? $this->analyzer->calculateMatchScore($user, $keywords) : 0;
 
-        // Generate AI content
-        $aiContent = $this->writer->generate($user, (object)[
+        $resumeInput = (object)[
             'job_title'       => $validated['job_title'],
             'job_description' => $jobDesc,
-        ], $projects, $skills, $certificates);
+            'template'         => $validated['template'] ?? 'modern',
+        ];
+
+        $pipelineResult = $this->pipeline->generate(
+            $user,
+            $resumeInput,
+            $projects,
+            $skills,
+            $certificates,
+            $keywords,
+            $matchScore
+        );
+        $aiContent = $pipelineResult['content'];
 
         // Save/update the resume record
         $resume = $user->resumes()->updateOrCreate(
@@ -120,6 +130,7 @@ class ResumeController extends Controller
             'ai_content' => $aiContent,
             'resume_id'  => $resume->id,
             'match_score'=> round($matchScore),
+            'pipeline'   => $pipelineResult['metadata'],
         ]);
     }
 

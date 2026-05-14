@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('file_path');           // Cloudinary secure URL
             $table->string('file_public_id');      // Cloudinary public_id for deletion
             $table->string('file_type')->default('pdf'); // pdf, image
-            $table->text('ai_summary')->nullable(); // Gemini-generated summary
+            $table->text('ai_summary')->nullable(); // AI-generated summary
             $table->timestamps();
         });
     }

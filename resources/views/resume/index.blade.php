@@ -241,7 +241,7 @@
                             </div>
                             <p class="text-xs text-gray-500 flex items-center gap-1.5">
                                 <i class="fas fa-robot text-pink-400"></i>
-                                Gemini AI will automatically summarize this certificate for your resume.
+                                The resume AI pipeline will summarize this certificate for your resume when configured.
                             </p>
                             <button type="submit"
                                     class="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold text-sm hover:from-pink-500 hover:to-rose-500 transition btn-glow shadow-lg shadow-pink-500/20">
@@ -329,7 +329,7 @@
                     </div>
                     <h3 class="font-bold text-white">AI Resume Generator</h3>
                     <span class="ml-auto text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                        <i class="fas fa-gem mr-1"></i>Gemini AI
+                        <i class="fas fa-wand-magic-sparkles mr-1"></i>Resume AI Pipeline
                     </span>
                 </div>
 
@@ -382,7 +382,7 @@
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Generating with Gemini AI...
+                            Generating through the resume pipeline...
                         </span>
                     </button>
 
@@ -531,7 +531,7 @@
                     <i class="fas fa-file-alt text-4xl text-purple-400/40"></i>
                 </div>
                 <p class="text-gray-400 font-semibold mb-2">Your AI resume will appear here</p>
-                <p class="text-gray-600 text-sm leading-relaxed">Enter a job title above and click Generate.<br>Gemini AI uses all your profile data automatically — bio, projects, skills, and certificates.</p>
+                <p class="text-gray-600 text-sm leading-relaxed">Enter a job title above and click Generate.<br>The resume pipeline uses your profile data automatically — bio, projects, skills, and certificates.</p>
                 @if($resume && $resume->ai_content)
                 <div class="mt-6 pt-6 border-t border-white/10">
                     <p class="text-xs text-gray-500 mb-3">Resume previously generated on {{ $resume->updated_at->diffForHumans() }}</p>

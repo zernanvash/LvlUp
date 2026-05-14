@@ -1,63 +1,78 @@
 @extends('layouts.app')
 @section('title', 'Skill Tree')
+@section('page_title', 'Skill Tree')
+@section('page_subtitle', 'Unlock skills through projects and progression')
 @section('content')
 @php
 $tierColors = [
-    'core'      => ['ring' => '#f59e0b', 'glow' => 'rgba(245,158,11,0.7)',  'bg' => 'from-amber-900/80 to-amber-700/60',   'text' => 'text-amber-300'],
-    'basic'     => ['ring' => '#3b82f6', 'glow' => 'rgba(59,130,246,0.7)',  'bg' => 'from-blue-900/80 to-blue-700/60',     'text' => 'text-blue-300'],
-    'advanced'  => ['ring' => '#8b5cf6', 'glow' => 'rgba(139,92,246,0.7)',  'bg' => 'from-violet-900/80 to-violet-700/60', 'text' => 'text-violet-300'],
-    'master'    => ['ring' => '#ec4899', 'glow' => 'rgba(236,72,153,0.7)',  'bg' => 'from-pink-900/80 to-pink-700/60',     'text' => 'text-pink-300'],
-    'legendary' => ['ring' => '#f97316', 'glow' => 'rgba(249,115,22,0.9)',  'bg' => 'from-orange-900/80 to-red-700/60',   'text' => 'text-orange-300'],
+    'core'      => ['ring' => 'var(--lvl-skill-core)',      'glow' => 'var(--lvl-skill-core-glow)'],
+    'basic'     => ['ring' => 'var(--lvl-skill-basic)',     'glow' => 'var(--lvl-skill-basic-glow)'],
+    'advanced'  => ['ring' => 'var(--lvl-skill-advanced)',  'glow' => 'var(--lvl-skill-advanced-glow)'],
+    'master'    => ['ring' => 'var(--lvl-skill-master)',    'glow' => 'var(--lvl-skill-master-glow)'],
+    'legendary' => ['ring' => 'var(--lvl-skill-legendary)', 'glow' => 'var(--lvl-skill-legendary-glow)'],
 ];
 @endphp
 
-<div class="skill-tree-root w-full h-[calc(100vh-80px)] relative overflow-hidden" x-data="skillTreeApp()" x-init="init()">
+<div class="skill-tree-root relative -mx-4 -my-6 h-[calc(100vh-5rem)] overflow-hidden sm:-mx-6 lg:-mx-8" x-data="skillTreeApp()" x-init="init()">
 
-    <!-- Starfield background -->
     <canvas id="bgCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
 
     <!-- HUD top bar -->
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-[96%] max-w-5xl">
-        <div class="flex items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl">
-            <div class="flex items-center gap-1 font-display text-lg font-bold text-white tracking-widest">
-                <i class="fas fa-sitemap text-purple-400 mr-2"></i>SKILL TREE
-            </div>
-            <div class="flex items-center gap-6">
-                <div class="text-center">
-                    <p class="text-[9px] uppercase tracking-widest text-blue-400 opacity-70">Unlocked</p>
-                    <p class="font-display font-bold text-white text-base leading-none">{{ count($unlockedNodeIds) }}<span class="text-gray-500 text-sm">/{{ $nodes->count() }}</span></p>
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-5xl">
+        <div class="skill-hud lvl-panel flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div class="flex items-center gap-3">
+                <div class="skill-hud-mark">
+                    <i class="fas fa-sitemap"></i>
                 </div>
-                <div class="w-px h-6 bg-white/10"></div>
-                <div class="text-center">
-                    <p class="text-[9px] uppercase tracking-widest text-pink-400 opacity-70">Level</p>
-                    <p class="font-display font-bold text-white text-base leading-none">{{ auth()->user()->level }}</p>
-                </div>
-                <div class="w-px h-6 bg-white/10"></div>
-                <div class="text-center">
-                    <p class="text-[9px] uppercase tracking-widest text-amber-400 opacity-70">Rank</p>
-                    <p class="font-display font-bold text-white text-base leading-none">{{ auth()->user()->rank }}</p>
+                <div>
+                    <p class="lvl-label">Progress map</p>
+                    <h2 class="text-base font-black text-[var(--lvl-text)]">Skill Tree</h2>
                 </div>
             </div>
-            <div class="flex items-center gap-3 text-xs">
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]"></span><span class="text-gray-400">Core</span></span>
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-400 shadow-[0_0_8px_#22c55e]"></span><span class="text-gray-400">Ready</span></span>
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_#a855f7]"></span><span class="text-gray-400">Unlocked</span></span>
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-gray-600"></span><span class="text-gray-400">Locked</span></span>
+            <div class="grid grid-cols-3 gap-3 sm:flex sm:items-center sm:gap-5">
+                <div class="text-center">
+                    <p class="lvl-label">Unlocked</p>
+                    <p class="text-base font-black text-[var(--lvl-text)] leading-none">{{ count($unlockedNodeIds) }}<span class="text-sm text-[var(--lvl-faint)]">/{{ $nodes->count() }}</span></p>
+                </div>
+                <div class="hidden h-7 w-px bg-[var(--lvl-border-soft)] sm:block"></div>
+                <div class="text-center">
+                    <p class="lvl-label">Level</p>
+                    <p class="text-base font-black text-[var(--lvl-text)] leading-none">{{ auth()->user()->level }}</p>
+                </div>
+                <div class="hidden h-7 w-px bg-[var(--lvl-border-soft)] sm:block"></div>
+                <div class="text-center">
+                    <p class="lvl-label">Rank</p>
+                    <p class="text-base font-black text-[var(--lvl-text)] leading-none">{{ auth()->user()->rank }}</p>
+                </div>
+            </div>
+            <div class="hidden items-center gap-2 text-xs lg:flex">
+                <span class="skill-legend"><span style="background: var(--lvl-gold);"></span>Core</span>
+                <span class="skill-legend"><span style="background: var(--lvl-green);"></span>Ready</span>
+                <span class="skill-legend"><span style="background: var(--lvl-p600);"></span>Unlocked</span>
+                <span class="skill-legend"><span style="background: var(--lvl-border);"></span>Locked</span>
             </div>
         </div>
     </div>
 
     <!-- Zoom controls -->
     <div class="absolute bottom-6 right-6 z-30 flex flex-col gap-2">
-        <button @click="zoomIn()" class="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white hover:bg-purple-600/40 transition flex items-center justify-center backdrop-blur">
+        <button @click="zoomIn()" class="skill-tool-button" title="Zoom in" aria-label="Zoom in">
             <i class="fas fa-plus"></i>
         </button>
-        <button @click="zoomOut()" class="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white hover:bg-purple-600/40 transition flex items-center justify-center backdrop-blur">
+        <button @click="zoomOut()" class="skill-tool-button" title="Zoom out" aria-label="Zoom out">
             <i class="fas fa-minus"></i>
         </button>
-        <button @click="resetView()" class="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white hover:bg-purple-600/40 transition flex items-center justify-center backdrop-blur">
+        <button @click="resetView()" class="skill-tool-button" title="Reset view" aria-label="Reset view">
             <i class="fas fa-compress-arrows-alt"></i>
         </button>
+    </div>
+
+    <div class="absolute bottom-6 left-6 z-20 hidden max-w-xs rounded-xl border border-[var(--lvl-border-soft)] bg-[var(--lvl-panel-bg)] px-4 py-3 text-xs text-[var(--lvl-muted)] shadow-lg backdrop-blur md:block">
+        <div class="mb-2 flex items-center gap-2 font-bold text-[var(--lvl-text)]">
+            <i class="fas fa-hand-pointer text-[var(--lvl-p600)]"></i>
+            Explore
+        </div>
+        Drag the canvas, zoom with the wheel, and click nodes to inspect unlock requirements.
     </div>
 
     <!-- Skill tree stage -->
@@ -78,65 +93,34 @@ $tierColors = [
                     data-parent-id="{{ $node->parent_node_id ?? '' }}"
                     data-state="{{ $state }}"
                     data-tier="{{ $node->tier }}"
-                    style="left:{{ $node->x_position * 12 }}px; top:{{ $node->y_position * 11 }}px; transform:translate(-50%,-50%);"
+                    style="left:{{ $node->x_position * 12 }}px; top:{{ $node->y_position * 11 }}px; transform:translate(-50%,-50%); --node-ring: {{ $tc['ring'] }}; --node-glow: {{ $tc['glow'] }};"
                     @click="openNodeModal({{ $node->id }})">
 
-                    <!-- Outer glow ring -->
-                    <div class="node-outer relative w-24 h-24 flex items-center justify-center transition-transform duration-200 hover:scale-110">
+                    <div class="node-outer relative w-24 h-24 flex items-center justify-center">
 
-                        <!-- Animated ring for available -->
                         @if($state === 'available')
-                        <div class="absolute inset-0 rounded-full animate-ping opacity-30" style="background: radial-gradient(circle, {{ $tc['ring'] }}44, transparent 70%);"></div>
+                        <div class="node-ready-pulse absolute inset-1 rounded-full"></div>
                         @endif
 
-                        <!-- Hexagon shape via clip-path -->
-                        <div class="node-hex w-20 h-20 flex items-center justify-center relative transition-all duration-300"
-                            style="clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-                            @if($state === 'unlocked')
-                                background: linear-gradient(135deg, {{ $tc['ring'] }}99, {{ $tc['ring'] }}44);
-                                box-shadow: 0 0 30px {{ $tc['glow'] }}, inset 0 0 20px {{ $tc['ring'] }}33;
-                            @elseif($state === 'available')
-                                background: linear-gradient(135deg, #22c55e99, #16a34a44);
-                                box-shadow: 0 0 25px rgba(34,197,94,0.8);
-                            @else
-                                background: linear-gradient(135deg, #1e293b, #0f172a);
-                            @endif">
-
-                            <!-- Inner hex -->
-                            <div class="w-14 h-14 flex items-center justify-center"
-                                style="clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-                                @if($state === 'unlocked')
-                                    background: linear-gradient(135deg, {{ $tc['ring'] }}66, {{ $tc['ring'] }}22);
-                                @elseif($state === 'available')
-                                    background: linear-gradient(135deg, #16a34a66, #15803d22);
-                                @else
-                                    background: #0f172a;
-                                @endif">
-                                <i class="{{ $node->skill->icon ?? 'fas fa-code' }} text-xl
-                                    @if($state === 'unlocked') {{ $tc['text'] }}
-                                    @elseif($state === 'available') text-green-300
-                                    @else text-gray-600 @endif"></i>
+                        <div class="node-hex relative flex h-20 w-20 items-center justify-center">
+                            <div class="node-inner flex h-14 w-14 items-center justify-center">
+                                <i class="{{ $node->skill->icon ?? 'fas fa-code' }} text-xl"></i>
                             </div>
                         </div>
 
-                        <!-- Lock overlay for locked nodes -->
                         @if($state === 'locked')
-                        <div class="absolute bottom-1 right-1 w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center border border-gray-600">
-                            <i class="fas fa-lock text-gray-500 text-[8px]"></i>
+                        <div class="node-state-badge">
+                            <i class="fas fa-lock"></i>
                         </div>
                         @elseif($state === 'unlocked')
-                        <div class="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center border" style="background: {{ $tc['ring'] }}33; border-color: {{ $tc['ring'] }}88;">
-                            <i class="fas fa-check text-[8px]" style="color: {{ $tc['ring'] }}"></i>
+                        <div class="node-state-badge is-unlocked">
+                            <i class="fas fa-check"></i>
                         </div>
                         @endif
                     </div>
 
-                    <!-- Node label -->
                     <div class="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none text-center">
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md
-                            @if($state === 'unlocked') {{ $tc['text'] }} bg-black/40
-                            @elseif($state === 'available') text-green-300 bg-black/40
-                            @else text-gray-500 bg-black/20 @endif">
+                        <span class="node-label">
                             {{ Str::limit($node->title, 18) }}
                         </span>
                     </div>
@@ -150,24 +134,24 @@ $tierColors = [
     <div x-show="modal.open"
         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-        x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+        x-cloak class="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md"
+        style="background: var(--lvl-overlay);"
         @click.self="closeModal()">
 
-        <div class="relative w-full max-w-md mx-4 rounded-2xl shadow-2xl overflow-hidden border border-white/10"
-            style="background: linear-gradient(135deg, #0d1117 0%, #161b2e 100%);">
+        <div class="skill-modal lvl-panel relative w-full max-w-md mx-4 overflow-hidden">
 
             <!-- Decorative top accent -->
             <div class="h-1 w-full" x-show="modal.data"
                 :style="modal.data ? `background: linear-gradient(90deg, transparent, ${stateColor(modal.data.state)}, transparent)` : ''"></div>
 
-            <button @click="closeModal()" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-500/30 text-gray-400 hover:text-white transition z-10">
+            <button @click="closeModal()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--lvl-border-soft)] bg-[var(--lvl-surface-raised)] text-[var(--lvl-muted)] hover:text-[var(--lvl-text)] transition z-10">
                 <i class="fas fa-times text-xs"></i>
             </button>
 
             <!-- Loading -->
             <div x-show="modal.loading" class="p-12 text-center">
-                <div class="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-purple-300 text-sm">Loading node data...</p>
+                <div class="w-12 h-12 border-2 border-[var(--lvl-p600)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-[var(--lvl-muted)] text-sm">Loading node data...</p>
             </div>
 
             <template x-if="modal.data && !modal.loading">
@@ -183,61 +167,63 @@ $tierColors = [
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <h3 class="font-display text-lg font-bold text-white leading-tight" x-text="modal.data.node.title"></h3>
+                                    <h3 class="font-display text-lg font-bold text-[var(--lvl-text)] leading-tight" x-text="modal.data.node.title"></h3>
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
                                         :style="`color: ${stateColor(modal.data.state)}; border-color: ${stateColor(modal.data.state)}55; background: ${stateColor(modal.data.state)}11`"
-                                        x-text="modal.data.state === 'unlocked' ? '✓ Unlocked' : modal.data.state === 'available' ? '⚡ Ready' : '🔒 Locked'"></span>
+                                        x-text="modal.data.state === 'unlocked' ? 'Unlocked' : modal.data.state === 'available' ? 'Ready' : 'Locked'"></span>
                                 </div>
-                                <p class="text-xs text-gray-400" x-text="modal.data.node.skill ? modal.data.node.skill.name : ''"></p>
+                                <p class="text-xs text-[var(--lvl-muted)]" x-text="modal.data.node.skill ? modal.data.node.skill.name : ''"></p>
                             </div>
                         </div>
-                        <p class="text-gray-300 text-sm mt-3 leading-relaxed" x-text="modal.data.node.description"></p>
+                        <p class="text-[var(--lvl-muted)] text-sm mt-3 leading-relaxed" x-text="modal.data.node.description"></p>
                     </div>
 
                     <!-- Divider -->
-                    <div class="mx-5 border-t border-white/5"></div>
+                    <div class="mx-5 border-t border-[var(--lvl-border-soft)]"></div>
 
                     <!-- Requirements -->
                     <div class="p-5 space-y-2">
-                        <p class="text-[10px] uppercase tracking-widest text-gray-500 mb-3">Requirements</p>
+                        <p class="lvl-label mb-3">Requirements</p>
 
                         <!-- Level -->
-                        <div class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/3 border border-white/5">
+                        <div class="requirement-row">
                             <div class="flex items-center gap-2 text-sm">
                                 <i class="fas fa-star-half-alt text-xs w-4 text-center" :style="`color: ${stateColor(modal.data.state)}`"></i>
-                                <span class="text-gray-300">Level <span class="font-bold text-white" x-text="modal.data.requirements.level.required"></span></span>
+                                <span class="text-[var(--lvl-muted)]">Level <span class="font-bold text-[var(--lvl-text)]" x-text="modal.data.requirements.level.required"></span></span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold tabular-nums"
-                                    :class="modal.data.requirements.level.met ? 'text-green-400' : 'text-yellow-400'"
+                                    :style="`color: ${modal.data.requirements.level.met ? 'var(--lvl-green)' : 'var(--lvl-gold)'}`"
                                     x-text="`${modal.data.requirements.level.current} / ${modal.data.requirements.level.required}`"></span>
-                                <i class="text-xs" :class="modal.data.requirements.level.met ? 'fas fa-check-circle text-green-400' : 'fas fa-hourglass-half text-yellow-400'"></i>
+                                <i class="text-xs" :class="modal.data.requirements.level.met ? 'fas fa-check-circle' : 'fas fa-hourglass-half'"
+                                   :style="`color: ${modal.data.requirements.level.met ? 'var(--lvl-green)' : 'var(--lvl-gold)'}`"></i>
                             </div>
                         </div>
 
                         <!-- Parent -->
                         <template x-if="modal.data.requirements.parent">
-                            <div class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/3 border border-white/5">
+                            <div class="requirement-row">
                                 <div class="flex items-center gap-2 text-sm">
-                                    <i class="fas fa-project-diagram text-xs w-4 text-center text-purple-400"></i>
-                                    <span class="text-gray-300">Unlock <span class="font-bold text-white" x-text="modal.data.requirements.parent.title"></span></span>
+                                    <i class="fas fa-project-diagram text-xs w-4 text-center text-[var(--lvl-p600)]"></i>
+                                    <span class="text-[var(--lvl-muted)]">Unlock <span class="font-bold text-[var(--lvl-text)]" x-text="modal.data.requirements.parent.title"></span></span>
                                 </div>
-                                <i class="text-xs" :class="modal.data.requirements.parent.met ? 'fas fa-check-circle text-green-400' : 'fas fa-times-circle text-red-400'"></i>
+                                <i class="text-xs" :class="modal.data.requirements.parent.met ? 'fas fa-check-circle' : 'fas fa-times-circle'"
+                                   :style="`color: ${modal.data.requirements.parent.met ? 'var(--lvl-green)' : 'var(--lvl-red)'}`"></i>
                             </div>
                         </template>
 
                         <!-- Tasks -->
                         <template x-for="task in modal.data.requirements.tasks" :key="task.description">
-                            <div class="px-3 py-2.5 rounded-xl bg-white/3 border border-white/5">
+                            <div class="requirement-task">
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-xs text-gray-300 leading-snug flex-1 pr-3" x-text="task.description"></span>
+                                    <span class="text-xs text-[var(--lvl-muted)] leading-snug flex-1 pr-3" x-text="task.description"></span>
                                     <span class="text-xs font-bold tabular-nums flex-shrink-0"
-                                        :class="task.completed ? 'text-green-400' : 'text-yellow-400'"
+                                        :style="`color: ${task.completed ? 'var(--lvl-green)' : 'var(--lvl-gold)'}`"
                                         x-text="`${task.current}/${task.required}`"></span>
                                 </div>
-                                <div class="w-full bg-white/5 rounded-full h-1">
+                                <div class="w-full bg-[var(--lvl-surface-soft)] rounded-full h-1">
                                     <div class="h-1 rounded-full transition-all duration-700"
-                                        :style="`width: ${Math.min(100, (task.current / Math.max(1, task.required)) * 100)}%; background: ${task.completed ? '#22c55e' : stateColor(modal.data.state)}`"></div>
+                                        :style="`width: ${Math.min(100, (task.current / Math.max(1, task.required)) * 100)}%; background: ${task.completed ? 'var(--lvl-green)' : stateColor(modal.data.state)}`"></div>
                                 </div>
                             </div>
                         </template>
@@ -248,8 +234,8 @@ $tierColors = [
                         <template x-if="modal.data.state === 'available'">
                             <button @click="unlockNode(modal.data.node.id)"
                                 :disabled="unlocking"
-                                class="w-full py-3 rounded-xl font-display font-bold text-sm transition shadow-lg text-white disabled:opacity-60"
-                                style="background: linear-gradient(135deg, #16a34a, #15803d);">
+                                class="lvl-action w-full py-3 rounded-xl font-display font-bold text-sm transition shadow-lg text-white disabled:opacity-60"
+                                style="background: linear-gradient(135deg, var(--lvl-green), var(--lvl-p400));">
                                 <template x-if="!unlocking">
                                     <span><i class="fas fa-unlock mr-2"></i> Unlock Skill Node</span>
                                 </template>
@@ -259,12 +245,12 @@ $tierColors = [
                             </button>
                         </template>
                         <template x-if="modal.data.state === 'unlocked'">
-                            <div class="text-center py-2 text-green-400 text-sm font-bold">
+                            <div class="text-center py-2 text-sm font-bold" style="color: var(--lvl-green);">
                                 <i class="fas fa-check-circle mr-1"></i> Skill Unlocked
                             </div>
                         </template>
                         <template x-if="modal.data.state === 'locked'">
-                            <a href="/projects/create" class="block w-full py-3 rounded-xl text-center text-sm font-bold text-purple-300 border border-purple-500/30 hover:bg-purple-500/10 transition">
+                            <a href="/projects/create" class="block w-full py-3 rounded-xl text-center text-sm font-bold text-[var(--lvl-p600)] border border-[var(--lvl-border-soft)] hover:bg-[var(--lvl-surface-soft)] transition">
                                 <i class="fas fa-plus mr-2"></i> Add Project to Progress
                             </a>
                         </template>
@@ -285,10 +271,25 @@ $tierColors = [
             modal: { open: false, loading: false, data: null },
             unlocking: false,
 
+            cssVar(name) {
+                return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+            },
+
+            tierColor(tier) {
+                const map = {
+                    core: '--lvl-skill-core',
+                    basic: '--lvl-skill-basic',
+                    advanced: '--lvl-skill-advanced',
+                    master: '--lvl-skill-master',
+                    legendary: '--lvl-skill-legendary',
+                };
+                return this.cssVar(map[tier] || '--lvl-p600') || '#a855f7';
+            },
+
             stateColor(state) {
-                if (state === 'unlocked') return '#a855f7';
-                if (state === 'available') return '#22c55e';
-                return '#6b7280';
+                if (state === 'unlocked') return this.cssVar('--lvl-p600') || '#a855f7';
+                if (state === 'available') return this.cssVar('--lvl-green') || '#22c55e';
+                return this.cssVar('--lvl-faint') || '#6b7280';
             },
 
             init() {
@@ -297,33 +298,51 @@ $tierColors = [
                 this.$nextTick(() => {
                     setTimeout(() => { this.drawConnections(); this.centerView(); }, 200);
                 });
-                window.addEventListener('resize', () => this.drawConnections());
+                window.addEventListener('resize', () => this.resizeBackground());
+            },
+
+            resizeBackground() {
+                const bg = document.getElementById('bgCanvas');
+                if (!bg) return;
+                bg.width = window.innerWidth;
+                bg.height = window.innerHeight;
             },
 
             initBackground() {
                 const bg = document.getElementById('bgCanvas');
-                bg.width = window.innerWidth;
-                bg.height = window.innerHeight;
+                this.resizeBackground();
                 const ctx = bg.getContext('2d');
-                const stars = Array.from({length: 180}, () => ({
+                const stars = Array.from({length: 90}, () => ({
                     x: Math.random() * bg.width, y: Math.random() * bg.height,
-                    r: Math.random() * 1.5 + 0.3, a: Math.random(), speed: Math.random() * 0.005 + 0.002
+                    r: Math.random() * 1.2 + 0.25, a: Math.random(), speed: Math.random() * 0.003 + 0.001
                 }));
                 const draw = () => {
+                    const text = this.cssVar('--lvl-text') || '#ffffff';
                     ctx.clearRect(0, 0, bg.width, bg.height);
-                    ctx.fillStyle = '#060914';
+                    ctx.fillStyle = 'transparent';
                     ctx.fillRect(0, 0, bg.width, bg.height);
                     stars.forEach(s => {
                         s.a += s.speed;
-                        const alpha = (Math.sin(s.a) + 1) / 2 * 0.8 + 0.1;
+                        const alpha = (Math.sin(s.a) + 1) / 2 * 0.28 + 0.06;
                         ctx.beginPath();
                         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(200,200,255,${alpha})`;
+                        ctx.fillStyle = this.hexToRgba(text, alpha);
                         ctx.fill();
                     });
                     requestAnimationFrame(draw);
                 };
                 draw();
+            },
+
+            hexToRgba(value, alpha) {
+                if (!value || !value.startsWith('#')) return `rgba(200,200,255,${alpha})`;
+                const hex = value.replace('#', '');
+                const full = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+                const num = parseInt(full, 16);
+                const r = (num >> 16) & 255;
+                const g = (num >> 8) & 255;
+                const b = num & 255;
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
             },
 
             drawConnections() {
@@ -350,23 +369,27 @@ $tierColors = [
                     ctx.moveTo(x1, y1);
                     ctx.bezierCurveTo(x1, my, x2, my, x2, y2);
 
+                    const unlockedColor = this.stateColor('unlocked');
+                    const readyColor = this.stateColor('available');
+                    const lockedColor = this.cssVar('--lvl-border') || '#334155';
+
                     if (parentState === 'unlocked' && state === 'unlocked') {
-                        ctx.strokeStyle = '#a855f7';
-                        ctx.shadowBlur = 12;
-                        ctx.shadowColor = '#a855f7';
+                        ctx.strokeStyle = unlockedColor;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = unlockedColor;
                         ctx.lineWidth = 3;
-                        ctx.globalAlpha = 0.9;
+                        ctx.globalAlpha = 0.74;
                     } else if (state === 'available') {
-                        ctx.strokeStyle = '#22c55e';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#22c55e';
+                        ctx.strokeStyle = readyColor;
+                        ctx.shadowBlur = 7;
+                        ctx.shadowColor = readyColor;
                         ctx.lineWidth = 2.5;
-                        ctx.globalAlpha = 0.8;
+                        ctx.globalAlpha = 0.72;
                     } else {
-                        ctx.strokeStyle = '#1e293b';
+                        ctx.strokeStyle = lockedColor;
                         ctx.shadowBlur = 0;
                         ctx.lineWidth = 1.5;
-                        ctx.globalAlpha = 0.4;
+                        ctx.globalAlpha = 0.34;
                     }
                     ctx.stroke();
                     ctx.shadowBlur = 0;
@@ -379,9 +402,9 @@ $tierColors = [
                         const by = Math.pow(1-t,3)*y1 + 3*Math.pow(1-t,2)*t*my + 3*(1-t)*t*t*my + Math.pow(t,3)*y2;
                         ctx.beginPath();
                         ctx.arc(bx, by, 4, 0, Math.PI * 2);
-                        ctx.fillStyle = '#c084fc';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#a855f7';
+                        ctx.fillStyle = unlockedColor;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = unlockedColor;
                         ctx.fill();
                         ctx.shadowBlur = 0;
                     }
@@ -487,22 +510,18 @@ $tierColors = [
                         if (nodeEl) {
                             nodeEl.setAttribute('data-state', 'unlocked');
                             const tier = nodeEl.getAttribute('data-tier') || 'basic';
-                            const tierColors = {
-                                core: '#f59e0b', basic: '#3b82f6', advanced: '#8b5cf6',
-                                master: '#ec4899', legendary: '#f97316'
-                            };
-                            const ring = tierColors[tier] || '#a855f7';
+                            const ring = this.tierColor(tier);
 
                             // Update outer hex background + glow
                             const outerHex = nodeEl.querySelector('.node-hex');
                             if (outerHex) {
-                                outerHex.style.background = `linear-gradient(135deg, ${ring}99, ${ring}44)`;
-                                outerHex.style.boxShadow = `0 0 30px ${ring}b3, inset 0 0 20px ${ring}33`;
+                                outerHex.style.background = '';
+                                outerHex.style.boxShadow = '';
 
                                 // Update inner hex (first direct child div of outerHex)
                                 const innerHex = outerHex.querySelector('div');
                                 if (innerHex) {
-                                    innerHex.style.background = `linear-gradient(135deg, ${ring}66, ${ring}22)`;
+                                    innerHex.style.background = '';
 
                                     // Update icon color
                                     const icon = innerHex.querySelector('i');
@@ -515,7 +534,7 @@ $tierColors = [
                             }
 
                             // Remove the ping animation (was for available state)
-                            const ping = nodeEl.querySelector('.animate-ping');
+                            const ping = nodeEl.querySelector('.node-ready-pulse, .animate-ping');
                             if (ping) ping.remove();
 
                             // Remove lock overlay if present
@@ -526,31 +545,25 @@ $tierColors = [
                             const nodeOuter = nodeEl.querySelector('.node-outer');
                             if (nodeOuter && !nodeOuter.querySelector('.unlock-check')) {
                                 const check = document.createElement('div');
-                                check.className = 'unlock-check absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center border';
-                                check.style.cssText = `background: ${ring}33; border-color: ${ring}88;`;
-                                check.innerHTML = `<i class="fas fa-check text-[8px]" style="color: ${ring}"></i>`;
+                                check.className = 'unlock-check node-state-badge is-unlocked';
+                                check.innerHTML = `<i class="fas fa-check"></i>`;
                                 nodeOuter.appendChild(check);
                             }
 
                             // Update label color
-                            const label = nodeEl.querySelector('.-bottom-7 span');
+                            const label = nodeEl.querySelector('.node-label');
                             if (label) {
-                                label.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/40';
-                                label.style.color = ring;
+                                label.className = 'node-label';
                             }
                         }
 
                         // Fire unlock toast
-                        const tierColors = {
-                            core: '#f59e0b', basic: '#3b82f6', advanced: '#8b5cf6',
-                            master: '#ec4899', legendary: '#f97316'
-                        };
                         window.pushToast({
                             label: (data.tier || 'skill').toUpperCase() + ' NODE UNLOCKED',
                             title: data.title,
                             sub: null,
                             icon: data.icon || 'fas fa-code',
-                            color: tierColors[data.tier] || '#a855f7',
+                            color: this.tierColor(data.tier),
                             duration: 4000,
                         });
 
@@ -604,9 +617,209 @@ $tierColors = [
 
     <style>
     [x-cloak] { display: none !important; }
-    .skill-tree-root { background: #060914; }
-    .node-hex { transition: filter 0.2s, transform 0.2s; }
-    .skill-node:hover .node-hex { filter: brightness(1.3); }
+    .skill-tree-root {
+        --lvl-skill-core: var(--lvl-gold);
+        --lvl-skill-basic: var(--lvl-p400);
+        --lvl-skill-advanced: var(--lvl-p600);
+        --lvl-skill-master: #d978b7;
+        --lvl-skill-legendary: #f07f45;
+        --lvl-skill-core-glow: rgba(239, 159, 39, .28);
+        --lvl-skill-basic-glow: rgba(127, 119, 221, .24);
+        --lvl-skill-advanced-glow: rgba(175, 169, 236, .24);
+        --lvl-skill-master-glow: rgba(217, 120, 183, .22);
+        --lvl-skill-legendary-glow: rgba(240, 127, 69, .24);
+        background:
+            radial-gradient(circle at 28% 18%, color-mix(in srgb, var(--lvl-p600) 16%, transparent), transparent 22rem),
+            linear-gradient(color-mix(in srgb, var(--lvl-border-soft) 42%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in srgb, var(--lvl-border-soft) 42%, transparent) 1px, transparent 1px),
+            var(--lvl-body-bg);
+        background-size: auto, 42px 42px, 42px 42px, auto;
+    }
+
+    .skill-tree-root::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 72% 34%, color-mix(in srgb, var(--lvl-gold) 10%, transparent), transparent 18rem),
+            radial-gradient(circle at 50% 80%, color-mix(in srgb, var(--lvl-green) 10%, transparent), transparent 20rem);
+        opacity: .9;
+    }
+
+    .skill-hud-mark,
+    .skill-tool-button {
+        align-items: center;
+        background: var(--lvl-surface-raised);
+        border: 1px solid var(--lvl-border-soft);
+        color: var(--lvl-p600);
+        display: flex;
+        justify-content: center;
+    }
+
+    .skill-hud-mark {
+        border-radius: .7rem;
+        height: 2.5rem;
+        width: 2.5rem;
+    }
+
+    .skill-tool-button {
+        backdrop-filter: blur(14px);
+        border-radius: .7rem;
+        box-shadow: var(--lvl-shadow);
+        height: 2.5rem;
+        transition: transform .16s ease, border-color .16s ease, color .16s ease, background-color .16s ease;
+        width: 2.5rem;
+    }
+
+    .skill-tool-button:hover {
+        border-color: var(--lvl-p100);
+        color: var(--lvl-p800);
+        transform: translateY(-1px);
+    }
+
+    .skill-legend {
+        align-items: center;
+        color: var(--lvl-muted);
+        display: inline-flex;
+        font-weight: 700;
+        gap: .4rem;
+    }
+
+    .skill-legend span {
+        border-radius: 999px;
+        box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 10%, transparent);
+        height: .55rem;
+        width: .55rem;
+    }
+
+    .node-outer {
+        transition: transform .18s ease;
+    }
+
+    .skill-node:hover .node-outer {
+        transform: translateY(-3px) scale(1.04);
+    }
+
+    .node-hex,
+    .node-inner {
+        clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    }
+
+    .node-hex {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--node-ring) 62%, var(--lvl-surface-raised)), color-mix(in srgb, var(--node-ring) 22%, var(--lvl-surface)));
+        border: 1px solid color-mix(in srgb, var(--node-ring) 72%, var(--lvl-border));
+        box-shadow: 0 12px 26px rgba(0, 0, 0, .22), 0 0 24px var(--node-glow);
+        transition: filter .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    .node-inner {
+        background: color-mix(in srgb, var(--lvl-surface) 82%, var(--node-ring));
+        color: var(--node-ring);
+        text-shadow: 0 0 14px color-mix(in srgb, var(--node-ring) 55%, transparent);
+    }
+
+    .skill-node[data-state="available"] .node-hex {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--lvl-green) 72%, var(--lvl-surface)), color-mix(in srgb, var(--lvl-green) 24%, var(--lvl-surface)));
+        border-color: color-mix(in srgb, var(--lvl-green) 70%, var(--lvl-border));
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .2), 0 0 24px color-mix(in srgb, var(--lvl-green) 28%, transparent);
+    }
+
+    .skill-node[data-state="available"] .node-inner {
+        color: var(--lvl-green);
+    }
+
+    .skill-node[data-state="locked"] .node-hex {
+        background: linear-gradient(135deg, var(--lvl-surface-soft), color-mix(in srgb, var(--lvl-surface-soft) 65%, #000));
+        border-color: var(--lvl-border-soft);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .14);
+        opacity: .68;
+    }
+
+    .skill-node[data-state="locked"] .node-inner {
+        background: color-mix(in srgb, var(--lvl-surface) 82%, var(--lvl-border));
+        color: var(--lvl-faint);
+        text-shadow: none;
+    }
+
+    .node-ready-pulse {
+        animation: nodeReadyPulse 2.8s ease-in-out infinite;
+        background: radial-gradient(circle, color-mix(in srgb, var(--lvl-green) 20%, transparent), transparent 68%);
+        border: 1px solid color-mix(in srgb, var(--lvl-green) 36%, transparent);
+    }
+
+    @keyframes nodeReadyPulse {
+        0%, 100% { opacity: .45; transform: scale(.9); }
+        50% { opacity: .95; transform: scale(1.12); }
+    }
+
+    .node-state-badge {
+        align-items: center;
+        background: var(--lvl-surface-raised);
+        border: 1px solid var(--lvl-border-soft);
+        border-radius: 999px;
+        bottom: .25rem;
+        color: var(--lvl-faint);
+        display: flex;
+        font-size: .55rem;
+        height: 1.25rem;
+        justify-content: center;
+        position: absolute;
+        right: .25rem;
+        width: 1.25rem;
+    }
+
+    .node-state-badge.is-unlocked {
+        background: color-mix(in srgb, var(--node-ring) 18%, var(--lvl-surface-raised));
+        border-color: color-mix(in srgb, var(--node-ring) 58%, var(--lvl-border-soft));
+        color: var(--node-ring);
+    }
+
+    .node-label {
+        background: color-mix(in srgb, var(--lvl-panel-bg) 88%, transparent);
+        border: 1px solid var(--lvl-border-soft);
+        border-radius: .45rem;
+        color: var(--lvl-muted);
+        display: inline-block;
+        font-size: .65rem;
+        font-weight: 800;
+        padding: .16rem .5rem;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .14);
+    }
+
+    .skill-node[data-state="unlocked"] .node-label,
+    .skill-node[data-state="available"] .node-label {
+        color: var(--node-ring);
+    }
+
+    .skill-node[data-state="available"] .node-label {
+        color: var(--lvl-green);
+    }
+
+    .skill-modal {
+        border-radius: .9rem !important;
+    }
+
+    .requirement-row,
+    .requirement-task {
+        background: var(--lvl-surface-raised);
+        border: 1px solid var(--lvl-border-soft);
+        border-radius: .75rem;
+        padding: .7rem .8rem;
+    }
+
+    .requirement-row {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .node-ready-pulse {
+            animation: none;
+        }
+    }
+
     #skillTreeStage { cursor: grab; }
     </style>
 @endsection
