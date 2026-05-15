@@ -5,26 +5,6 @@
 @section('page_subtitle', 'Your legendary accomplishments')
 
 @section('content')
-@php
-    $equippedBadges = auth()->user()->badges()->wherePivot('is_displayed', true)->orderBy('user_badges.created_at', 'asc')->get();
-    $equippedCount  = $equippedBadges->count();
-
-    // Build JS-safe array of equipped badges for Alpine
-    $equippedJs = $equippedBadges->map(fn($b) => [
-        'id'     => $b->id,
-        'title'  => $b->title,
-        'icon'   => $b->icon,
-        'rarity' => $b->rarity,
-        'color'  => match($b->rarity) {
-            'uncommon'  => 'green',
-            'rare'      => 'blue',
-            'epic'      => 'purple',
-            'legendary' => 'amber',
-            'mythic'    => 'pink',
-            default     => 'gray',
-        },
-    ])->values()->toArray();
-@endphp
 <div class="max-w-7xl mx-auto space-y-8">
 
     <!-- Equipped Badges Display (fully reactive via Alpine store) -->
@@ -33,7 +13,8 @@
             <h2 class="font-display text-xl font-bold text-white flex items-center gap-3">
                 <i class="fas fa-crown text-amber-400"></i>
                 Equipped Badges
-                <span class="text-sm text-purple-300 font-normal">(<span x-text="$store.achievements.equipped.length"></span>/6)</span>
+                <span class="text-sm text-purple-300 font-normal" aria-label="{{ $equippedCount }}/6">(<span x-text="$store.achievements.equipped.length">{{ $equippedCount }}</span>/6)</span>
+                <span class="sr-only">{{ $equippedCount }}/6</span>
             </h2>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -107,7 +88,7 @@
                 </div>
                 <div x-data>
                     <p class="text-sm text-pink-300">Equipped</p>
-                    <p class="font-display text-3xl font-bold text-white" x-text="$store.achievements.equipped.length + '/6'"></p>
+                    <p class="font-display text-3xl font-bold text-white" x-text="$store.achievements.equipped.length + '/6'">{{ $equippedCount }}/6</p>
                 </div>
             </div>
         </div>
@@ -222,6 +203,7 @@
                 <div class="bg-gradient-to-t from-black/20 to-transparent p-4"
                      x-data="{ equipped: {{ $isDisplayed ? 'true' : 'false' }}, loading: false, badge: {{ Js::from($badgeJs) }} }">
                     <button
+                        :aria-label="equipped ? 'Unequip Badge' : 'Equip Badge'"
                         @click.prevent="
                             if (loading) return;
                             window.dispatchEvent(new CustomEvent('lvlup-feature-hint', {

@@ -7,7 +7,9 @@
 @section('content')
 @php
     $vis = $user->visibility_settings ?? [];
-    $show = fn(string $key) => $vis[$key] ?? true;
+    $show = fn(string $key) => $key === 'show_email'
+        ? ($vis[$key] ?? false)
+        : ($vis[$key] ?? true);
 @endphp
 
 <div class="max-w-5xl mx-auto space-y-6">
@@ -189,8 +191,9 @@
         @if($show('show_skills'))
         <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-pink-900/30 to-pink-950/30 backdrop-blur text-center">
             <i class="fas fa-network-wired text-3xl text-pink-400 mb-3"></i>
+            <div class="text-sm font-bold text-white mb-2">Skill Tree Progress</div>
             <div class="text-4xl font-display font-bold text-white mb-1">{{ $stats['unlocked_nodes'] }}</div>
-            <div class="text-sm text-pink-300">Skill Nodes Unlocked</div>
+            <div class="text-sm text-pink-300">Nodes Unlocked</div>
         </div>
         @endif
         @if($show('show_achievements'))

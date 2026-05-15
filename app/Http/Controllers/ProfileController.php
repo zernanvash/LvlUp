@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -24,25 +25,25 @@ class ProfileController extends Controller
             abort(403, 'This profile is private.');
         }
 
-        // Load relationships for public profile
-        $user->load([
-            'equippedBadges',
-            'projects' => function ($query) {
-                $query->where('is_featured', true)->latest()->take(6);
-            },
-            'unlockedNodes.skill'
-        ]);
+        [$user, $stats] = Cache::remember("public-profile.{$user->id}", now()->addSeconds(60), function () use ($user) {
+            $user->load([
+                'equippedBadges',
+                'projects' => function ($query) {
+                    $query->where('is_featured', true)->latest()->take(6);
+                },
+                'unlockedNodes.skill'
+            ]);
 
-        // Calculate stats
-        $stats = [
-            'level' => $user->level,
-            'xp' => $user->xp,
-            'rank' => $user->rank,
-            'total_xp' => $user->total_xp,
-            'total_projects' => $user->projects()->count(),
-            'total_badges' => $user->badges()->count(),
-            'unlocked_nodes' => $user->unlockedNodes()->count(),
-        ];
+            return [$user, [
+                'level' => $user->level,
+                'xp' => $user->xp,
+                'rank' => $user->rank,
+                'total_xp' => $user->total_xp,
+                'total_projects' => $user->projects()->count(),
+                'total_badges' => $user->badges()->count(),
+                'unlocked_nodes' => $user->unlockedNodes()->count(),
+            ]];
+        });
 
         return view('profile.public', [
             'user' => $user,
@@ -78,6 +79,7 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+        $request->user()->clearFastUiCaches();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -100,6 +102,7 @@ class ProfileController extends Controller
         }
 
         $request->user()->update(['visibility_settings' => $settings]);
+        $request->user()->clearFastUiCaches();
 
         return Redirect::route('profile.edit')->with('status', 'visibility-updated')->with('active_tab', 'visibility');
     }
@@ -131,6 +134,7 @@ class ProfileController extends Controller
     public function toggleVisibility(Request $request): RedirectResponse
     {
         $request->user()->toggleVisibility();
+        $request->user()->clearFastUiCaches();
 
         return Redirect::route('profile.edit')->with('status', 'visibility-updated');
     }

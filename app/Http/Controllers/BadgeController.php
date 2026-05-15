@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Badge;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BadgeController extends Controller
 {
@@ -13,46 +14,86 @@ class BadgeController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $user->load('badges', 'projects');
+        $user->load('badges', 'projects.skills', 'unlockedNodes');
 
-        $badges = Badge::with('requiredSkill')->get()->map(function ($badge) use ($user) {
-            $earned = $user->badges->contains($badge->id);
-            $progress = $earned ? 100 : $this->calculateProgress($badge, $user);
+        $earnedBadges = $user->badges->keyBy('id');
+        $progressCounts = $this->progressCountsFor($user);
+        $allBadges = Cache::remember('badges.with-required-skill', now()->addMinutes(10), function () {
+            return Badge::with('requiredSkill')
+                ->orderBy('category')
+                ->orderBy('threshold')
+                ->get();
+        });
+
+        $badges = $allBadges->map(function ($badge) use ($earnedBadges, $progressCounts) {
+            $earnedBadge = $earnedBadges->get($badge->id);
+            $earned = $earnedBadge !== null;
+            $progress = $earned ? 100 : $this->calculateProgress($badge, $progressCounts);
 
             return [
                 'badge'       => $badge,
                 'earned'      => $earned,
                 'progress'    => round($progress, 1),
-                'earned_at'   => $earned ? $user->badges->find($badge->id)->pivot->earned_at : null,
-                'is_displayed'=> $earned ? (bool) $user->badges->find($badge->id)->pivot->is_displayed : false,
+                'earned_at'   => $earned ? $earnedBadge->pivot->earned_at : null,
+                'is_displayed'=> $earned ? (bool) $earnedBadge->pivot->is_displayed : false,
             ];
         });
 
         $badgesByCategory = $badges->groupBy('badge.category');
+        $equippedBadges = $user->badges
+            ->where('pivot.is_displayed', true)
+            ->sortBy('pivot.updated_at')
+            ->values();
+        $equippedCount = $equippedBadges->count();
+        $equippedJs = $equippedBadges->map(fn($b) => [
+            'id'     => $b->id,
+            'title'  => $b->title,
+            'icon'   => $b->icon,
+            'rarity' => $b->rarity,
+            'color'  => match($b->rarity) {
+                'uncommon'  => 'green',
+                'rare'      => 'blue',
+                'epic'      => 'purple',
+                'legendary' => 'amber',
+                'mythic'    => 'pink',
+                default     => 'gray',
+            },
+        ])->values()->toArray();
 
-        return view('achievements.index', compact('badgesByCategory'));
+        return view('achievements.index', compact('badgesByCategory', 'equippedBadges', 'equippedCount', 'equippedJs'));
     }
 
-    private function calculateProgress(Badge $badge, $user): float
+    private function progressCountsFor($user): array
     {
-        if ($badge->required_skill_id) {
-            $count = $user->projects()
-                ->whereHas('skills', fn($q) => $q->where('skills.id', $badge->required_skill_id))
-                ->count();
-            return min(100, ($count / max(1, $badge->threshold)) * 100);
+        $projects = $user->projects;
+        $projectsByType = $projects->groupBy('project_type')->map->count();
+        $projectsBySkill = [];
+
+        foreach ($projects as $project) {
+            foreach ($project->skills->unique('id') as $skill) {
+                $projectsBySkill[$skill->id] = ($projectsBySkill[$skill->id] ?? 0) + 1;
+            }
         }
 
-        $current = match($badge->category) {
-            'project'   => $user->projects()->count(),
-            'level'     => $user->level,
-            'web'       => $user->projects()->where('project_type', 'web')->count(),
-            'backend'   => $user->projects()->where('project_type', 'backend')->count(),
-            'fullstack' => $user->projects()->where('project_type', 'fullstack')->count(),
-            'mobile'    => $user->projects()->where('project_type', 'mobile')->count(),
-            'devops'    => $user->projects()->where('project_type', 'devops')->count(),
-            'ai'        => $user->projects()->where('project_type', 'ai')->count(),
-            'streak'    => $user->streak_days ?? 0,
-            'skill_node'=> $user->unlockedNodes()->count(),
+        return [
+            'projects' => $projects->count(),
+            'level' => $user->level,
+            'project_types' => $projectsByType,
+            'streak' => $user->streak_days ?? 0,
+            'skill_nodes' => $user->unlockedNodes->count(),
+            'skill_projects' => $projectsBySkill,
+        ];
+    }
+
+    private function calculateProgress(Badge $badge, array $counts): float
+    {
+        $current = match(true) {
+            (bool) $badge->required_skill_id => $counts['skill_projects'][$badge->required_skill_id] ?? 0,
+            $badge->category === 'project' => $counts['projects'],
+            $badge->category === 'level' => $counts['level'],
+            in_array($badge->category, ['web', 'backend', 'fullstack', 'mobile', 'devops', 'ai'], true) => $counts['project_types']->get($badge->category, 0),
+            $badge->category === 'streak' => $counts['streak'],
+            $badge->category === 'skill_node' => $counts['skill_nodes'],
             default     => 0,
         };
 

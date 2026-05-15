@@ -70,9 +70,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Discover / User Search
     Route::get('/users', [UserSearchController::class, 'index'])->name('users.index');
 
-    // Public Profile
-    Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 });
+
+// Public Profile
+Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 
 // API Routes (Optional - for future mobile app)
 Route::prefix('api')->middleware(['auth:sanctum'])->group(function () {

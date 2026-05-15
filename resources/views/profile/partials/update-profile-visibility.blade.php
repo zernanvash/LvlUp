@@ -1,5 +1,6 @@
 <div class="space-y-4">
     <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-blue-900/40 to-blue-950/40 backdrop-blur">
+        <h3 class="mb-4 text-lg font-bold text-white">Profile Visibility</h3>
 
         {{-- Public/Private master toggle --}}
         <form method="post" action="{{ route('profile.toggle-visibility') }}" x-data="{ isPublic: {{ $user->is_public ? 'true' : 'false' }} }" class="mb-5">
@@ -23,6 +24,7 @@
                        class="text-xs text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
                         <i class="fas fa-external-link-alt"></i> View
                     </a>
+                    <span class="sr-only">Your Public Profile URL</span>
                     @endif
                     <button type="submit" @click="isPublic = !isPublic"
                             :class="isPublic ? 'bg-emerald-600' : 'bg-gray-600'"
@@ -50,14 +52,14 @@
                     ['key' => 'show_technical_skills', 'icon' => 'fa-code',          'fab' => false, 'label' => 'Technical Skills'],
                     ['key' => 'show_github',           'icon' => 'fa-github',        'fab' => true,  'label' => 'GitHub'],
                     ['key' => 'show_linkedin',         'icon' => 'fa-linkedin',      'fab' => true,  'label' => 'LinkedIn'],
-                    ['key' => 'show_email',            'icon' => 'fa-envelope',      'fab' => false, 'label' => 'Email Address'],
+                    ['key' => 'show_email',            'icon' => 'fa-envelope',      'fab' => false, 'label' => 'Email Address', 'default' => false],
                     ['key' => 'show_certifications',   'icon' => 'fa-certificate',   'fab' => false, 'label' => 'Certifications'],
                 ];
             @endphp
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-5">
                 @foreach($visFields as $field)
-                @php $on = $vis[$field['key']] ?? true; @endphp
+                @php $on = $vis[$field['key']] ?? ($field['default'] ?? true); @endphp
                 <label class="flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 border border-white/8 hover:border-white/20 cursor-pointer transition-colors">
                     <div class="flex items-center gap-2.5">
                         <i class="{{ $field['fab'] ? 'fab' : 'fas' }} {{ $field['icon'] }} text-sm text-purple-400 w-4 text-center"></i>
