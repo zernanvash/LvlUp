@@ -447,79 +447,79 @@
                 {{-- Content Sections (Data View) --}}
                 <div x-show="viewMode === 'data'" x-transition class="space-y-4">
                     {{-- Summary --}}
-                    <div x-show="aiContent.summary" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.summary" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-id-badge text-indigo-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Professional Summary</h4>
-                            <button @click="copyText(aiContent.summary)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.summary)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <p class="text-gray-300 text-sm leading-relaxed" x-text="aiContent.summary"></p>
+                        <p class="text-gray-300 text-sm leading-relaxed" x-text="(aiContent && aiContent.summary) || ''"></p>
                     </div>
 
                     {{-- Skills --}}
-                    <div x-show="aiContent.skills" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-blue-900/30 to-indigo-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.skills" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-blue-900/30 to-indigo-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-code text-blue-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Skills</h4>
-                            <button @click="copyText(aiContent.skills)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.skills)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <template x-for="skill in (aiContent.skills || '').split(',').map(s => s.trim()).filter(Boolean)" :key="skill">
+                            <template x-for="skill in ((aiContent && aiContent.skills) || '').split(',').map(s => s.trim()).filter(Boolean)" :key="skill">
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 border border-blue-500/40 text-blue-300" x-text="skill"></span>
                             </template>
                         </div>
                     </div>
 
                     {{-- Experience --}}
-                    <div x-show="aiContent.experience" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-emerald-900/30 to-teal-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.experience" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-emerald-900/30 to-teal-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-briefcase text-emerald-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Work Experience</h4>
-                            <button @click="copyText(aiContent.experience)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.experience)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.experience"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.experience) || ''"></div>
                     </div>
 
                     {{-- Projects --}}
-                    <div x-show="aiContent.projects" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.projects" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-folder-open text-indigo-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Projects</h4>
-                            <button @click="copyText(aiContent.projects)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.projects)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.projects"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.projects) || ''"></div>
                     </div>
 
                     {{-- Education --}}
-                    <div x-show="aiContent.education" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-amber-900/30 to-orange-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.education" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-amber-900/30 to-orange-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-graduation-cap text-amber-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Education</h4>
-                            <button @click="copyText(aiContent.education)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.education)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.education"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.education) || ''"></div>
                     </div>
 
                     {{-- Certifications --}}
-                    <div x-show="aiContent.certifications" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-pink-900/30 to-rose-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.certifications" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-pink-900/30 to-rose-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-certificate text-pink-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Certifications</h4>
-                            <button @click="copyText(aiContent.certifications)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.certifications)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.certifications"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.certifications) || ''"></div>
                     </div>
                 </div>
 
@@ -575,6 +575,19 @@ function resumeBuilder() {
         },
 
         async generateResume() {
+            window.dispatchEvent(new CustomEvent('lvlup-feature-hint', {
+                detail: {
+                    key: 'feature-resume-generate',
+                    label: 'Feature hint',
+                    title: 'AI resume generation',
+                    body: 'The generator uses your profile, selected projects, skills, and certificates. A specific target job title usually gives better output than a broad one.',
+                    steps: [
+                        'Select only the projects you want represented.',
+                        'Paste a job description when you want stronger keyword matching.',
+                        'Review the content before downloading the PDF.',
+                    ],
+                },
+            }));
             if (!this.jobTitle.trim()) {
                 alert('Please enter a target job title.');
                 return;

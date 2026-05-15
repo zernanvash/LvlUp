@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>LvlUp - @yield('title', 'Dashboard')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         :root {
@@ -46,6 +45,7 @@
         * { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         body {
             min-height: 100vh;
+            overflow-x: hidden;
             color: var(--lvl-text);
             background: var(--lvl-body-bg);
         }
@@ -184,6 +184,29 @@
             color: white;
             border-radius: 999px;
         }
+
+        @media (max-width: 640px) {
+            body { min-width: 320px; }
+            .lvl-topbar {
+                min-height: 4.5rem;
+                height: auto;
+                padding-top: .75rem;
+                padding-bottom: .75rem;
+            }
+            .lvl-nav-link {
+                min-height: 2.75rem;
+                padding: .72rem .75rem;
+                font-size: .95rem;
+            }
+            .lvl-panel,
+            .glow-border {
+                border-radius: .65rem !important;
+            }
+            .card-hover:hover,
+            .btn-glow:hover {
+                transform: none !important;
+            }
+        }
     </style>
 
     <script>
@@ -212,7 +235,74 @@
         ['href' => route('achievements.index'), 'match' => 'achievements', 'icon' => 'fas fa-trophy', 'label' => 'Achievements'],
         ['href' => route('users.index'), 'match' => 'users*', 'icon' => 'fas fa-users', 'label' => 'Discover'],
     ];
+
+    $tutorialCatalog = [
+        'dashboard' => [
+            'key' => 'page-dashboard',
+            'label' => 'First look',
+            'title' => 'Command Center',
+            'body' => 'This page summarizes your level, XP, projects, badges, and suggested next actions. Use it as your home base when deciding what to improve next.',
+            'steps' => ['Watch your XP bar for level progress.', 'Create or improve projects to earn XP.', 'Open the progression guide when you want the full rules.'],
+        ],
+        'skill-tree.index' => [
+            'key' => 'page-skill-tree',
+            'label' => 'Map basics',
+            'title' => 'Skill Tree',
+            'body' => 'Drag around the map, zoom with the controls, and open nodes to see what unlocks them. Green nodes are ready to claim.',
+            'steps' => ['Tap any node to inspect requirements.', 'Add projects when a node needs more evidence.', 'Unlocked nodes can trigger XP, badges, and new paths.'],
+        ],
+        'projects.index' => [
+            'key' => 'page-projects',
+            'label' => 'Portfolio basics',
+            'title' => 'Projects',
+            'body' => 'Projects are the main proof you use to level up. Add real work, attach skills, and keep descriptions clear so the skill tree and resume builder have better data.',
+            'steps' => ['Use New Project to add portfolio work.', 'Filter by type when your list grows.', 'Featured projects appear more prominently on your public profile.'],
+        ],
+        'projects.create' => [
+            'key' => 'page-project-create',
+            'label' => 'Project setup',
+            'title' => 'Add a Project',
+            'body' => 'A stronger project entry earns better XP and helps unlock skill nodes. Include what you built, what tools you used, and any live or repository links.',
+            'steps' => ['Pick the closest project type.', 'Add skill tags that honestly match the work.', 'Use links or evidence when available.'],
+        ],
+        'resume.index' => [
+            'key' => 'page-resume',
+            'label' => 'Resume flow',
+            'title' => 'Resume Builder',
+            'body' => 'The resume builder pulls from your profile, selected projects, skills, and certificates. Complete your profile first for better AI output.',
+            'steps' => ['Choose which projects to include.', 'Enter a target job title before generating.', 'Download the PDF after reviewing the generated content.'],
+        ],
+        'achievements.index' => [
+            'key' => 'page-achievements',
+            'label' => 'Badge basics',
+            'title' => 'Achievements',
+            'body' => 'Badges mark milestones and some can be equipped on your public profile. You can equip up to six earned badges.',
+            'steps' => ['Earn badges through projects, skills, levels, and activity.', 'Use equip to control what appears on your profile.', 'Locked badges show progress when available.'],
+        ],
+        'users.index' => [
+            'key' => 'page-discover',
+            'label' => 'Discover basics',
+            'title' => 'Discover',
+            'body' => 'Discover helps you find public developer profiles. Search by name, title, or skills, then open profiles for portfolio inspiration.',
+            'steps' => ['Use rank and sort filters to narrow results.', 'Open a profile to view projects and badges.', 'Your own visibility is managed from Profile.'],
+        ],
+        'profile.edit' => [
+            'key' => 'page-profile',
+            'label' => 'Profile basics',
+            'title' => 'Profile',
+            'body' => 'Your profile feeds the public profile and resume builder. Fill in title, bio, skills, links, and visibility settings when you are ready.',
+            'steps' => ['Complete resume details for better generated PDFs.', 'Toggle public visibility intentionally.', 'Keep links and project evidence up to date.'],
+        ],
+    ];
+
+    $currentTutorial = $tutorialCatalog[Route::currentRouteName()] ?? null;
 @endphp
+
+@if($currentTutorial)
+<script>
+window._lvlupPageTutorial = @json($currentTutorial);
+</script>
+@endif
 
 <!-- Level-Up Overlay -->
 <div
@@ -223,7 +313,7 @@
     x-cloak
 >
     <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--lvl-overlay);"></div>
-    <div class="lvl-panel relative z-10 w-full max-w-md p-8 text-center border-l-4" style="border-left-color: var(--lvl-p600) !important;">
+    <div class="lvl-panel relative z-10 w-full max-w-md p-5 text-center border-l-4 sm:p-8" style="border-left-color: var(--lvl-p600) !important;">
         <div class="mx-auto mb-4 h-16 w-16 rounded-full bg-[var(--lvl-p50)] border border-[var(--lvl-p100)] flex items-center justify-center text-[var(--lvl-p600)]">
             <i class="fas fa-crown text-2xl"></i>
         </div>
@@ -297,7 +387,7 @@
 <!-- Mobile Sidebar -->
 <div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-50 md:hidden">
     <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--lvl-overlay);" @click="sidebarOpen = false"></div>
-    <aside class="lvl-sidebar absolute inset-y-0 left-0 flex w-72 flex-col">
+    <aside class="lvl-sidebar absolute inset-y-0 left-0 flex w-[min(18rem,calc(100vw-2rem))] flex-col">
         <div class="h-20 px-5 flex items-center justify-between border-b border-[var(--lvl-border-soft)]">
             <x-application-logo class="h-10 w-32" />
             <button @click="sidebarOpen = false" class="h-9 w-9 rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-muted)]">
@@ -316,9 +406,9 @@
 </div>
 
 <div class="min-h-screen md:pl-72">
-    <header class="lvl-topbar sticky top-0 z-30 h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <div class="flex items-center gap-4 min-w-0">
-            <button @click="sidebarOpen = true" class="md:hidden h-10 w-10 rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-p600)]">
+    <header class="lvl-topbar sticky top-0 z-30 h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
+        <div class="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+            <button @click="sidebarOpen = true" class="md:hidden h-11 w-11 flex-shrink-0 rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-p600)]">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="min-w-0">
@@ -328,7 +418,19 @@
         </div>
 
         @auth
-        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 rounded-full border border-[var(--lvl-border-soft)] bg-white px-2 py-1.5 hover:border-[var(--lvl-p100)] transition">
+        <div class="flex flex-shrink-0 items-center gap-2">
+            <button
+                type="button"
+                @click="openPageTutorial(true)"
+                x-show="pageTutorial"
+                x-cloak
+                class="hidden h-11 w-11 items-center justify-center rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-p600)] transition hover:border-[var(--lvl-p100)] sm:flex"
+                aria-label="Show page tips"
+                title="Show page tips"
+            >
+                <i class="fas fa-question"></i>
+            </button>
+        <a href="{{ route('profile.edit') }}" class="flex min-h-11 items-center gap-3 rounded-full border border-[var(--lvl-border-soft)] bg-white px-1.5 py-1.5 hover:border-[var(--lvl-p100)] transition sm:px-2">
             <span class="hidden sm:block text-right">
                 <span class="block text-xs font-bold text-[var(--lvl-text)]">{{ auth()->user()->name }}</span>
                 <span class="block text-[11px] text-[var(--lvl-muted)]">Lv. {{ auth()->user()->level }}</span>
@@ -337,10 +439,11 @@
                  class="h-9 w-9 rounded-full object-cover"
                  alt="{{ auth()->user()->name }}">
         </a>
+        </div>
         @endauth
     </header>
 
-    <main class="px-4 py-6 sm:px-6 lg:px-8">
+    <main class="px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
         @yield('content')
     </main>
 </div>
@@ -348,7 +451,7 @@
 @yield('modals')
 @stack('scripts')
 
-<div class="fixed bottom-6 right-6 z-[9998] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3 pointer-events-none" id="toastStack">
+<div class="fixed bottom-3 right-3 z-[9998] flex w-[calc(100vw-1.5rem)] max-w-sm flex-col gap-3 pointer-events-none sm:bottom-6 sm:right-6 sm:w-[calc(100vw-2rem)]" id="toastStack">
     <template x-for="toast in toasts" :key="toast.id">
         <div class="pointer-events-auto lvl-panel relative overflow-hidden p-4 flex items-start gap-3"
             x-show="toast.visible"
@@ -369,6 +472,69 @@
     </template>
 </div>
 
+<div
+    x-show="tutorialOpen && currentTutorial"
+    x-cloak
+    x-transition
+    class="fixed inset-x-3 bottom-3 z-[9997] sm:bottom-6 sm:left-auto sm:right-6 sm:w-full sm:max-w-md"
+>
+    <div class="lvl-panel overflow-hidden">
+        <div class="border-l-4 p-4 sm:p-5" style="border-left-color: var(--lvl-p600);">
+            <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--lvl-p100)] bg-[var(--lvl-p50)] text-[var(--lvl-p600)]">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="lvl-label" x-text="(currentTutorial && currentTutorial.label) || 'Quick tip'"></p>
+                    <h2 class="mt-1 text-base font-black text-[var(--lvl-text)]" x-text="(currentTutorial && currentTutorial.title) || ''"></h2>
+                    <p class="mt-2 text-sm leading-5 text-[var(--lvl-muted)]" x-text="(currentTutorial && currentTutorial.body) || ''"></p>
+                </div>
+                <button
+                    type="button"
+                    @click="dismissTutorial(false)"
+                    class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--lvl-border-soft)] bg-[var(--lvl-surface-raised)] text-[var(--lvl-muted)] hover:text-[var(--lvl-text)]"
+                    aria-label="Close tutorial"
+                >
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+
+            <ul class="mt-4 space-y-2 text-sm text-[var(--lvl-muted)]" x-show="currentTutorial && currentTutorial.steps && currentTutorial.steps.length">
+                <template x-for="step in ((currentTutorial && currentTutorial.steps) || [])" :key="step">
+                    <li class="flex gap-2">
+                        <i class="fas fa-check mt-1 text-xs text-[var(--lvl-p600)]"></i>
+                        <span x-text="step"></span>
+                    </li>
+                </template>
+            </ul>
+
+            <div class="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <button
+                    type="button"
+                    @click="completeTutorial()"
+                    class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--lvl-p100)] bg-[var(--lvl-p600)] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--lvl-p400)]"
+                >
+                    Got it
+                </button>
+                <button
+                    type="button"
+                    @click="skipTutorial()"
+                    class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--lvl-border-soft)] bg-[var(--lvl-surface-raised)] px-4 py-2.5 text-sm font-bold text-[var(--lvl-muted)] transition hover:text-[var(--lvl-text)]"
+                >
+                    Skip
+                </button>
+                <button
+                    type="button"
+                    @click="muteTutorials()"
+                    class="inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-bold text-[var(--lvl-faint)] transition hover:text-[var(--lvl-muted)]"
+                >
+                    Hide all
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function appShell() {
     return {
@@ -377,6 +543,11 @@ function appShell() {
         levelUpData: {},
         toasts: [],
         _toastId: 0,
+        pageTutorial: window._lvlupPageTutorial || null,
+        currentTutorial: null,
+        tutorialOpen: false,
+        tutorialStoragePrefix: 'lvlup:tutorial:',
+        tutorialsMutedKey: 'lvlup:tutorials-muted',
 
         init() {
             window.pushToast = (opts) => this.pushToast(opts);
@@ -423,6 +594,14 @@ function appShell() {
                 this.showLevelUp = true;
                 setTimeout(() => this.showLevelUp = false, 5000);
             });
+
+            window.addEventListener('lvlup-feature-hint', (event) => {
+                this.openFeatureTutorial(event.detail || {});
+            });
+
+            this.$nextTick(() => {
+                setTimeout(() => this.openPageTutorial(false), 450);
+            });
         },
 
         pushToast({ label, title, sub, icon, color, duration = 4000 }) {
@@ -442,6 +621,47 @@ function appShell() {
             const t = this.toasts.find(x => x.id === id);
             if (t) t.visible = false;
             setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id); }, 300);
+        },
+
+        hasSeenTutorial(key) {
+            return !key || localStorage.getItem(this.tutorialStoragePrefix + key) === '1';
+        },
+
+        tutorialsMuted() {
+            return localStorage.getItem(this.tutorialsMutedKey) === '1';
+        },
+
+        openPageTutorial(force = false) {
+            if (!this.pageTutorial) return;
+            if (!force && (this.tutorialsMuted() || this.hasSeenTutorial(this.pageTutorial.key))) return;
+            this.currentTutorial = this.pageTutorial;
+            this.tutorialOpen = true;
+        },
+
+        openFeatureTutorial(tutorial) {
+            if (!tutorial.key || this.tutorialsMuted() || this.hasSeenTutorial(tutorial.key)) return;
+            this.currentTutorial = tutorial;
+            this.tutorialOpen = true;
+        },
+
+        dismissTutorial(markSeen = false) {
+            if (markSeen && this.currentTutorial?.key) {
+                localStorage.setItem(this.tutorialStoragePrefix + this.currentTutorial.key, '1');
+            }
+            this.tutorialOpen = false;
+        },
+
+        completeTutorial() {
+            this.dismissTutorial(true);
+        },
+
+        skipTutorial() {
+            this.dismissTutorial(true);
+        },
+
+        muteTutorials() {
+            localStorage.setItem(this.tutorialsMutedKey, '1');
+            this.dismissTutorial(true);
         },
     };
 }

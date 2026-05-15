@@ -469,6 +469,19 @@ $tierColors = [
             resetView() { this.scale = 0.85; this.centerView(); },
 
             async openNodeModal(nodeId) {
+                window.dispatchEvent(new CustomEvent('lvlup-feature-hint', {
+                    detail: {
+                        key: 'feature-skill-node-detail',
+                        label: 'Feature hint',
+                        title: 'Skill node details',
+                        body: 'This panel shows the exact requirements for a skill node. Ready nodes can be unlocked immediately; locked nodes tell you what evidence or level you still need.',
+                        steps: [
+                            'Check the level, parent, and project requirements.',
+                            'Use Add Project to Progress when a node needs more work.',
+                            'Unlocking nodes can award XP, badges, and new available nodes.',
+                        ],
+                    },
+                }));
                 this.modal.open = true;
                 this.modal.loading = true;
                 this.modal.data = null;

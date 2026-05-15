@@ -224,6 +224,19 @@
                     <button
                         @click.prevent="
                             if (loading) return;
+                            window.dispatchEvent(new CustomEvent('lvlup-feature-hint', {
+                                detail: {
+                                    key: 'feature-badge-equip',
+                                    label: 'Feature hint',
+                                    title: 'Equipping badges',
+                                    body: 'Equipped badges are the ones shown on your public profile. You can equip up to six, and you can swap them whenever you want.',
+                                    steps: [
+                                        'Equip badges that best represent your work.',
+                                        'Unequip one if you hit the six-badge limit.',
+                                        'Locked badges become available after you meet their requirements.',
+                                    ],
+                                },
+                            }));
                             loading = true;
                             fetch('{{ route('badges.toggle-display', $badge) }}', {
                                 method: 'POST',
