@@ -136,8 +136,38 @@
 
         .card-hover { transition: transform .16s ease, box-shadow .16s ease; }
         .card-hover:hover { transform: translateY(-2px) !important; box-shadow: var(--lvl-hover-shadow) !important; }
-        .btn-glow { position: relative; overflow: hidden; }
-        .btn-glow:hover { transform: translateY(-1px); }
+        .btn-glow {
+            position: relative; overflow: hidden;
+            background: linear-gradient(90deg, var(--lvl-p200), var(--lvl-p400)) !important;
+            color: var(--lvl-p800) !important;
+            border: 1px solid var(--lvl-p100) !important;
+            box-shadow: 0 2px 12px rgba(83,74,183,0.25) !important;
+            transition: opacity .15s ease, transform .15s ease !important;
+        }
+        .btn-glow:hover { opacity: .9 !important; transform: translateY(-1px) !important; }
+        .btn-secondary {
+            background: var(--lvl-surface-soft) !important;
+            border: 1px solid var(--lvl-border) !important;
+            color: var(--lvl-muted) !important;
+            border-radius: .5rem !important;
+            transition: background .15s, border-color .15s, color .15s !important;
+        }
+        .btn-secondary:hover {
+            background: var(--lvl-surface-raised) !important;
+            border-color: var(--lvl-p100) !important;
+            color: var(--lvl-p800) !important;
+        }
+        .btn-danger {
+            background: rgba(239,107,107,0.08) !important;
+            border: 1px solid rgba(239,107,107,0.2) !important;
+            color: var(--lvl-red) !important;
+            border-radius: .5rem !important;
+            transition: background .15s, border-color .15s !important;
+        }
+        .btn-danger:hover {
+            background: rgba(239,107,107,0.18) !important;
+            border-color: rgba(239,107,107,0.4) !important;
+        }
         .page-progress {
             position: fixed;
             top: 0;
@@ -207,6 +237,44 @@
                 transform: none !important;
             }
         }
+
+        /* ── Global form elements (inputs only, not buttons) ── */
+        main input[type=text],
+        main input[type=url],
+        main input[type=email],
+        main input[type=password],
+        main input[type=number],
+        main textarea,
+        main select {
+            background: var(--lvl-surface-soft) !important;
+            border: 1px solid var(--lvl-border) !important;
+            border-radius: .5rem !important;
+            color: var(--lvl-text) !important;
+            font-size: .8125rem !important;
+            font-family: inherit !important;
+            transition: border-color .15s ease, box-shadow .15s ease !important;
+        }
+        main input[type=text]:focus,
+        main input[type=url]:focus,
+        main input[type=email]:focus,
+        main input[type=password]:focus,
+        main input[type=number]:focus,
+        main textarea:focus,
+        main select:focus {
+            border-color: var(--lvl-p400) !important;
+            box-shadow: 0 0 0 3px rgba(127,119,221,0.15) !important;
+            outline: none !important;
+        }
+        main input::placeholder,
+        main textarea::placeholder { color: var(--lvl-faint) !important; opacity: 1 !important; }
+        main select option {
+            background: var(--lvl-surface) !important;
+            color: var(--lvl-text) !important;
+        }
+        main input[type=checkbox],
+        main input[type=radio] { accent-color: var(--lvl-p400) !important; }
+        main .text-red-400,
+        main .text-red-500 { color: var(--lvl-red) !important; }
     </style>
 
     <script>
@@ -430,15 +498,16 @@ window._lvlupPageTutorial = @json($currentTutorial);
             >
                 <i class="fas fa-question"></i>
             </button>
-        <a href="{{ route('profile.edit') }}" class="flex min-h-11 items-center gap-3 rounded-full border border-[var(--lvl-border-soft)] bg-white px-1.5 py-1.5 hover:border-[var(--lvl-p100)] transition sm:px-2">
-            <span class="hidden sm:block text-right">
-                <span class="block text-xs font-bold text-[var(--lvl-text)]">{{ auth()->user()->name }}</span>
-                <span class="block text-[11px] text-[var(--lvl-muted)]">Lv. {{ auth()->user()->level }}</span>
-            </span>
-            <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=534ab7&color=fff&size=48' }}"
-                 class="h-9 w-9 rounded-full object-cover"
-                 alt="{{ auth()->user()->name }}">
-        </a>
+            <a href="{{ route('profile.edit') }}" class="relative inline-flex hover:opacity-80 transition" style="padding:2px;">
+                <div class="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 border-2"
+                     style="background:var(--lvl-p200);color:var(--lvl-p800);border-color:var(--lvl-p100);">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <span class="absolute -bottom-0.5 -right-1 text-[9px] font-bold leading-tight px-1 rounded-full border"
+                      style="background:var(--lvl-p100);color:var(--lvl-p600);border-color:var(--lvl-surface);border-width:1.5px;">
+                    {{ auth()->user()->level }}
+                </span>
+            </a>
         </div>
         @endauth
     </header>
