@@ -285,7 +285,12 @@ $tierColors = [
             offsetX: 0,
             offsetY: 80,
             isDragging: false,
+            isPinching: false,
             startX: 0, startY: 0,
+            startDistance: 0,
+            startScale: 1.0,
+            pinchCenterX: 0,
+            pinchCenterY: 0,
             modal: { open: false, loading: false, data: null },
             unlocking: false,
 
@@ -465,6 +470,66 @@ $tierColors = [
                     this.scale = ns;
                     applyTransform();
                 }, { passive: false });
+
+                // ── Touch Events (Panning & Pinch Zoom on Mobile) ──
+                stage.addEventListener('touchstart', e => {
+                    if (e.touches.length === 1 && e.target.closest('.skill-node')) return;
+                    
+                    if (e.touches.length === 1) {
+                        this.isDragging = true;
+                        this.isPinching = false;
+                        this.startX = e.touches[0].clientX - this.offsetX;
+                        this.startY = e.touches[0].clientY - this.offsetY;
+                    } else if (e.touches.length === 2) {
+                        this.isDragging = false;
+                        this.isPinching = true;
+                        
+                        const dx = e.touches[0].clientX - e.touches[1].clientX;
+                        const dy = e.touches[0].clientY - e.touches[1].clientY;
+                        this.startDistance = Math.hypot(dx, dy);
+                        this.startScale = this.scale;
+                        
+                        const rect = stage.getBoundingClientRect();
+                        this.pinchCenterX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+                        this.pinchCenterY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+                    }
+                }, { passive: false });
+
+                stage.addEventListener('touchmove', e => {
+                    if (this.isDragging && e.touches.length === 1) {
+                        e.preventDefault();
+                        this.offsetX = e.touches[0].clientX - this.startX;
+                        this.offsetY = e.touches[0].clientY - this.startY;
+                        applyTransform();
+                    } else if (this.isPinching && e.touches.length === 2) {
+                        e.preventDefault();
+                        const dx = e.touches[0].clientX - e.touches[1].clientX;
+                        const dy = e.touches[0].clientY - e.touches[1].clientY;
+                        const currentDistance = Math.hypot(dx, dy);
+                        if (this.startDistance > 0) {
+                            const factor = currentDistance / this.startDistance;
+                            const ns = Math.min(Math.max(this.startScale * factor, 0.3), 2.5);
+                            
+                            const mx = this.pinchCenterX;
+                            const my = this.pinchCenterY;
+                            
+                            this.offsetX = mx - (mx - this.offsetX) * (ns / this.scale);
+                            this.offsetY = my - (my - this.offsetY) * (ns / this.scale);
+                            this.scale = ns;
+                            applyTransform();
+                        }
+                    }
+                }, { passive: false });
+
+                stage.addEventListener('touchend', e => {
+                    this.isDragging = false;
+                    this.isPinching = false;
+                });
+                
+                stage.addEventListener('touchcancel', e => {
+                    this.isDragging = false;
+                    this.isPinching = false;
+                });
 
                 this._applyTransform = applyTransform;
             },
