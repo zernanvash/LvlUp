@@ -1,6 +1,6 @@
 <div class="space-y-6">
     {{-- Profile Header --}}
-    <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-purple-900/40 backdrop-blur relative overflow-hidden">
+    <div class="lvl-panel p-8 relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-purple-600/5 animate-pulse pointer-events-none"></div>
         <div class="relative z-10 flex flex-col sm:flex-row items-start gap-6">
             {{-- Avatar --}}
@@ -72,7 +72,7 @@
     {{-- Equipped Badges --}}
     @php $equippedBadges = $user->badges()->wherePivot('is_displayed', true)->get(); @endphp
     @if($equippedBadges->count() > 0)
-    <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-amber-900/30 to-amber-950/30 backdrop-blur">
+    <div class="lvl-panel p-6 border-l-4" style="border-left-color: var(--lvl-gold) !important;">
         <h2 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-crown text-amber-400"></i> Equipped Badges
         </h2>
@@ -83,10 +83,10 @@
                 $c = $colors[$badge->rarity] ?? 'gray';
             @endphp
             <div class="group relative text-center">
-                <div class="glow-border rounded-xl p-3 bg-gradient-to-br from-{{ $c }}-900/40 to-{{ $c }}-950/40 card-hover">
-                    <div class="text-3xl mb-1"><i class="{{ $badge->icon }}"></i></div>
+                <div class="lvl-panel p-3 text-center card-hover" style="border-color: var(--lvl-border-soft); background: var(--lvl-surface-raised);">
+                    <div class="text-3xl mb-1" style="color: {{ $badge->rarity_color }};"><i class="{{ $badge->icon }}"></i></div>
                     <div class="text-xs font-bold text-white truncate">{{ $badge->title }}</div>
-                    <div class="text-xs text-{{ $c }}-300 uppercase">{{ $badge->rarity }}</div>
+                    <div class="text-xs uppercase" style="color: {{ $badge->rarity_color }}; font-size: 10px;">{{ $badge->rarity }}</div>
                 </div>
                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                     {{ $badge->description }}
@@ -99,13 +99,13 @@
 
     {{-- Technical Skills --}}
     @if($user->technical_skills)
-    <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-cyan-900/30 to-cyan-950/30 backdrop-blur">
+    <div class="lvl-panel p-6 border-l-4" style="border-left-color: #22d3ee !important;">
         <h2 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-code text-cyan-400"></i> Technical Skills
         </h2>
         <div class="flex flex-wrap gap-2">
             @foreach(array_filter(array_map('trim', explode(',', $user->technical_skills))) as $skill)
-            <span class="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-sm text-cyan-300 font-medium">
+            <span class="lvl-chip gray font-medium text-sm px-3 py-1.5">
                 {{ $skill }}
             </span>
             @endforeach
@@ -115,7 +115,7 @@
 
     {{-- Certifications --}}
     @if($user->certifications)
-    <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-indigo-900/30 to-indigo-950/30 backdrop-blur">
+    <div class="lvl-panel p-6 border-l-4" style="border-left-color: #6366f1 !important;">
         <h2 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-certificate text-indigo-400"></i> Certifications
         </h2>

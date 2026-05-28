@@ -437,10 +437,41 @@
                 <div x-show="viewMode === 'preview'" x-transition 
                      class="w-full rounded-2xl overflow-hidden bg-gray-100 border-4 border-gray-800 shadow-2xl relative" style="height: 800px;">
                     <template x-if="pdfPreviewUrl">
-                        <iframe :src="pdfPreviewUrl" class="w-full h-full border-0"></iframe>
+                        <iframe :src="pdfPreviewUrl" @load="pdfLoaded = true" class="w-full h-full border-0"></iframe>
                     </template>
-                    <div x-show="!pdfPreviewUrl" class="absolute inset-0 flex items-center justify-center text-gray-500">
-                        <i class="fas fa-spinner fa-spin mr-2"></i> Loading PDF Preview...
+                    <div x-show="pdfPreviewUrl === '' || !pdfLoaded" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-[#1a192f]/40 backdrop-blur-sm animate-skeleton-pulse">
+                        <div class="w-full max-w-md bg-white/5 border border-white/10 rounded-xl p-8 space-y-6 shadow-2xl">
+                            <!-- Document Header skeleton -->
+                            <div class="space-y-3 text-center">
+                                <div class="w-16 h-16 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center mx-auto text-purple-400">
+                                    <i class="fas fa-file-pdf text-3xl"></i>
+                                </div>
+                                <div class="h-4 bg-white/5 rounded w-1/2 mx-auto"></div>
+                                <div class="h-3 bg-white/5 rounded w-1/3 mx-auto"></div>
+                            </div>
+
+                            <!-- Document Rows skeleton -->
+                            <div class="space-y-4 pt-4 border-t border-white/5">
+                                <div class="space-y-2">
+                                    <div class="h-2.5 bg-white/5 rounded w-1/4"></div>
+                                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                                    <div class="h-3 bg-white/5 rounded w-5/6"></div>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="h-2.5 bg-white/5 rounded w-1/3"></div>
+                                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                                    <div class="h-3 bg-white/5 rounded w-4/5"></div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Text -->
+                            <div class="text-center pt-2">
+                                <span class="text-xs text-[var(--lvl-muted)] font-semibold flex items-center justify-center gap-2">
+                                    <i class="fas fa-circle-notch fa-spin text-purple-400"></i>
+                                    Generating PDF layout...
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -561,6 +592,7 @@ function resumeBuilder() {
         matchScore:      0,
         viewMode:        'preview',
         pdfPreviewUrl:   '',
+        pdfLoaded:       false,
 
         init() {
             this.$watch('template', (value) => {
@@ -571,6 +603,7 @@ function resumeBuilder() {
         },
 
         updatePreviewUrl() {
+            this.pdfLoaded = false;
             this.pdfPreviewUrl = '{{ route('resume.preview') }}?template=' + this.template + '&t=' + Date.now();
         },
 

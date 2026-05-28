@@ -27,10 +27,8 @@
         @foreach($tabs as $key => $t)
         <button
             @click="tab = '{{ $key }}'"
-            :class="tab === '{{ $key }}'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-400/50'
-                : 'bg-white/5 text-purple-300 hover:bg-white/10 hover:text-white'"
-            class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap"
+            :class="tab === '{{ $key }}' ? 'btn-glow' : 'btn-secondary'"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all whitespace-nowrap"
         >
             <i class="fas {{ $t['icon'] }} text-xs"></i>
             {{ $t['label'] }}
@@ -80,10 +78,10 @@
 
     {{-- SECURITY TAB --}}
     <div x-show="tab === 'security'" x-transition class="space-y-6">
-        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-pink-900/40 to-pink-950/40 backdrop-blur">
+        <div class="lvl-panel p-8 border-l-4" style="border-left-color: var(--lvl-p400) !important;">
             @include('profile.partials.update-password-form')
         </div>
-        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-red-900/40 to-red-950/40 backdrop-blur">
+        <div class="lvl-panel p-8 border-l-4" style="border-left-color: var(--lvl-red) !important;">
             @include('profile.partials.delete-user-form')
         </div>
     </div>

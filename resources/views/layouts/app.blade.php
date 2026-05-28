@@ -192,6 +192,27 @@
         }
         .animated-bg, .stars, .star { display: none !important; }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+        .animate-skeleton-pulse {
+            animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .page-skeleton { display: none; }
+        body.is-navigating main { display: none !important; }
+        body.is-navigating .page-skeleton { display: block !important; }
+
+        /* Page-specific loading states */
+        .page-skeleton > div { display: none; }
+        body.loading-dashboard .skeleton-dashboard { display: block; }
+        body.loading-skill-tree .skeleton-skill-tree { display: block; }
+        body.loading-projects .skeleton-projects { display: block; }
+        body.loading-resume .skeleton-resume { display: block; }
+        body.loading-achievements .skeleton-achievements { display: block; }
+        body.loading-discover .skeleton-discover { display: block; }
+        body.loading-profile .skeleton-profile { display: block; }
+
         main .glow-border .text-white,
         main .lvl-panel .text-white { color: var(--lvl-text) !important; }
         main .glow-border .lvl-action,
@@ -512,6 +533,256 @@ window._lvlupPageTutorial = @json($currentTutorial);
         @endauth
     </header>
 
+    <!-- Global Skeleton Loader (visible during page transitions) -->
+    <div class="page-skeleton px-3 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6 animate-skeleton-pulse" aria-hidden="true">
+        <!-- 1. Dashboard Skeleton -->
+        <div class="skeleton-dashboard space-y-6">
+            <div class="lvl-panel p-4 flex items-center gap-3 border-l-4" style="border-left-color: var(--lvl-border-soft) !important;">
+                <div class="h-8 w-8 bg-white/5 rounded-lg"></div>
+                <div class="h-4 bg-white/5 rounded w-1/3"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-[1.35fr_.65fr] gap-6">
+                <div class="lvl-panel p-6 border-l-4 space-y-4" style="border-left-color: var(--lvl-border-soft) !important;">
+                    <div class="flex items-center gap-4">
+                        <div class="h-16 w-16 bg-white/5 rounded-full"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-3 bg-white/5 rounded w-1/4"></div>
+                            <div class="h-5 bg-white/5 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="h-3 bg-white/5 rounded w-full mt-4"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="lvl-panel p-4 flex flex-col items-center justify-center space-y-2">
+                        <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        <div class="h-6 bg-white/5 rounded w-1/3"></div>
+                    </div>
+                    <div class="lvl-panel p-4 flex flex-col items-center justify-center space-y-2">
+                        <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        <div class="h-6 bg-white/5 rounded w-1/3"></div>
+                    </div>
+                    <div class="lvl-panel p-4 flex flex-col items-center justify-center space-y-2">
+                        <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        <div class="h-6 bg-white/5 rounded w-1/3"></div>
+                    </div>
+                    <div class="lvl-panel p-4 flex flex-col items-center justify-center space-y-2">
+                        <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        <div class="h-6 bg-white/5 rounded w-1/3"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="lvl-panel p-6 space-y-4">
+                    <div class="h-4 bg-white/5 rounded w-1/4"></div>
+                    <div class="h-40 bg-white/5 rounded-xl w-full"></div>
+                </div>
+                <div class="lvl-panel p-6 space-y-4">
+                    <div class="h-4 bg-white/5 rounded w-1/4"></div>
+                    <div class="h-40 bg-white/5 rounded-xl w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Skill Tree Skeleton -->
+        <div class="skeleton-skill-tree relative -mx-4 -my-6 h-[calc(100vh-5rem)] overflow-hidden sm:-mx-6 lg:-mx-8">
+            <div class="absolute top-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-5xl z-10">
+                <div class="lvl-panel flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 bg-white/5 rounded-lg"></div>
+                        <div class="space-y-1.5">
+                            <div class="h-2.5 bg-white/5 rounded w-12"></div>
+                            <div class="h-4 bg-white/5 rounded w-24"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="h-8 w-12 bg-white/5 rounded"></div>
+                        <div class="h-8 w-12 bg-white/5 rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute inset-0 bg-[#16152a]/20 flex items-center justify-center">
+                <div class="w-24 h-24 rounded-full border border-white/5 flex items-center justify-center animate-ping">
+                    <i class="fas fa-sitemap text-3xl text-purple-500/20"></i>
+                </div>
+            </div>
+            <div class="absolute bottom-6 right-6 flex flex-col gap-2 z-10">
+                <div class="h-9 w-9 bg-white/5 rounded-lg border border-white/10"></div>
+                <div class="h-9 w-9 bg-white/5 rounded-lg border border-white/10"></div>
+            </div>
+        </div>
+
+        <!-- 3. Projects Skeleton -->
+        <div class="skeleton-projects space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="h-4 bg-white/5 rounded w-20"></div>
+                <div class="h-9 w-32 bg-white/5 rounded-lg"></div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <div class="h-7 w-12 bg-white/5 rounded-lg"></div>
+                <div class="h-7 w-16 bg-white/5 rounded-lg"></div>
+                <div class="h-7 w-20 bg-white/5 rounded-lg"></div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="lvl-panel p-4 space-y-4">
+                    <div class="h-32 bg-white/5 rounded-lg w-full"></div>
+                    <div class="h-4 bg-white/5 rounded w-3/4"></div>
+                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                </div>
+                <div class="lvl-panel p-4 space-y-4">
+                    <div class="h-32 bg-white/5 rounded-lg w-full"></div>
+                    <div class="h-4 bg-white/5 rounded w-3/4"></div>
+                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                </div>
+                <div class="lvl-panel p-4 space-y-4">
+                    <div class="h-32 bg-white/5 rounded-lg w-full"></div>
+                    <div class="h-4 bg-white/5 rounded w-3/4"></div>
+                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Resume Skeleton -->
+        <div class="skeleton-resume grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div class="space-y-5">
+                <div class="lvl-panel p-6 space-y-4">
+                    <div class="h-4 bg-white/5 rounded w-1/3"></div>
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <div class="h-12 bg-white/5 rounded-lg w-full"></div>
+                        <div class="h-12 bg-white/5 rounded-lg w-full"></div>
+                    </div>
+                </div>
+                <div class="lvl-panel p-5 space-y-3">
+                    <div class="h-4 bg-white/5 rounded w-1/4"></div>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="h-6 w-16 bg-white/5 rounded-full"></div>
+                        <div class="h-6 w-20 bg-white/5 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="lvl-panel p-6 space-y-6">
+                <div class="h-5 bg-white/5 rounded w-1/3"></div>
+                <div class="space-y-4">
+                    <div class="h-12 bg-white/5 rounded-xl w-full"></div>
+                    <div class="h-24 bg-white/5 rounded-xl w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Achievements Skeleton -->
+        <div class="skeleton-achievements space-y-6">
+            <div class="lvl-panel p-6 border-l-4 space-y-4" style="border-left-color: var(--lvl-border-soft) !important;">
+                <div class="h-5 bg-white/5 rounded w-1/4"></div>
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                    <div class="h-20 bg-white/5 rounded-xl"></div>
+                    <div class="h-20 bg-white/5 rounded-xl"></div>
+                    <div class="h-20 bg-white/5 rounded-xl"></div>
+                    <div class="h-20 bg-white/5 rounded-xl"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="lvl-panel p-5 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/5 rounded-lg"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-2.5 bg-white/5 rounded w-12"></div>
+                        <div class="h-4 bg-white/5 rounded w-8"></div>
+                    </div>
+                </div>
+                <div class="lvl-panel p-5 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/5 rounded-lg"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-2.5 bg-white/5 rounded w-12"></div>
+                        <div class="h-4 bg-white/5 rounded w-8"></div>
+                    </div>
+                </div>
+                <div class="lvl-panel p-5 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/5 rounded-lg"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-2.5 bg-white/5 rounded w-12"></div>
+                        <div class="h-4 bg-white/5 rounded w-8"></div>
+                    </div>
+                </div>
+                <div class="lvl-panel p-5 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/5 rounded-lg"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-2.5 bg-white/5 rounded w-12"></div>
+                        <div class="h-4 bg-white/5 rounded w-8"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Discover Skeleton -->
+        <div class="skeleton-discover space-y-6">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="h-10 bg-white/5 rounded-lg flex-1"></div>
+                <div class="h-10 w-28 bg-white/5 rounded-lg"></div>
+                <div class="h-10 w-28 bg-white/5 rounded-lg"></div>
+                <div class="h-10 w-24 bg-white/5 rounded-lg"></div>
+            </div>
+            <div class="h-4 bg-white/5 rounded w-1/4"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="lvl-panel p-5 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-12 w-12 bg-white/5 rounded-full"></div>
+                        <div class="space-y-2 flex-1">
+                            <div class="h-4 bg-white/5 rounded w-2/3"></div>
+                            <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                </div>
+                <div class="lvl-panel p-5 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-12 w-12 bg-white/5 rounded-full"></div>
+                        <div class="space-y-2 flex-1">
+                            <div class="h-4 bg-white/5 rounded w-2/3"></div>
+                            <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                </div>
+                <div class="lvl-panel p-5 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-12 w-12 bg-white/5 rounded-full"></div>
+                        <div class="space-y-2 flex-1">
+                            <div class="h-4 bg-white/5 rounded w-2/3"></div>
+                            <div class="h-3 bg-white/5 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Profile Skeleton -->
+        <div class="skeleton-profile space-y-6">
+            <div class="flex gap-2 overflow-x-auto pb-1">
+                <div class="h-9 w-20 bg-white/5 rounded-lg"></div>
+                <div class="h-9 w-24 bg-white/5 rounded-lg"></div>
+                <div class="h-9 w-20 bg-white/5 rounded-lg"></div>
+                <div class="h-9 w-28 bg-white/5 rounded-lg"></div>
+            </div>
+            <div class="lvl-panel p-8 border-l-4 space-y-6" style="border-left-color: var(--lvl-border-soft) !important;">
+                <div class="space-y-2">
+                    <div class="h-6 bg-white/5 rounded w-1/5"></div>
+                    <div class="h-3.5 bg-white/5 rounded w-1/3"></div>
+                </div>
+                <div class="space-y-4 pt-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <div class="h-3 bg-white/5 rounded w-1/4"></div>
+                            <div class="h-10 bg-white/5 rounded-lg w-full"></div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="h-3 bg-white/5 rounded w-1/4"></div>
+                            <div class="h-10 bg-white/5 rounded-lg w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main class="px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
         @yield('content')
     </main>
@@ -779,7 +1050,32 @@ function appShell() {
     document.addEventListener('click', (event) => {
         const anchor = event.target.closest('a');
         if (shouldPrefetch(anchor)) {
-            document.body.classList.add('is-navigating');
+            // Remove prior loading classes
+            document.body.classList.forEach(cls => {
+                if (cls.startsWith('loading-')) document.body.classList.remove(cls);
+            });
+
+            // Determine page category based on path
+            const path = new URL(anchor.href, window.location.href).pathname;
+            let pageType = 'dashboard';
+
+            if (path === '/' || path.includes('/dashboard')) {
+                pageType = 'dashboard';
+            } else if (path.includes('/skill-tree')) {
+                pageType = 'skill-tree';
+            } else if (path.includes('/projects')) {
+                pageType = 'projects';
+            } else if (path.includes('/resume')) {
+                pageType = 'resume';
+            } else if (path.includes('/achievements')) {
+                pageType = 'achievements';
+            } else if (path.includes('/users') || path.includes('/discover')) {
+                pageType = 'discover';
+            } else if (path.includes('/profile')) {
+                pageType = 'profile';
+            }
+
+            document.body.classList.add('is-navigating', `loading-${pageType}`);
         }
     });
 
@@ -789,16 +1085,30 @@ function appShell() {
 
         document.body.classList.add('is-submitting');
         form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((button) => {
-            button.dataset.originalText = button.value || button.textContent || '';
+            button.dataset.originalHTML = button.innerHTML;
+            button.dataset.originalValue = button.value || '';
             button.disabled = true;
             if (button.tagName === 'BUTTON') {
-                button.textContent = button.dataset.loadingText || 'Working...';
+                button.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${button.dataset.loadingText || 'Saving...'}`;
+            } else if (button.tagName === 'INPUT') {
+                button.value = button.dataset.loadingText || 'Saving...';
             }
         });
     });
 
     window.addEventListener('pageshow', () => {
         document.body.classList.remove('is-navigating', 'is-submitting');
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith('loading-')) document.body.classList.remove(cls);
+        });
+        document.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((button) => {
+            button.disabled = false;
+            if (button.tagName === 'BUTTON' && button.dataset.originalHTML) {
+                button.innerHTML = button.dataset.originalHTML;
+            } else if (button.tagName === 'INPUT' && button.dataset.originalValue) {
+                button.value = button.dataset.originalValue;
+            }
+        });
         requestAnimationFrame(() => {
             document.body.classList.add('is-loaded');
             setTimeout(() => document.body.classList.remove('is-loaded'), 260);

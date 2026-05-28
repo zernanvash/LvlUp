@@ -148,10 +148,28 @@ $tierColors = [
                 <i class="fas fa-times text-xs"></i>
             </button>
 
-            <!-- Loading -->
-            <div x-show="modal.loading" class="p-12 text-center">
-                <div class="w-12 h-12 border-2 border-[var(--lvl-p600)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-[var(--lvl-muted)] text-sm">Loading node data...</p>
+            <!-- Loading Skeleton -->
+            <div x-show="modal.loading" class="p-6 space-y-6 animate-skeleton-pulse" aria-hidden="true">
+                <!-- Header skeleton -->
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 bg-white/5 rounded-xl flex-shrink-0"></div>
+                    <div class="flex-1 space-y-2 mt-1">
+                        <div class="h-5 bg-white/5 rounded w-3/4"></div>
+                        <div class="h-4 bg-white/5 rounded w-1/4"></div>
+                    </div>
+                </div>
+                <!-- Description skeleton -->
+                <div class="space-y-2 pt-2">
+                    <div class="h-3.5 bg-white/5 rounded w-full"></div>
+                    <div class="h-3.5 bg-white/5 rounded w-5/6"></div>
+                    <div class="h-3.5 bg-white/5 rounded w-4/5"></div>
+                </div>
+                <!-- Requirements skeleton -->
+                <div class="space-y-3 pt-4 border-t border-[var(--lvl-border-soft)]">
+                    <div class="h-4 bg-white/5 rounded w-1/4 mb-1"></div>
+                    <div class="h-12 bg-white/5 rounded-xl w-full"></div>
+                    <div class="h-12 bg-white/5 rounded-xl w-full"></div>
+                </div>
             </div>
 
             <template x-if="modal.data && !modal.loading">
@@ -250,7 +268,7 @@ $tierColors = [
                             </div>
                         </template>
                         <template x-if="modal.data.state === 'locked'">
-                            <a href="/projects/create" class="block w-full py-3 rounded-xl text-center text-sm font-bold text-[var(--lvl-p600)] border border-[var(--lvl-border-soft)] hover:bg-[var(--lvl-surface-soft)] transition">
+                            <a href="{{ route('projects.create') }}" class="btn-secondary block w-full py-2.5 rounded-lg text-center text-sm font-bold">
                                 <i class="fas fa-plus mr-2"></i> Add Project to Progress
                             </a>
                         </template>
