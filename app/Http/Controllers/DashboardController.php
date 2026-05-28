@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Badge;
 use App\Models\Skill;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -19,10 +20,14 @@ class DashboardController extends Controller
             $user->save();
         }
 
-        $projects = $user->projects()
-            ->with('skills')
-            ->latest()
-            ->get();
+        $projects = Cache::remember(
+            "dashboard.projects.{$user->id}",
+            now()->addSeconds(30),
+            fn () => $user->projects()
+                ->with('skills')
+                ->latest()
+                ->get()
+        );
 
         $xpToNextLevel        = $user->xpToNextLevel();
         $showMilestoneBanner  = $user->shouldShowMilestoneBanner();

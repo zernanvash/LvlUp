@@ -1,22 +1,19 @@
 <section class="space-y-6" x-data="{ showModal: false }">
     <header>
-        <h2 class="font-display text-2xl font-bold text-white mb-2">
-            {{ __('Delete Account') }}
+        <h2 class="font-display text-xl font-bold text-white mb-2 flex items-center gap-2">
+            <i class="fas fa-exclamation-triangle text-red-400"></i> {{ __('Delete Account') }}
         </h2>
 
-        <p class="text-red-300">
+        <p class="text-sm text-red-300/80">
             {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
         </p>
     </header>
 
     <button
         @click="showModal = true"
-        class="btn-glow bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all"
+        class="btn-danger px-6 py-2.5 rounded-lg font-bold"
     >
-        <span class="relative z-10 flex items-center gap-2">
-            <i class="fas fa-exclamation-triangle"></i>
-            {{ __('Delete Account') }}
-        </span>
+        <i class="fas fa-exclamation-triangle mr-2"></i> {{ __('Delete Account') }}
     </button>
 
     <!-- Delete Confirmation Modal -->
@@ -46,7 +43,7 @@
                 x-transition:leave-end="opacity-0 scale-95"
                 class="relative w-full max-w-md"
             >
-                <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-red-900/90 to-red-950/90 backdrop-blur-xl">
+                <div class="lvl-panel p-8">
                     <form method="post" action="{{ route('profile.destroy') }}">
                         @csrf
                         @method('delete')
@@ -64,12 +61,12 @@
                         </div>
 
                         <div class="mb-6">
-                            <label for="password" class="block text-sm font-bold text-white mb-2">{{ __('Password') }}</label>
+                            <label for="password" class="block text-sm font-semibold text-[var(--lvl-muted)] mb-1.5">{{ __('Password') }}</label>
                             <input
                                 id="password"
                                 name="password"
                                 type="password"
-                                class="w-full px-4 py-3 bg-black/40 border-2 border-red-500/30 rounded-lg text-white placeholder-red-300/50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                class="w-full px-4 py-2.5"
                                 placeholder="{{ __('Enter your password') }}"
                             />
                             @error('password', 'userDeletion')
@@ -81,14 +78,14 @@
                             <button
                                 type="button"
                                 @click="showModal = false"
-                                class="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 rounded-lg font-bold text-white transition-colors"
+                                class="btn-secondary flex-1 px-4 py-2.5 rounded-lg font-bold"
                             >
                                 {{ __('Cancel') }}
                             </button>
 
                             <button
                                 type="submit"
-                                class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-bold text-white transition-colors"
+                                class="btn-danger flex-1 px-4 py-2.5 rounded-lg font-bold"
                             >
                                 {{ __('Delete Account') }}
                             </button>

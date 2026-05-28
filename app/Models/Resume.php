@@ -17,6 +17,9 @@ class Resume extends Model
         'selected_project_ids',
         'selected_skill_ids',
         'pdf_path',
+        'pdf_public_id',
+        'pdf_template',
+        'pdf_generated_at',
         'match_score',
         'template',
         'ai_content',
@@ -25,6 +28,7 @@ class Resume extends Model
     protected $casts = [
         'selected_project_ids' => 'array',
         'selected_skill_ids' => 'array',
+        'pdf_generated_at' => 'datetime',
     ];
 
     public function user()
@@ -89,4 +93,3 @@ class Resume extends Model
         return $path;
     }
 }
-

@@ -437,89 +437,120 @@
                 <div x-show="viewMode === 'preview'" x-transition 
                      class="w-full rounded-2xl overflow-hidden bg-gray-100 border-4 border-gray-800 shadow-2xl relative" style="height: 800px;">
                     <template x-if="pdfPreviewUrl">
-                        <iframe :src="pdfPreviewUrl" class="w-full h-full border-0"></iframe>
+                        <iframe :src="pdfPreviewUrl" @load="pdfLoaded = true" class="w-full h-full border-0"></iframe>
                     </template>
-                    <div x-show="!pdfPreviewUrl" class="absolute inset-0 flex items-center justify-center text-gray-500">
-                        <i class="fas fa-spinner fa-spin mr-2"></i> Loading PDF Preview...
+                    <div x-show="pdfPreviewUrl === '' || !pdfLoaded" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-[#1a192f]/40 backdrop-blur-sm animate-skeleton-pulse">
+                        <div class="w-full max-w-md bg-white/5 border border-white/10 rounded-xl p-8 space-y-6 shadow-2xl">
+                            <!-- Document Header skeleton -->
+                            <div class="space-y-3 text-center">
+                                <div class="w-16 h-16 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center mx-auto text-purple-400">
+                                    <i class="fas fa-file-pdf text-3xl"></i>
+                                </div>
+                                <div class="h-4 bg-white/5 rounded w-1/2 mx-auto"></div>
+                                <div class="h-3 bg-white/5 rounded w-1/3 mx-auto"></div>
+                            </div>
+
+                            <!-- Document Rows skeleton -->
+                            <div class="space-y-4 pt-4 border-t border-white/5">
+                                <div class="space-y-2">
+                                    <div class="h-2.5 bg-white/5 rounded w-1/4"></div>
+                                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                                    <div class="h-3 bg-white/5 rounded w-5/6"></div>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="h-2.5 bg-white/5 rounded w-1/3"></div>
+                                    <div class="h-3 bg-white/5 rounded w-full"></div>
+                                    <div class="h-3 bg-white/5 rounded w-4/5"></div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Text -->
+                            <div class="text-center pt-2">
+                                <span class="text-xs text-[var(--lvl-muted)] font-semibold flex items-center justify-center gap-2">
+                                    <i class="fas fa-circle-notch fa-spin text-purple-400"></i>
+                                    Generating PDF layout...
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Content Sections (Data View) --}}
                 <div x-show="viewMode === 'data'" x-transition class="space-y-4">
                     {{-- Summary --}}
-                    <div x-show="aiContent.summary" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.summary" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-id-badge text-indigo-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Professional Summary</h4>
-                            <button @click="copyText(aiContent.summary)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.summary)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <p class="text-gray-300 text-sm leading-relaxed" x-text="aiContent.summary"></p>
+                        <p class="text-gray-300 text-sm leading-relaxed" x-text="(aiContent && aiContent.summary) || ''"></p>
                     </div>
 
                     {{-- Skills --}}
-                    <div x-show="aiContent.skills" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-blue-900/30 to-indigo-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.skills" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-blue-900/30 to-indigo-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-code text-blue-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Skills</h4>
-                            <button @click="copyText(aiContent.skills)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.skills)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <template x-for="skill in (aiContent.skills || '').split(',').map(s => s.trim()).filter(Boolean)" :key="skill">
+                            <template x-for="skill in ((aiContent && aiContent.skills) || '').split(',').map(s => s.trim()).filter(Boolean)" :key="skill">
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 border border-blue-500/40 text-blue-300" x-text="skill"></span>
                             </template>
                         </div>
                     </div>
 
                     {{-- Experience --}}
-                    <div x-show="aiContent.experience" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-emerald-900/30 to-teal-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.experience" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-emerald-900/30 to-teal-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-briefcase text-emerald-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Work Experience</h4>
-                            <button @click="copyText(aiContent.experience)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.experience)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.experience"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.experience) || ''"></div>
                     </div>
 
                     {{-- Projects --}}
-                    <div x-show="aiContent.projects" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.projects" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-900/30 to-purple-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-folder-open text-indigo-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Projects</h4>
-                            <button @click="copyText(aiContent.projects)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.projects)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.projects"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.projects) || ''"></div>
                     </div>
 
                     {{-- Education --}}
-                    <div x-show="aiContent.education" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-amber-900/30 to-orange-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.education" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-amber-900/30 to-orange-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-graduation-cap text-amber-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Education</h4>
-                            <button @click="copyText(aiContent.education)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.education)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.education"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.education) || ''"></div>
                     </div>
 
                     {{-- Certifications --}}
-                    <div x-show="aiContent.certifications" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-pink-900/30 to-rose-950/40 backdrop-blur">
+                    <div x-show="aiContent && aiContent.certifications" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-pink-900/30 to-rose-950/40 backdrop-blur">
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fas fa-certificate text-pink-400"></i>
                             <h4 class="font-bold text-white text-sm uppercase tracking-wider">Certifications</h4>
-                            <button @click="copyText(aiContent.certifications)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
+                            <button @click="copyText(aiContent && aiContent.certifications)" class="ml-auto text-xs text-gray-500 hover:text-gray-300 transition px-2 py-1 rounded hover:bg-white/5">
                                 <i class="fas fa-copy mr-1"></i>Copy
                             </button>
                         </div>
-                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="aiContent.certifications"></div>
+                        <div class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="(aiContent && aiContent.certifications) || ''"></div>
                     </div>
                 </div>
 
@@ -561,6 +592,7 @@ function resumeBuilder() {
         matchScore:      0,
         viewMode:        'preview',
         pdfPreviewUrl:   '',
+        pdfLoaded:       false,
 
         init() {
             this.$watch('template', (value) => {
@@ -571,10 +603,24 @@ function resumeBuilder() {
         },
 
         updatePreviewUrl() {
+            this.pdfLoaded = false;
             this.pdfPreviewUrl = '{{ route('resume.preview') }}?template=' + this.template + '&t=' + Date.now();
         },
 
         async generateResume() {
+            window.dispatchEvent(new CustomEvent('lvlup-feature-hint', {
+                detail: {
+                    key: 'feature-resume-generate',
+                    label: 'Feature hint',
+                    title: 'AI resume generation',
+                    body: 'The generator uses your profile, selected projects, skills, and certificates. A specific target job title usually gives better output than a broad one.',
+                    steps: [
+                        'Select only the projects you want represented.',
+                        'Paste a job description when you want stronger keyword matching.',
+                        'Review the content before downloading the PDF.',
+                    ],
+                },
+            }));
             if (!this.jobTitle.trim()) {
                 alert('Please enter a target job title.');
                 return;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SkillNode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class SkillTreeController extends Controller
@@ -17,10 +18,12 @@ class SkillTreeController extends Controller
         $user = auth()->user();
         
         // Get all skill nodes with their relationships
-        $nodes = SkillNode::with(['skill', 'parent', 'children'])
-            ->orderBy('tier')
-            ->orderBy('y_position')
-            ->get();
+        $nodes = Cache::remember('skill-tree.nodes', now()->addMinutes(10), function () {
+            return SkillNode::with(['skill', 'parent', 'children'])
+                ->orderBy('tier')
+                ->orderBy('y_position')
+                ->get();
+        });
         
         // Get user's unlocked node IDs for quick lookup
         $unlockedNodeIds = $user->unlockedNodes->pluck('id')->toArray();
@@ -114,6 +117,7 @@ class SkillTreeController extends Controller
 
         try {
             $user->unlockedNodes()->attach($node->id, ['unlocked_at' => now()]);
+            $user->clearFastUiCaches();
 
             // Record activity streak (max +1 per calendar day)
             $user->fresh()->recordActivityStreak();

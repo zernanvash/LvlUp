@@ -6,6 +6,56 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
+const prefetched = new Set();
+
+function sameOrigin(url) {
+    try {
+        return new URL(url, window.location.href).origin === window.location.origin;
+    } catch {
+        return false;
+    }
+}
+
+function shouldPrefetch(anchor) {
+    if (!anchor || !anchor.href || anchor.target || anchor.hasAttribute('download')) return false;
+    if (!sameOrigin(anchor.href)) return false;
+    if (anchor.href.includes('#') || anchor.href === window.location.href) return false;
+    return true;
+}
+
+function prefetch(anchor) {
+    if (!shouldPrefetch(anchor) || prefetched.has(anchor.href)) return;
+    prefetched.add(anchor.href);
+
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = anchor.href;
+    link.as = 'document';
+    document.head.appendChild(link);
+}
+
+document.addEventListener('mouseover', (event) => {
+    const anchor = event.target.closest('a');
+    if (anchor) prefetch(anchor);
+}, { passive: true });
+
+document.addEventListener('touchstart', (event) => {
+    const anchor = event.target.closest('a');
+    if (anchor) prefetch(anchor);
+}, { passive: true });
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || form.dataset.noBusy === 'true') return;
+
+    form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((button) => {
+        button.disabled = true;
+        if (button.tagName === 'BUTTON') {
+            button.textContent = button.dataset.loadingText || 'Working...';
+        }
+    });
+});
+
 // Particle effect initialization
 document.addEventListener('DOMContentLoaded', function() {
     // Create particle container if it doesn't exist

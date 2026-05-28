@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable
 {
@@ -65,6 +66,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'last_login' => 'date',
         'last_activity_date' => 'date',
+        'is_public' => 'boolean',
         'password' => 'hashed',
         'visibility_settings' => 'array',
     ];
@@ -136,11 +138,12 @@ class User extends Authenticatable
         }
 
         $this->save();
+        $this->clearFastUiCaches();
     }
 
     public function getRankTitle(): string
     {
-        return self::RANK_TITLES[$this->rank] ?? $this->rank;
+        return self::RANK_TITLES[$this->rank] ?? $this->rank ?? 'Junior Dev';
     }
 
     public static function rankTitleMap(): array
@@ -196,6 +199,7 @@ class User extends Authenticatable
 
         $this->last_activity_date = $today;
         $this->save();
+        $this->clearFastUiCaches();
     }
 
     public function xpNeededForNextLevel(): int
@@ -257,6 +261,7 @@ class User extends Authenticatable
             'is_displayed' => true,
             'updated_at' => now()
         ]);
+        $this->clearFastUiCaches();
         return true;
     }
 
@@ -269,6 +274,7 @@ class User extends Authenticatable
 
         // Unequip the badge
         $this->badges()->updateExistingPivot($badgeId, ['is_displayed' => false]);
+        $this->clearFastUiCaches();
         return true;
     }
 
@@ -291,5 +297,12 @@ class User extends Authenticatable
     public function getPublicUrl(): string
     {
         return route('profile.public', ['username' => $this->name]);
+    }
+
+    public function clearFastUiCaches(): void
+    {
+        Cache::forget("dashboard.projects.{$this->id}");
+        Cache::forget("public-profile.{$this->id}");
+        Cache::forget("api.stats.{$this->id}");
     }
 }

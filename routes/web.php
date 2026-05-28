@@ -7,9 +7,10 @@ use App\Http\Controllers\SkillTreeController;
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\Api\UserSnapshotController;
+use App\Http\Controllers\ShortcutController;
 use App\Http\Controllers\UserSearchController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,9 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Projects
     Route::resource('projects', ProjectController::class);
-    Route::get('/new', function () {
-        return redirect()->route('projects.create');
-    });
+    Route::get('/new', [ShortcutController::class, 'newProject']);
     
     // Skill Tree
     Route::get('/skill-tree', [SkillTreeController::class, 'index'])->name('skill-tree.index');
@@ -71,30 +70,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Discover / User Search
     Route::get('/users', [UserSearchController::class, 'index'])->name('users.index');
 
-    // Public Profile
-    Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 });
+
+// Public Profile
+Route::get('/profile/{username}', [ProfileController::class, 'show'])->name('profile.public');
 
 // API Routes (Optional - for future mobile app)
 Route::prefix('api')->middleware(['auth:sanctum'])->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user()->load(['projects', 'badges', 'unlockedNodes']);
-    });
-    
-    Route::get('/stats', function (Request $request) {
-        $user = $request->user();
-        return [
-            'level' => $user->level,
-            'xp' => $user->xp,
-            'xp_needed' => $user->xpNeededForNextLevel(),
-            'xp_progress' => $user->xpProgress(),
-            'rank' => $user->rank,
-            'primogems' => $user->gacha_currency,
-            'skill_points' => $user->skill_points,
-            'streak_days' => $user->streak_days,
-            'total_projects' => $user->projects()->count(),
-            'total_badges' => $user->badges()->count(),
-            'unlocked_skills' => $user->unlockedNodes()->count(),
-        ];
-    });
+    Route::get('/user', [UserSnapshotController::class, 'profile']);
+    Route::get('/stats', [UserSnapshotController::class, 'stats']);
 });

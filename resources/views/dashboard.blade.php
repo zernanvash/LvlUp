@@ -70,22 +70,22 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Projects</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ $projects->count() }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">Portfolio entries</p>
             </div>
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Badges</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ $badges->count() }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">{{ $equippedBadges->count() }} equipped</p>
             </div>
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Skills</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ $unlockedNodes }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">of {{ $totalNodes }} nodes</p>
             </div>
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Total XP</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ number_format($user->total_xp) }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">Lifetime earned</p>
@@ -94,7 +94,7 @@
     </section>
 
     <section class="grid gap-4 lg:grid-cols-2">
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="mb-4 flex items-center justify-between">
                 <div>
                     <p class="lvl-label">Skill radar</p>
@@ -129,7 +129,7 @@
             @endif
         </div>
 
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="mb-4 flex items-center justify-between">
                 <div>
                     <p class="lvl-label">Activity</p>
@@ -180,7 +180,7 @@
             @else
                 <div class="space-y-3">
                     @foreach($projects->take(4) as $project)
-                    <a href="{{ route('projects.show', $project) }}" class="block rounded-lg border border-[var(--lvl-border-soft)] bg-white p-4 hover:border-[var(--lvl-p100)] transition">
+                    <a href="{{ route('projects.show', $project) }}" class="block rounded-lg border p-4 transition" style="border-color:var(--lvl-border-soft);background:var(--lvl-surface-raised);" onmouseover="this.style.borderColor='var(--lvl-p100)'" onmouseout="this.style.borderColor='var(--lvl-border-soft)'">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
@@ -221,7 +221,7 @@
                 @if($equippedBadges->count())
                     <div class="grid grid-cols-3 gap-3 sm:grid-cols-6 xl:grid-cols-3">
                         @foreach($equippedBadges as $badge)
-                        <div class="rounded-lg border border-[var(--lvl-border-soft)] bg-white p-3 text-center">
+                        <div class="rounded-lg border p-3 text-center" style="border-color:var(--lvl-border-soft);background:var(--lvl-surface-raised);">
                             <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-[var(--lvl-p50)] border border-[var(--lvl-p100)] text-[var(--lvl-p600)] flex items-center justify-center">
                                 <i class="{{ $badge->icon }}"></i>
                             </div>
@@ -261,7 +261,7 @@
         </div>
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             @foreach($latestBadges as $badge)
-            <div class="rounded-lg border border-[var(--lvl-border-soft)] bg-white p-4">
+            <div class="rounded-lg border p-4" style="border-color:var(--lvl-border-soft);background:var(--lvl-surface-raised);">
                 <div class="flex items-center gap-3">
                     <div class="h-11 w-11 rounded-full bg-[var(--lvl-p50)] border border-[var(--lvl-p100)] text-[var(--lvl-p600)] flex items-center justify-center">
                         <i class="{{ $badge->icon }}"></i>
@@ -285,7 +285,7 @@
                     <p class="lvl-label">Progression guide</p>
                     <h2 class="text-xl font-black text-[var(--lvl-text)]">How XP moves you up</h2>
                 </div>
-                <button @click="guideOpen = false" class="h-9 w-9 rounded-lg border border-[var(--lvl-border-soft)] bg-white text-[var(--lvl-muted)]">
+                <button @click="guideOpen = false" class="h-9 w-9 rounded-lg border text-[var(--lvl-muted)]" style="border-color:var(--lvl-border-soft);background:var(--lvl-surface-soft);">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -293,7 +293,7 @@
             <div class="space-y-4 text-sm">
                 <div>
                     <p class="mb-2 font-bold text-[var(--lvl-text)]">XP sources</p>
-                    <div class="divide-y divide-[var(--lvl-border-soft)] rounded-lg border border-[var(--lvl-border-soft)] bg-white">
+                    <div class="divide-y rounded-lg border" style="divide-color:var(--lvl-border-soft);border-color:var(--lvl-border-soft);background:var(--lvl-surface-raised);">
                         <div class="flex justify-between p-3"><span>Create a project</span><strong>100 XP base</strong></div>
                         <div class="flex justify-between p-3"><span>Project code depth</span><strong>up to +400 XP</strong></div>
                         <div class="flex justify-between p-3"><span>Rare badge</span><strong>150 XP</strong></div>

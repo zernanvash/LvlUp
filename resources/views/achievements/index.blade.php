@@ -5,45 +5,25 @@
 @section('page_subtitle', 'Your legendary accomplishments')
 
 @section('content')
-@php
-    $equippedBadges = auth()->user()->badges()->wherePivot('is_displayed', true)->orderBy('user_badges.created_at', 'asc')->get();
-    $equippedCount  = $equippedBadges->count();
-
-    // Build JS-safe array of equipped badges for Alpine
-    $equippedJs = $equippedBadges->map(fn($b) => [
-        'id'     => $b->id,
-        'title'  => $b->title,
-        'icon'   => $b->icon,
-        'rarity' => $b->rarity,
-        'color'  => match($b->rarity) {
-            'uncommon'  => 'green',
-            'rare'      => 'blue',
-            'epic'      => 'purple',
-            'legendary' => 'amber',
-            'mythic'    => 'pink',
-            default     => 'gray',
-        },
-    ])->values()->toArray();
-@endphp
 <div class="max-w-7xl mx-auto space-y-8">
 
     <!-- Equipped Badges Display (fully reactive via Alpine store) -->
-    <div x-data x-show="$store.achievements.equipped.length > 0" class="glow-border rounded-2xl p-6 bg-gradient-to-br from-purple-900/40 to-pink-900/40 backdrop-blur">
+    <div x-data x-show="$store.achievements.equipped.length > 0" class="lvl-panel p-6 border-l-4" style="border-left-color: var(--lvl-p400) !important;">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-display text-xl font-bold text-white flex items-center gap-3">
                 <i class="fas fa-crown text-amber-400"></i>
                 Equipped Badges
-                <span class="text-sm text-purple-300 font-normal">(<span x-text="$store.achievements.equipped.length"></span>/6)</span>
+                <span class="text-sm text-purple-300 font-normal" aria-label="{{ $equippedCount }}/6">(<span x-text="$store.achievements.equipped.length">{{ $equippedCount }}</span>/6)</span>
+                <span class="sr-only">{{ $equippedCount }}/6</span>
             </h2>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <template x-for="b in $store.achievements.equipped" :key="b.id">
                 <div class="relative group">
-                    <div class="glow-border rounded-xl p-4 backdrop-blur text-center transition-transform hover:scale-105"
-                         :class="`bg-gradient-to-br from-${b.color}-900/40 to-${b.color}-950/40`">
+                    <div class="lvl-panel p-4 text-center transition-transform hover:scale-105" style="border-color: var(--lvl-border-soft); background: var(--lvl-surface-raised);">
                         <div class="text-4xl mb-2"><i :class="b.icon"></i></div>
                         <p class="text-xs text-white font-bold truncate" x-text="b.title"></p>
-                        <p class="text-xs uppercase" :class="`text-${b.color}-300`" x-text="b.rarity"></p>
+                        <p class="text-xs uppercase" :style="`color: ${b.color === 'gray' ? 'var(--lvl-muted)' : b.color === 'amber' ? 'var(--lvl-gold)' : b.color === 'green' ? 'var(--lvl-green)' : b.color === 'blue' ? '#3b82f6' : b.color === 'purple' ? 'var(--lvl-p600)' : '#ec4899'}`" x-text="b.rarity"></p>
                     </div>
                 </div>
             </template>
@@ -51,26 +31,26 @@
     </div>
 
     <!-- Progress Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-amber-900/40 to-amber-950/40 backdrop-blur">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-trophy text-2xl text-white"></i>
                 </div>
                 <div>
-                    <p class="text-sm text-amber-300">Total Badges</p>
+                    <p class="lvl-label text-amber-300">Total Badges</p>
                     <p class="font-display text-3xl font-bold text-white">{{ $badgesByCategory->flatten(1)->filter(fn($b) => $b['earned'])->count() }}</p>
                 </div>
             </div>
         </div>
         
-        <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-purple-900/40 to-purple-950/40 backdrop-blur">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-star text-2xl text-white"></i>
                 </div>
                 <div>
-                    <p class="text-sm text-purple-300">Completion</p>
+                    <p class="lvl-label text-purple-300">Completion</p>
                     <p class="font-display text-3xl font-bold text-white">
                         @php
                             $totalBadges = $badgesByCategory->flatten(1)->count();
@@ -82,13 +62,13 @@
             </div>
         </div>
         
-        <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-blue-900/40 to-blue-950/40 backdrop-blur">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-gem text-2xl text-white"></i>
                 </div>
                 <div>
-                    <p class="text-sm text-blue-300">Rarest Badge</p>
+                    <p class="lvl-label text-blue-300">Rarest Badge</p>
                     <p class="font-display text-xl font-bold text-white">
                         @php
                             $rarityOrder = ['common' => 0, 'uncommon' => 1, 'rare' => 2, 'epic' => 3, 'legendary' => 4, 'mythic' => 5];
@@ -100,14 +80,14 @@
             </div>
         </div>
         
-        <div class="glow-border rounded-2xl p-6 bg-gradient-to-br from-pink-900/40 to-pink-950/40 backdrop-blur">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-crown text-2xl text-white"></i>
                 </div>
                 <div x-data>
-                    <p class="text-sm text-pink-300">Equipped</p>
-                    <p class="font-display text-3xl font-bold text-white" x-text="$store.achievements.equipped.length + '/6'"></p>
+                    <p class="lvl-label text-pink-300">Equipped</p>
+                    <p class="font-display text-3xl font-bold text-white" x-text="$store.achievements.equipped.length + '/6'">{{ $equippedCount }}/6</p>
                 </div>
             </div>
         </div>
@@ -141,15 +121,12 @@
                 $color = $rarityColors[$badge->rarity];
             @endphp
             
-            <div class="glow-border rounded-2xl overflow-hidden bg-gradient-to-br from-[#2d1b4e]/80 to-[#1a1d3e]/80 backdrop-blur
-                        {{ $isEarned ? 'rarity-' . $badge->rarity : 'opacity-60' }}
-                        transition-all duration-300 hover:scale-105">
-                <div class="p-6">
+            <div class="tilt-card lvl-panel overflow-hidden transition-all duration-300 {{ $isEarned ? '' : 'opacity-50' }}">
+                <div class="p-5">
                     <!-- Badge Icon -->
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-20 h-20 bg-gradient-to-br from-{{ $color }}-500/20 to-{{ $color }}-600/20 
-                                    border-2 border-{{ $color }}-500/40 rounded-2xl flex items-center justify-center text-4xl
-                                    {{ $isEarned ? '' : 'grayscale' }}">
+                        <div class="w-16 h-16 rounded-xl flex items-center justify-center text-3xl border-2 {{ $isEarned ? '' : 'grayscale' }}"
+                             style="background: {{ $badge->rarity_color }}22; border-color: {{ $badge->rarity_color }}44; color: {{ $badge->rarity_color }};">
                             <i class="{{ $badge->icon }}"></i>
                         </div>
                         
@@ -160,26 +137,26 @@
                                     $starCount = ['common' => 2, 'uncommon' => 2, 'rare' => 3, 'epic' => 4, 'legendary' => 5, 'mythic' => 6];
                                 @endphp
                                 @for($i = 0; $i < ($starCount[$badge->rarity] ?? 2); $i++)
-                                    <i class="fas fa-star text-{{ $color }}-400 text-sm"></i>
+                                    <i class="fas fa-star text-sm" style="color: {{ $badge->rarity_color }};"></i>
                                 @endfor
                             </div>
                         </div>
                     </div>
                     
                     <!-- Badge Details -->
-                    <h3 class="font-display font-bold text-white text-lg mb-2">{{ $badge->title }}</h3>
-                    <p class="text-sm text-purple-200/70 mb-4">{{ $badge->description }}</p>
+                    <h3 class="font-bold text-white text-base mb-1.5 truncate" title="{{ $badge->title }}">{{ $badge->title }}</h3>
+                    <p class="text-xs text-[var(--lvl-muted)] mb-3 line-clamp-2 h-8 leading-normal">{{ $badge->description }}</p>
                     
                     <!-- Progress Bar (for unearned badges) -->
                     @if(!$isEarned && $progress > 0)
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between text-xs mb-1">
-                            <span class="text-{{ $color }}-300">Progress</span>
+                    <div class="mb-3">
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span style="color: {{ $badge->rarity_color }};">Progress</span>
                             <span class="text-white font-bold">{{ round($progress) }}%</span>
                         </div>
-                        <div class="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                            <div class="bg-gradient-to-r from-{{ $color }}-500 to-{{ $color }}-600 h-full rounded-full transition-all duration-500"
-                                 style="width: {{ $progress }}%"></div>
+                        <div class="w-full bg-[var(--lvl-surface-soft)] rounded-full h-1.5 overflow-hidden border border-[var(--lvl-border-soft)]">
+                            <div class="h-full rounded-full transition-all duration-500"
+                                 style="width: {{ $progress }}%; background: {{ $badge->rarity_color }};"></div>
                         </div>
                     </div>
                     @endif
@@ -187,7 +164,7 @@
                     <!-- Status and Rewards -->
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-xs">
-                            <span class="text-{{ $color }}-300 font-bold uppercase">{{ $badge->rarity }}</span>
+                            <span class="font-bold uppercase" style="color: {{ $badge->rarity_color }};">{{ $badge->rarity }}</span>
                             @if($isEarned)
                                 <span class="text-green-400">
                                     <i class="fas fa-check-circle"></i> Earned {{ $badgeData['earned_at'] ? \Carbon\Carbon::parse($badgeData['earned_at'])->diffForHumans() : 'recently' }}
@@ -199,7 +176,7 @@
                             @endif
                         </div>
                         
-                        <div class="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div class="flex items-center justify-between pt-3 border-t border-white/5">
                             <div class="flex items-center gap-2 text-purple-300">
                                 <i class="fas fa-bolt"></i>
                                 <span class="text-sm font-bold">+{{ $badge->xp_reward }} XP</span>
@@ -222,8 +199,22 @@
                 <div class="bg-gradient-to-t from-black/20 to-transparent p-4"
                      x-data="{ equipped: {{ $isDisplayed ? 'true' : 'false' }}, loading: false, badge: {{ Js::from($badgeJs) }} }">
                     <button
+                        :aria-label="equipped ? 'Unequip Badge' : 'Equip Badge'"
                         @click.prevent="
                             if (loading) return;
+                            window.dispatchEvent(new CustomEvent('lvlup-feature-hint', {
+                                detail: {
+                                    key: 'feature-badge-equip',
+                                    label: 'Feature hint',
+                                    title: 'Equipping badges',
+                                    body: 'Equipped badges are the ones shown on your public profile. You can equip up to six, and you can swap them whenever you want.',
+                                    steps: [
+                                        'Equip badges that best represent your work.',
+                                        'Unequip one if you hit the six-badge limit.',
+                                        'Locked badges become available after you meet their requirements.',
+                                    ],
+                                },
+                            }));
                             loading = true;
                             fetch('{{ route('badges.toggle-display', $badge) }}', {
                                 method: 'POST',
@@ -264,10 +255,8 @@
                             .finally(() => loading = false)
                         "
                         :disabled="loading || (!equipped && $store.achievements.equipped.length >= 6)"
-                        class="w-full px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all border"
-                        :class="equipped
-                            ? 'bg-red-500/20 hover:bg-red-500/40 border-red-500/50 text-red-300'
-                            : 'bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/50 text-purple-300 disabled:opacity-40 disabled:cursor-not-allowed'">
+                        class="w-full px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all"
+                        :class="equipped ? 'btn-danger' : 'btn-secondary'">
                         <template x-if="loading">
                             <span><i class="fas fa-spinner fa-spin mr-1"></i> ...</span>
                         </template>

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ProjectController extends Controller
 {
@@ -19,14 +20,19 @@ class ProjectController extends Controller
             $query->where('project_type', $request->type);
         }
 
-        $projects = $query->paginate(12);
+        $cacheKey = 'projects.index.' . auth()->id() . '.' . md5(json_encode([
+            'type' => $request->get('type', 'all'),
+            'page' => $request->integer('page', 1),
+        ]));
+
+        $projects = Cache::remember($cacheKey, now()->addSeconds(30), fn () => $query->paginate(12));
 
         return view('projects.index', compact('projects'));
     }
     
     public function create()
     {
-        $skills = Skill::orderBy('name')->get();
+        $skills = Cache::remember('skills.options', now()->addMinutes(10), fn () => Skill::orderBy('name')->get());
         return view('projects.create', compact('skills'));
     }
     
@@ -124,7 +130,7 @@ class ProjectController extends Controller
             abort(403);
         }
         
-        $skills = Skill::orderBy('name')->get();
+        $skills = Cache::remember('skills.options', now()->addMinutes(10), fn () => Skill::orderBy('name')->get());
         $project->load('skills');
         
         return view('projects.edit', compact('project', 'skills'));
@@ -193,6 +199,7 @@ class ProjectController extends Controller
         }
         
         $project->delete();
+        auth()->user()->clearFastUiCaches();
         
         return redirect()->route('dashboard')
             ->with('success', 'Project deleted successfully!');

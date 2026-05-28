@@ -16,14 +16,13 @@
                 name="q"
                 value="{{ $query }}"
                 placeholder="Search by name, title, skills..."
-                class="w-full pl-11 pr-4 py-3 bg-[#1a1d3e]/80 border-2 border-purple-500/30 rounded-xl text-white placeholder-purple-400/50 focus:outline-none focus:border-purple-400 transition"
+                class="w-full pl-11 pr-4 py-2.5"
                 autofocus
             >
         </div>
 
         {{-- Rank filter --}}
-        <select name="rank"
-            class="px-4 py-3 bg-[#1a1d3e]/80 border-2 border-purple-500/30 rounded-xl text-white focus:outline-none focus:border-purple-400 transition">
+        <select name="rank" class="px-4 py-2.5">
             <option value="" {{ $rankFilter === '' ? 'selected' : '' }}>All Ranks</option>
             @foreach($ranks as $rank)
                 <option value="{{ $rank }}" {{ $rankFilter === $rank ? 'selected' : '' }}>{{ $rank }}</option>
@@ -31,22 +30,20 @@
         </select>
 
         {{-- Sort --}}
-        <select name="sort"
-            class="px-4 py-3 bg-[#1a1d3e]/80 border-2 border-purple-500/30 rounded-xl text-white focus:outline-none focus:border-purple-400 transition">
+        <select name="sort" class="px-4 py-2.5">
             <option value="level"   {{ $sortBy === 'level'    ? 'selected' : '' }}>Sort: Level</option>
             <option value="projects" {{ $sortBy === 'projects' ? 'selected' : '' }}>Sort: Projects</option>
             <option value="badges"  {{ $sortBy === 'badges'   ? 'selected' : '' }}>Sort: Badges</option>
             <option value="name"    {{ $sortBy === 'name'     ? 'selected' : '' }}>Sort: Name</option>
         </select>
 
-        <button type="submit"
-            class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl font-bold transition shadow-lg">
+        <button type="submit" class="btn-glow px-6 py-2.5 rounded-lg font-bold">
             Search
         </button>
 
         @if($query || $rankFilter)
         <a href="{{ route('users.index') }}"
-            class="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 hover:text-white transition text-center">
+            class="btn-secondary px-4 py-2.5 rounded-lg flex items-center justify-center">
             <i class="fas fa-times"></i>
         </a>
         @endif
@@ -65,27 +62,28 @@
 
     {{-- User Cards Grid --}}
     @if($users->isEmpty())
-    <div class="glow-border rounded-2xl p-16 text-center bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur">
+    <div class="lvl-panel p-16 text-center">
         <i class="fas fa-user-slash text-5xl text-purple-400/40 mb-4"></i>
-        <h3 class="font-display text-xl font-bold text-white mb-2">No developers found</h3>
-        <p class="text-purple-300 text-sm">Try a different search or remove filters.</p>
+        <h3 class="text-xl font-bold text-white mb-2">No developers found</h3>
+        <p class="text-[var(--lvl-muted)] text-sm">Try a different search or remove filters.</p>
     </div>
     @else
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         @foreach($users as $user)
         @php
             $rankColors = [
-                'Bronze'   => ['border' => 'border-amber-700/50',  'badge' => 'from-amber-800/60 to-amber-900/60',  'text' => 'text-amber-400'],
-                'Silver'   => ['border' => 'border-gray-400/50',   'badge' => 'from-gray-700/60 to-gray-800/60',    'text' => 'text-gray-300'],
-                'Gold'     => ['border' => 'border-yellow-400/60', 'badge' => 'from-yellow-700/60 to-yellow-900/60','text' => 'text-yellow-300'],
-                'Platinum' => ['border' => 'border-cyan-400/50',   'badge' => 'from-cyan-800/60 to-cyan-900/60',    'text' => 'text-cyan-300'],
-                'Diamond'  => ['border' => 'border-blue-400/60',   'badge' => 'from-blue-700/60 to-blue-900/60',    'text' => 'text-blue-300'],
-                'Master'   => ['border' => 'border-purple-400/70', 'badge' => 'from-purple-700/60 to-pink-900/60',  'text' => 'text-purple-300'],
+                'Bronze'   => ['border' => '#b45309', 'badge' => 'from-amber-800/60 to-amber-900/60',  'text' => 'text-amber-400'],
+                'Silver'   => ['border' => '#9ca3af', 'badge' => 'from-gray-700/60 to-gray-800/60',    'text' => 'text-gray-300'],
+                'Gold'     => ['border' => '#facc15', 'badge' => 'from-yellow-700/60 to-yellow-900/60','text' => 'text-yellow-300'],
+                'Platinum' => ['border' => '#22d3ee', 'badge' => 'from-cyan-800/60 to-cyan-900/60',    'text' => 'text-cyan-300'],
+                'Diamond'  => ['border' => '#60a5fa', 'badge' => 'from-blue-700/60 to-blue-900/60',    'text' => 'text-blue-300'],
+                'Master'   => ['border' => '#c084fc', 'badge' => 'from-purple-700/60 to-pink-900/60',  'text' => 'text-purple-300'],
             ];
             $rc = $rankColors[$user->rank] ?? $rankColors['Bronze'];
         @endphp
         <a href="{{ route('profile.public', $user->name) }}"
-            class="group block glow-border rounded-2xl overflow-hidden bg-gradient-to-br from-[#1e1b4b]/80 to-[#1a1d3e]/80 backdrop-blur border-2 {{ $rc['border'] }} hover:scale-[1.02] transition-transform duration-200 card-hover">
+            class="tilt-card group block lvl-panel overflow-hidden card-hover"
+            style="border-color: {{ $rc['border'] }}77 !important; border-width: 2px;">
 
             {{-- Card top accent --}}
             <div class="h-1 w-full bg-gradient-to-r from-transparent via-purple-500/60 to-transparent group-hover:via-pink-500/80 transition-all"></div>

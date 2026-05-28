@@ -5,321 +5,329 @@
 @section('page_subtitle', 'Add to your portfolio and earn XP')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <form action="{{ route('projects.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+<div class="max-w-3xl mx-auto" x-data="{ projectType: '{{ old('project_type') }}' }">
+    <form action="{{ route('projects.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
         @csrf
-        
-        <!-- Project Details Card -->
-        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-purple-900/40 to-purple-950/40 backdrop-blur">
-            <h2 class="font-display text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                Project Information
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Project Name -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-purple-200 mb-2">
+        <input type="hidden" name="project_type" id="project_type_input" :value="projectType" required>
+
+        {{-- ── Project Info ── --}}
+        <div class="rounded-xl overflow-hidden border border-white/10 bg-purple-950/30 backdrop-blur">
+            <div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 border-b border-white/10">
+                <i class="fas fa-file-alt text-purple-400 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-widest text-purple-200">Project Info</span>
+            </div>
+
+            <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {{-- Name --}}
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">
                         Project Name <span class="text-red-400">*</span>
                     </label>
-                    <input 
-                        type="text" 
-                        name="name" 
+                    <input
+                        type="text"
+                        name="name"
                         required
-                        placeholder="My Awesome Project"
-                        class="w-full bg-purple-950/50 border-2 border-purple-500/30 rounded-xl px-4 py-3 text-white placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition"
+                        placeholder="e.g. Task Manager API"
+                        class="w-full px-3 py-2"
                         value="{{ old('name') }}"
                     >
                     @error('name')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                
-                <!-- Language -->
+
+                {{-- Language --}}
                 <div>
-                    <label class="block text-sm font-bold text-purple-200 mb-2">
-                        Primary Language <span class="text-red-400">*</span>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">
+                        Language <span class="text-red-400">*</span>
                     </label>
-                    <select 
-                        name="language" 
+                    <select
+                        name="language"
                         required
-                        class="w-full bg-purple-950/50 border-2 border-purple-500/30 rounded-xl px-4 py-3 text-white focus:border-purple-400 focus:outline-none transition"
+                        class="w-full px-3 py-2"
                     >
-                        <option value="">Select Language</option>
-                        <option value="PHP" {{ old('language') == 'PHP' ? 'selected' : '' }}>PHP</option>
-                        <option value="JavaScript" {{ old('language') == 'JavaScript' ? 'selected' : '' }}>JavaScript</option>
-                        <option value="Python" {{ old('language') == 'Python' ? 'selected' : '' }}>Python</option>
-                        <option value="Java" {{ old('language') == 'Java' ? 'selected' : '' }}>Java</option>
-                        <option value="C++" {{ old('language') == 'C++' ? 'selected' : '' }}>C++</option>
-                        <option value="C#" {{ old('language') == 'C#' ? 'selected' : '' }}>C#</option>
-                        <option value="Ruby" {{ old('language') == 'Ruby' ? 'selected' : '' }}>Ruby</option>
-                        <option value="Go" {{ old('language') == 'Go' ? 'selected' : '' }}>Go</option>
-                        <option value="Rust" {{ old('language') == 'Rust' ? 'selected' : '' }}>Rust</option>
-                        <option value="TypeScript" {{ old('language') == 'TypeScript' ? 'selected' : '' }}>TypeScript</option>
+                        <option value="">Select...</option>
+                        @foreach(['PHP','JavaScript','TypeScript','Python','Java','C++','C#','Ruby','Go','Rust'] as $lang)
+                            <option value="{{ $lang }}" {{ old('language') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
+                        @endforeach
                     </select>
                     @error('language')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                
-                <!-- Project URL -->
+
+                {{-- Live URL --}}
                 <div>
-                    <label class="block text-sm font-bold text-purple-200 mb-2">
-                        Live URL (Optional)
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">
+                        Live URL
                     </label>
-                    <input 
-                        type="url" 
-                        name="url" 
-                        placeholder="https://myproject.com"
-                        class="w-full bg-purple-950/50 border-2 border-purple-500/30 rounded-xl px-4 py-3 text-white placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition"
-                        value="{{ old('url') }}"
-                    >
+                    <div class="relative">
+                        <i class="fas fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-purple-400/60 text-xs pointer-events-none"></i>
+                        <input
+                            type="url"
+                            name="url"
+                            placeholder="https://..."
+                            class="w-full pl-8 pr-3 py-2"
+                            value="{{ old('url') }}"
+                        >
+                    </div>
                     @error('url')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                
-                <!-- GitHub URL -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-purple-200 mb-2 flex items-center gap-2">
-                        <i class="fab fa-github"></i> GitHub Repository
+
+                {{-- GitHub --}}
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">
+                        GitHub
                     </label>
-                    <input 
-                        type="url" 
-                        name="github_url" 
-                        placeholder="https://github.com/username/repo"
-                        class="w-full bg-purple-950/50 border-2 border-purple-500/30 rounded-xl px-4 py-3 text-white placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition"
-                        value="{{ old('github_url') }}"
-                    >
+                    <div class="relative">
+                        <i class="fab fa-github absolute left-3 top-1/2 -translate-y-1/2 text-purple-400/60 text-xs pointer-events-none"></i>
+                        <input
+                            type="url"
+                            name="github_url"
+                            placeholder="github.com/..."
+                            class="w-full pl-8 pr-3 py-2"
+                            value="{{ old('github_url') }}"
+                        >
+                    </div>
                     @error('github_url')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                
-                <!-- Description -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-purple-200 mb-2">
+
+                {{-- Description --}}
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">
                         Description
                     </label>
-                    <textarea 
-                        name="description" 
-                        rows="4"
-                        placeholder="Describe your project, the problems it solves, and technologies used..."
-                        class="w-full bg-purple-950/50 border-2 border-purple-500/30 rounded-xl px-4 py-3 text-white placeholder-purple-400/50 focus:border-purple-400 focus:outline-none transition resize-none"
+                    <textarea
+                        name="description"
+                        rows="2"
+                        placeholder="What does this project do? What problems does it solve?"
+                        class="w-full px-3 py-2 resize-none"
                     >{{ old('description') }}</textarea>
                     @error('description')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
         </div>
 
-        <!-- Project Type Card -->
-        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-indigo-900/40 to-indigo-950/40 backdrop-blur">
-            <h2 class="font-display text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-layer-group"></i>
-                </div>
-                Project Type
-            </h2>
-            <p class="text-indigo-300 text-sm mb-6">This determines which skill tree nodes you can unlock. Choose the one that best fits your project.</p>
+        {{-- ── Project Type ── --}}
+        <div class="rounded-xl overflow-hidden border border-white/10 bg-indigo-950/30 backdrop-blur">
+            <div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 border-b border-white/10">
+                <i class="fas fa-layer-group text-indigo-400 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-200">Project Type</span>
+                <span class="ml-auto text-xs text-indigo-400/70">Affects skill tree unlocks</span>
+            </div>
 
             @error('project_type')
-                <p class="text-red-400 text-sm mb-4">{{ $message }}</p>
+                <p class="text-red-400 text-xs px-4 pt-3">{{ $message }}</p>
             @enderror
 
-            <input type="hidden" name="project_type" id="project_type_input" value="{{ old('project_type') }}" required>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" x-data="{ selected: '{{ old('project_type') }}' }">
+            <div class="p-3">
                 @php
                 $types = [
-                    ['value' => 'web',        'label' => 'Web / Frontend', 'icon' => 'fas fa-globe',         'color' => 'from-blue-500 to-cyan-500'],
-                    ['value' => 'backend',    'label' => 'Backend / API',  'icon' => 'fas fa-server',        'color' => 'from-violet-500 to-purple-500'],
-                    ['value' => 'fullstack',  'label' => 'Full Stack',     'icon' => 'fas fa-layer-group',   'color' => 'from-pink-500 to-rose-500'],
-                    ['value' => 'mobile',     'label' => 'Mobile',         'icon' => 'fas fa-mobile-alt',    'color' => 'from-green-500 to-emerald-500'],
-                    ['value' => 'devops',     'label' => 'DevOps / Cloud', 'icon' => 'fas fa-cloud',         'color' => 'from-amber-500 to-orange-500'],
-                    ['value' => 'ai',         'label' => 'AI / ML',        'icon' => 'fas fa-brain',         'color' => 'from-red-500 to-pink-500'],
-                    ['value' => 'other',      'label' => 'Other',          'icon' => 'fas fa-code',          'color' => 'from-gray-500 to-slate-500'],
+                    ['value' => 'web',       'label' => 'Web',       'icon' => 'fas fa-globe'],
+                    ['value' => 'backend',   'label' => 'Backend',   'icon' => 'fas fa-server'],
+                    ['value' => 'fullstack', 'label' => 'Full Stack','icon' => 'fas fa-layer-group'],
+                    ['value' => 'mobile',    'label' => 'Mobile',    'icon' => 'fas fa-mobile-alt'],
+                    ['value' => 'devops',    'label' => 'DevOps',    'icon' => 'fas fa-cloud'],
+                    ['value' => 'ai',        'label' => 'AI / ML',   'icon' => 'fas fa-brain'],
+                    ['value' => 'other',     'label' => 'Other',     'icon' => 'fas fa-code'],
                 ];
                 @endphp
 
-                @foreach($types as $type)
-                <button
-                    type="button"
-                    x-on:click="selected = '{{ $type['value'] }}'; document.getElementById('project_type_input').value = '{{ $type['value'] }}';"
-                    :class="selected === '{{ $type['value'] }}' ? 'ring-2 ring-white scale-105 opacity-100' : 'opacity-60 hover:opacity-90'"
-                    class="relative flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br {{ $type['color'] }} bg-opacity-20 border border-white/10 transition-all duration-200 cursor-pointer"
-                >
-                    <i class="{{ $type['icon'] }} text-2xl text-white"></i>
-                    <span class="text-xs font-bold text-white text-center leading-tight">{{ $type['label'] }}</span>
-                    <span x-show="selected === '{{ $type['value'] }}'" class="absolute top-2 right-2 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                        <i class="fas fa-check text-indigo-600 text-xs"></i>
-                    </span>
-                </button>
-                @endforeach
+                <div class="grid grid-cols-7 gap-2">
+                    @foreach($types as $type)
+                    <button
+                        type="button"
+                        x-on:click="projectType = '{{ $type['value'] }}'"
+                        :class="projectType === '{{ $type['value'] }}'
+                            ? 'border-indigo-400 bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-400/50'
+                            : 'border-white/10 bg-white/5 text-purple-300/60 hover:border-white/20 hover:text-purple-200'"
+                        class="flex flex-col items-center gap-1.5 py-3 rounded-lg border transition-all duration-150 cursor-pointer"
+                    >
+                        <i class="{{ $type['icon'] }} text-base"></i>
+                        <span class="text-xs font-bold leading-tight text-center">{{ $type['label'] }}</span>
+                    </button>
+                    @endforeach
+                </div>
             </div>
         </div>
 
-        <!-- Code & Skills Card -->
-        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-blue-900/40 to-blue-950/40 backdrop-blur">
-            <h2 class="font-display text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-code"></i>
-                </div>
-                Code & Skills
-            </h2>
-            
-            <!-- Code Snippet -->
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-blue-200 mb-2 flex items-center justify-between">
-                    <span>Code Sample (Optional)</span>
-                    <span class="text-xs font-normal text-blue-400">
-                        <i class="fas fa-magic"></i> Auto-detects skills
-                    </span>
-                </label>
-                <textarea 
-                    name="content" 
-                    id="code_input"
-                    rows="12"
-                    placeholder="// Paste your code here...
-function example() {
-    return 'AI will detect skills from your code!';
-}"
-                    class="w-full font-mono text-sm bg-black/50 border-2 border-blue-500/30 rounded-xl px-4 py-3 text-cyan-300 placeholder-blue-400/30 focus:border-blue-400 focus:outline-none transition resize-none"
-                >{{ old('content') }}</textarea>
-                <p class="text-xs text-blue-400 mt-2">
-                    <i class="fas fa-bolt text-amber-400"></i> 
-                    Earn extra XP based on code complexity! (2 XP per line, max +400 XP)
-                </p>
+        {{-- ── Skills & Code ── --}}
+        <div class="rounded-xl overflow-hidden border border-white/10 bg-blue-950/30 backdrop-blur">
+            <div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 border-b border-white/10">
+                <i class="fas fa-magic text-blue-400 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Skills & Code</span>
+                <span class="ml-auto flex items-center gap-1 text-xs text-amber-400/80">
+                    <i class="fas fa-bolt text-amber-400"></i>+2 XP/line · max +400 XP
+                </span>
             </div>
-            
-            <!-- Manual Tags -->
-            <div>
-                <label class="block text-sm font-bold text-blue-200 mb-2">
-                    Technologies & Skills
-                </label>
-                <input 
-                    type="text" 
-                    name="tags" 
-                    id="tag_input"
-                    placeholder="React, Node.js, MongoDB, REST API..."
-                    class="w-full bg-blue-950/50 border-2 border-blue-500/30 rounded-xl px-4 py-3 text-white placeholder-blue-400/50 focus:border-blue-400 focus:outline-none transition"
-                    value="{{ old('tags') }}"
-                >
-                <p class="text-xs text-blue-300 mt-2">Separate with commas. Mix with auto-detected skills.</p>
-                
-                <!-- Skill Suggestions -->
-                <div id="suggestions" class="flex flex-wrap gap-2 mt-4"></div>
+
+            <div class="p-4 space-y-3">
+                {{-- Code sample --}}
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-blue-300 mb-1.5">
+                        Code Sample
+                        <span class="normal-case tracking-normal font-normal text-blue-400/60 ml-1">(optional — AI detects skills)</span>
+                    </label>
+                    <textarea
+                        name="content"
+                        id="code_input"
+                        rows="5"
+                        placeholder="// Paste your code here — skills will be detected as you type"
+                        class="w-full font-mono text-xs bg-black/40 border border-blue-500/20 rounded-lg px-3 py-2.5 text-cyan-300 placeholder-blue-400/30 focus:border-blue-400 focus:outline-none transition resize-none"
+                    >{{ old('content') }}</textarea>
+                </div>
+
+                {{-- Tags --}}
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-blue-300 mb-1.5">
+                        Technologies & Skills
+                    </label>
+                    <input
+                        type="text"
+                        name="tags"
+                        id="tag_input"
+                        placeholder="React, Node.js, MongoDB... or click detected skills below"
+                        class="w-full px-3 py-2"
+                        value="{{ old('tags') }}"
+                    >
+                    <p class="text-xs text-blue-400/60 mt-1">Separate with commas.</p>
+                    <div id="suggestions" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Thumbnail Upload -->
-        <div class="glow-border rounded-2xl p-8 bg-gradient-to-br from-pink-900/40 to-pink-950/40 backdrop-blur">
-            <h2 class="font-display text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-image"></i>
-                </div>
-                Project Thumbnail
-            </h2>
-            
-            <div class="flex items-center gap-4">
-                <label class="flex-1 cursor-pointer">
-                    <div class="border-2 border-dashed border-pink-500/30 rounded-xl p-8 hover:border-pink-400 transition text-center">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-pink-400 mb-3"></i>
-                        <p class="text-pink-200 font-bold mb-1">Click to upload thumbnail</p>
-                        <p class="text-xs text-pink-400">PNG, JPG up to 2MB</p>
+        {{-- ── Thumbnail ── --}}
+        <div class="rounded-xl overflow-hidden border border-white/10 bg-pink-950/30 backdrop-blur">
+            <div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 border-b border-white/10">
+                <i class="fas fa-image text-pink-400 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-widest text-pink-200">Thumbnail</span>
+                <span class="ml-auto text-xs text-pink-400/70">PNG or JPG · max 2 MB</span>
+            </div>
+
+            <div class="p-4">
+                <label class="cursor-pointer block">
+                    <div id="drop_zone" class="flex items-center gap-3 border border-dashed border-pink-500/30 rounded-lg px-4 py-4 hover:border-pink-400/60 transition text-center">
+                        <i class="fas fa-cloud-upload-alt text-2xl text-pink-400/60 flex-shrink-0"></i>
+                        <div class="text-left">
+                            <p class="text-sm text-pink-200 font-bold">Drag & drop or click to browse</p>
+                            <p class="text-xs text-pink-400/60 mt-0.5">PNG, JPG up to 2 MB</p>
+                        </div>
+                        <p id="file_name" class="ml-auto text-xs text-pink-300 hidden"></p>
                     </div>
-                    <input type="file" name="thumbnail" accept="image/*" class="hidden">
+                    <input type="file" name="thumbnail" accept="image/*" class="hidden" id="thumbnail_input">
                 </label>
             </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="flex items-center justify-between">
-            <a href="{{ route('dashboard') }}" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold transition">
+        {{-- ── XP Preview + Actions ── --}}
+        <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-900/30 border border-purple-500/20">
+            <i class="fas fa-trophy text-purple-400"></i>
+            <span class="text-sm text-purple-200">Estimated XP reward</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-xs font-bold text-purple-200">Base +100 XP</span>
+            <span id="xp_bonus" class="text-sm text-purple-300/60"></span>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+            <a href="{{ route('dashboard') }}" class="btn-secondary px-5 py-2 text-sm">
                 Cancel
             </a>
-            
-            <button 
-                type="submit" 
-                class="btn-glow bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-8 py-3 rounded-xl font-display font-bold shadow-lg transition"
+            <button
+                type="submit"
+                class="btn-glow px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
             >
-                <span class="relative z-10 flex items-center gap-2">
-                    <i class="fas fa-rocket"></i>
-                    Launch Project & Earn XP
-                </span>
+                <i class="fas fa-rocket"></i>
+                Launch & Earn XP
             </button>
         </div>
     </form>
 </div>
 
 <script>
-    const codeArea = document.getElementById('code_input');
-    const tagInput = document.getElementById('tag_input');
+    const codeArea   = document.getElementById('code_input');
+    const tagInput   = document.getElementById('tag_input');
     const suggestDiv = document.getElementById('suggestions');
+    const xpBonus    = document.getElementById('xp_bonus');
+    const fileInput  = document.getElementById('thumbnail_input');
+    const fileName   = document.getElementById('file_name');
 
-    // Skill detection patterns
     const library = {
-        'import React': 'React',
-        'from "react"': 'React',
-        'import Vue': 'Vue',
-        'new Vue': 'Vue',
-        'Eloquent': 'Laravel',
-        'Route::': 'Laravel',
-        'Schema::': 'Laravel',
+        'import React'   : 'React',
+        'from "react"'   : 'React',
+        'import Vue'     : 'Vue',
+        'new Vue'        : 'Vue',
+        'Eloquent'       : 'Laravel',
+        'Route::'        : 'Laravel',
+        'Schema::'       : 'Laravel',
         'addEventListener': 'JavaScript',
-        'querySelector': 'JavaScript',
-        'fetch(': 'API',
-        'axios': 'API',
-        'tailwind': 'Tailwind CSS',
-        'SELECT': 'SQL',
-        'INSERT INTO': 'SQL',
-        'import numpy': 'Python',
-        'import pandas': 'Python',
-        'tensorflow': 'TensorFlow',
-        'pytorch': 'PyTorch',
-        'docker': 'Docker',
-        'kubernetes': 'Kubernetes',
+        'querySelector'  : 'JavaScript',
+        'fetch('         : 'API',
+        'axios'          : 'API',
+        'tailwind'       : 'Tailwind CSS',
+        'SELECT'         : 'SQL',
+        'INSERT INTO'    : 'SQL',
+        'import numpy'   : 'Python',
+        'import pandas'  : 'Python',
+        'tensorflow'     : 'TensorFlow',
+        'pytorch'        : 'PyTorch',
+        'docker'         : 'Docker',
+        'kubernetes'     : 'Kubernetes',
     };
 
     let detectedSkills = new Set();
 
     codeArea.addEventListener('input', () => {
-        const val = codeArea.value;
+        const val  = codeArea.value;
+        const lines = val.split('\n').filter(l => l.trim()).length;
+        const bonus = Math.min(lines * 2, 400);
+
+        xpBonus.textContent = lines > 0 ? `+ ${bonus} XP code bonus` : '';
+
         suggestDiv.innerHTML = '';
         detectedSkills.clear();
-        
+
         Object.keys(library).forEach(pattern => {
             if (val.toLowerCase().includes(pattern.toLowerCase())) {
                 const skill = library[pattern];
-                
                 if (!detectedSkills.has(skill)) {
                     detectedSkills.add(skill);
-                    
                     const currentTags = tagInput.value.toLowerCase();
                     if (!currentTags.includes(skill.toLowerCase())) {
-                        let btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = "px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-500/40 text-purple-200 rounded-lg text-sm font-bold hover:border-purple-400 transition";
-                        btn.innerHTML = `<i class="fas fa-plus mr-2"></i>${skill}`;
-                        btn.onclick = () => {
+                        const btn       = document.createElement('button');
+                        btn.type        = 'button';
+                        btn.className   = 'flex items-center gap-1.5 px-3 py-1 bg-purple-500/20 border border-purple-400/30 text-purple-200 rounded-full text-xs font-bold hover:border-purple-400 transition';
+                        btn.innerHTML   = `<i class="fas fa-plus text-xs"></i>${skill}`;
+                        btn.onclick     = () => {
                             const current = tagInput.value;
                             tagInput.value = current ? `${current}, ${skill}` : skill;
                             btn.remove();
+                            if (!suggestDiv.querySelector('button')) {
+                                suggestDiv.innerHTML = '';
+                            }
                         };
                         suggestDiv.appendChild(btn);
                     }
                 }
             }
         });
-        
-        if (detectedSkills.size > 0) {
-            const info = document.createElement('p');
-            info.className = 'text-sm text-purple-300 w-full';
-            info.innerHTML = `<i class="fas fa-sparkles text-amber-400"></i> Detected ${detectedSkills.size} skill(s) in your code!`;
+
+        if (detectedSkills.size > 0 && suggestDiv.querySelector('button')) {
+            const info       = document.createElement('span');
+            info.className   = 'flex items-center gap-1 px-2.5 py-1 bg-teal-500/10 border border-teal-400/30 text-teal-300 rounded-full text-xs font-bold';
+            info.innerHTML   = `<i class="fas fa-sparkles text-teal-400"></i>${detectedSkills.size} detected`;
             suggestDiv.insertBefore(info, suggestDiv.firstChild);
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            fileName.textContent = fileInput.files[0].name;
+            fileName.classList.remove('hidden');
         }
     });
 </script>
