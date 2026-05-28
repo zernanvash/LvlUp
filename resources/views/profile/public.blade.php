@@ -107,7 +107,7 @@
 
     {{-- Equipped Badges --}}
     @if($show('show_badges') && $user->equippedBadges->count() > 0)
-    <div class="lvl-panel rounded-2xl p-6">
+    <div class="tilt-card lvl-panel rounded-2xl p-6">
         <h3 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-crown text-amber-400"></i> Equipped Badges
         </h3>
@@ -130,7 +130,7 @@
 
     {{-- Technical Skills --}}
     @if($show('show_technical_skills') && $user->technical_skills)
-    <div class="lvl-panel rounded-2xl p-6">
+    <div class="tilt-card lvl-panel rounded-2xl p-6">
         <h3 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-code text-purple-400"></i> Technical Skills
         </h3>
@@ -146,7 +146,7 @@
 
     {{-- Featured Projects --}}
     @if($show('show_projects') && $user->projects->count() > 0)
-    <div class="lvl-panel rounded-2xl p-6">
+    <div class="tilt-card lvl-panel rounded-2xl p-6">
         <h3 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-folder-open text-purple-400"></i> Featured Projects
         </h3>
@@ -185,7 +185,7 @@
     @if($show('show_skills') || $show('show_achievements'))
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         @if($show('show_skills'))
-        <div class="lvl-panel rounded-2xl p-6 text-center">
+        <div class="tilt-card lvl-panel rounded-2xl p-6 text-center">
             <i class="fas fa-network-wired text-3xl text-purple-400 mb-3"></i>
             <div class="text-sm font-bold text-white mb-2">Skill Tree Progress</div>
             <div class="text-4xl font-display font-bold text-white mb-1">{{ $stats['unlocked_nodes'] }}</div>
@@ -193,7 +193,7 @@
         </div>
         @endif
         @if($show('show_achievements'))
-        <div class="lvl-panel rounded-2xl p-6 text-center">
+        <div class="tilt-card lvl-panel rounded-2xl p-6 text-center">
             <i class="fas fa-award text-3xl text-purple-400 mb-3"></i>
             <div class="text-sm font-bold text-white mb-2">Achievements Earned</div>
             <div class="text-4xl font-display font-bold text-white mb-1">{{ $stats['total_badges'] }}</div>
@@ -205,7 +205,7 @@
 
     {{-- Certifications --}}
     @if($show('show_certifications') && $user->certifications)
-    <div class="lvl-panel rounded-2xl p-6">
+    <div class="tilt-card lvl-panel rounded-2xl p-6">
         <h3 class="font-display text-lg font-bold text-white mb-4 flex items-center gap-2">
             <i class="fas fa-certificate text-purple-400"></i> Certifications
         </h3>

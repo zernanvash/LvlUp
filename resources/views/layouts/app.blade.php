@@ -296,14 +296,107 @@
         main input[type=radio] { accent-color: var(--lvl-p400) !important; }
         main .text-red-400,
         main .text-red-500 { color: var(--lvl-red) !important; }
+
+        /* ── Gamified Interactivity Enhancements (XP Popup, Pulsing, 3D Tilt) ── */
+        @keyframes floatUpFade {
+            0% {
+                transform: translate(-50%, 0) scale(0.85);
+                opacity: 0;
+            }
+            15% {
+                transform: translate(-50%, -15px) scale(1.15);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -75px) scale(0.95);
+                opacity: 0;
+            }
+        }
+        .floating-xp-gain {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--lvl-gold);
+            text-shadow: 0 0 10px rgba(239, 159, 39, 0.7), 0 0 20px rgba(239, 159, 39, 0.4);
+            animation: floatUpFade 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            font-family: inherit;
+        }
+
+        @keyframes xpGlowPulse {
+            0%, 100% {
+                box-shadow: 0 0 4px var(--lvl-p400);
+                filter: brightness(1);
+            }
+            50% {
+                box-shadow: 0 0 16px var(--lvl-p400), 0 0 24px var(--lvl-p600);
+                filter: brightness(1.35);
+            }
+        }
+        .xp-pulse {
+            animation: xpGlowPulse 1.6s ease-in-out infinite;
+        }
+
+        .tilt-card {
+            position: relative;
+        }
+        .tilt-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            border-radius: inherit;
+            background: radial-gradient(
+                circle 240px at var(--sheen-x, 0px) var(--sheen-y, 0px),
+                rgba(255, 255, 255, 0.08),
+                transparent 80%
+            );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .tilt-card:hover::before {
+            opacity: 1;
+        }
     </style>
 
     <script>
         window._toastQueue = [];
         window.pushToast = (opts) => window._toastQueue.push(opts);
     </script>
+
+    @if(session('success'))
+        @php
+            preg_match('/(?:earned|received|got)\s+(\d+)\s*XP/i', session('success'), $matches);
+            $xpEarned = isset($matches[1]) ? (int)$matches[1] : null;
+        @endphp
+        <script>
+            window.pushToast({
+                label: 'SUCCESS',
+                title: "{{ session('success') }}",
+                icon: 'fas fa-check-circle',
+                color: '#9bcf5a'
+            });
+            @if($xpEarned)
+                window._xpEarned = {{ $xpEarned }};
+            @endif
+        </script>
+    @endif
+
+    @if(session('error'))
+        <script>
+            window.pushToast({
+                label: 'ERROR',
+                title: "{{ session('error') }}",
+                icon: 'fas fa-exclamation-circle',
+                color: '#ef6b6b'
+            });
+        </script>
+    @endif
 </head>
 <body x-data="appShell()" class="min-h-screen">
+<canvas id="lvlup-confetti" class="fixed inset-0 pointer-events-none z-[10000] w-full h-full"></canvas>
 <div class="page-progress" aria-hidden="true"></div>
 @if(session('level_up'))
 <script>window._levelUpData = @json(session('level_up'));</script>
@@ -440,7 +533,7 @@ window._lvlupPageTutorial = @json($currentTutorial);
                     <span>{{ number_format(auth()->user()->xpProgress(), 1) }}%</span>
                 </div>
                 <div class="lvl-xp-bg">
-                    <div class="lvl-xp-fill" style="width: {{ auth()->user()->xpProgress() }}%;"></div>
+                    <div class="lvl-xp-fill xp-pulse-target" style="width: {{ auth()->user()->xpProgress() }}%;"></div>
                 </div>
             </div>
         </div>
@@ -519,7 +612,7 @@ window._lvlupPageTutorial = @json($currentTutorial);
             >
                 <i class="fas fa-question"></i>
             </button>
-            <a href="{{ route('profile.edit') }}" class="relative inline-flex hover:opacity-80 transition" style="padding:2px;">
+            <a href="{{ route('profile.edit') }}" class="relative inline-flex hover:opacity-80 transition" style="padding:2px;" id="lvl-user-profile-badge">
                 <div class="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 border-2"
                      style="background:var(--lvl-p200);color:var(--lvl-p800);border-color:var(--lvl-p100);">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -891,6 +984,117 @@ function appShell() {
 
         init() {
             window.pushToast = (opts) => this.pushToast(opts);
+            
+            // ── Floating XP gain Popup Visualizer ──
+            window.triggerXpGain = (amount) => {
+                if (!amount) return;
+                const badge = document.getElementById('lvl-user-profile-badge');
+                let x = window.innerWidth - 80;
+                let top = 40;
+                if (badge) {
+                    const rect = badge.getBoundingClientRect();
+                    x = rect.left + rect.width / 2;
+                    top = rect.top;
+                }
+                const floatingText = document.createElement('div');
+                floatingText.className = 'floating-xp-gain';
+                floatingText.innerText = `+${amount} XP`;
+                floatingText.style.left = `${x}px`;
+                floatingText.style.top = `${top}px`;
+                document.body.appendChild(floatingText);
+                setTimeout(() => floatingText.remove(), 1300);
+            };
+
+            // ── XP Bar Pulsing ──
+            window.pulseXpBar = () => {
+                const targets = document.querySelectorAll('.xp-pulse-target');
+                targets.forEach(t => t.classList.add('xp-pulse'));
+                setTimeout(() => {
+                    targets.forEach(t => t.classList.remove('xp-pulse'));
+                }, 3000);
+            };
+
+            // ── Canvas Confetti Celebration ──
+            window.triggerConfetti = (x, y) => {
+                const canvas = document.getElementById('lvlup-confetti');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                const colors = ['#ef9f27', '#7f77dd', '#afa9ec', '#9bcf5a', '#ef6b6b', '#6be0ef'];
+                const particles = [];
+                const count = 120;
+                const startX = x !== undefined ? x : canvas.width / 2;
+                const startY = y !== undefined ? y : canvas.height / 2;
+                
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: startX,
+                        y: startY,
+                        vx: (Math.random() - 0.5) * 16,
+                        vy: (Math.random() - 0.5) * 16 - 6,
+                        radius: Math.random() * 4 + 3,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1,
+                        decay: Math.random() * 0.015 + 0.008,
+                        gravity: 0.28,
+                        rotation: Math.random() * 360,
+                        rotationSpeed: (Math.random() - 0.5) * 12
+                    });
+                }
+                
+                let active = true;
+                function tick() {
+                    if (!active) return;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    let alive = false;
+                    
+                    particles.forEach(p => {
+                        if (p.alpha <= 0) return;
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += p.gravity;
+                        p.alpha -= p.decay;
+                        p.rotation += p.rotationSpeed;
+                        
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.rotation * Math.PI / 180);
+                        ctx.globalAlpha = p.alpha;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -p.radius);
+                        ctx.lineTo(p.radius * 0.75, 0);
+                        ctx.lineTo(0, p.radius);
+                        ctx.lineTo(-p.radius * 0.75, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    });
+                    
+                    if (alive) {
+                        requestAnimationFrame(tick);
+                    } else {
+                        active = false;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                }
+                tick();
+            };
+
+            // ── Event Delegated Card Hover Sheen ──
+            document.addEventListener('mousemove', (e) => {
+                const card = e.target.closest('.tilt-card');
+                if (!card) return;
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--sheen-x', `${x}px`);
+                card.style.setProperty('--sheen-y', `${y}px`);
+            });
+
             if (window._toastQueue && window._toastQueue.length) {
                 window._toastQueue.forEach(opts => this.pushToast(opts));
                 window._toastQueue = [];
@@ -900,18 +1104,23 @@ function appShell() {
                 this.levelUpData = window._levelUpData;
                 this.showLevelUp = true;
                 setTimeout(() => this.showLevelUp = false, 5000);
+                setTimeout(() => window.triggerConfetti(), 900);
             }
 
             if (window._newBadges && window._newBadges.length) {
                 window._newBadges.forEach((badge, idx) => {
-                    setTimeout(() => this.pushToast({
-                        label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
-                        title: badge.title,
-                        sub: '+' + badge.xp_reward + ' XP',
-                        icon: badge.icon,
-                        color: badge.rarity_color,
-                        duration: 5000,
-                    }), idx * 600);
+                    setTimeout(() => {
+                        this.pushToast({
+                            label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
+                            title: badge.title,
+                            sub: '+' + badge.xp_reward + ' XP',
+                            icon: badge.icon,
+                            color: badge.rarity_color,
+                            duration: 5000,
+                        });
+                        window.triggerXpGain(badge.xp_reward);
+                        window.pulseXpBar();
+                    }, idx * 600);
                 });
             }
 
@@ -929,10 +1138,20 @@ function appShell() {
                 });
             }
 
+            if (window._xpEarned) {
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        window.triggerXpGain(window._xpEarned);
+                        window.pulseXpBar();
+                    }, 800);
+                });
+            }
+
             document.body.addEventListener('trigger-level-up', (e) => {
                 this.levelUpData = e.detail;
                 this.showLevelUp = true;
                 setTimeout(() => this.showLevelUp = false, 5000);
+                setTimeout(() => window.triggerConfetti(), 300);
             });
 
             window.addEventListener('lvlup-feature-hint', (event) => {

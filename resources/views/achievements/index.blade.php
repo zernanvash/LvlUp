@@ -32,7 +32,7 @@
 
     <!-- Progress Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-trophy text-2xl text-white"></i>
@@ -44,7 +44,7 @@
             </div>
         </div>
         
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-star text-2xl text-white"></i>
@@ -62,7 +62,7 @@
             </div>
         </div>
         
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-gem text-2xl text-white"></i>
@@ -80,7 +80,7 @@
             </div>
         </div>
         
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-crown text-2xl text-white"></i>
@@ -121,7 +121,7 @@
                 $color = $rarityColors[$badge->rarity];
             @endphp
             
-            <div class="lvl-panel overflow-hidden transition-all duration-300 hover:scale-105 {{ $isEarned ? '' : 'opacity-50' }}">
+            <div class="tilt-card lvl-panel overflow-hidden transition-all duration-300 {{ $isEarned ? '' : 'opacity-50' }}">
                 <div class="p-5">
                     <!-- Badge Icon -->
                     <div class="flex items-center justify-between mb-4">

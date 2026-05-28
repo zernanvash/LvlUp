@@ -539,6 +539,12 @@ $tierColors = [
                         // Update the node element visuals on the canvas
                         const nodeEl = document.getElementById(`node-${nodeId}`);
                         if (nodeEl) {
+                            // Confetti explosion from node center
+                            const rect = nodeEl.getBoundingClientRect();
+                            if (typeof window.triggerConfetti === 'function') {
+                                window.triggerConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                            }
+
                             nodeEl.setAttribute('data-state', 'unlocked');
                             const tier = nodeEl.getAttribute('data-tier') || 'basic';
                             const ring = this.tierColor(tier);
@@ -601,14 +607,22 @@ $tierColors = [
                         // Fire badge toasts if any were earned
                         if (data.new_badges && data.new_badges.length) {
                             data.new_badges.forEach((badge, idx) => {
-                                setTimeout(() => window.pushToast({
-                                    label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
-                                    title: badge.title,
-                                    sub: '+' + badge.xp_reward + ' XP',
-                                    icon: badge.icon,
-                                    color: badge.rarity_color,
-                                    duration: 5000,
-                                }), (idx + 1) * 600);
+                                setTimeout(() => {
+                                    window.pushToast({
+                                        label: badge.rarity.toUpperCase() + ' BADGE UNLOCKED',
+                                        title: badge.title,
+                                        sub: '+' + badge.xp_reward + ' XP',
+                                        icon: badge.icon,
+                                        color: badge.rarity_color,
+                                        duration: 5000,
+                                    });
+                                    if (typeof window.triggerXpGain === 'function') {
+                                        window.triggerXpGain(badge.xp_reward);
+                                    }
+                                    if (typeof window.pulseXpBar === 'function') {
+                                        window.pulseXpBar();
+                                    }
+                                }, (idx + 1) * 600);
                             });
                         }
 

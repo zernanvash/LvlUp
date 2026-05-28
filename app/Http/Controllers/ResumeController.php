@@ -244,6 +244,7 @@ class ResumeController extends Controller
         ])->render();
 
         return Browsershot::html($html)
+            ->noSandbox()
             ->format('A4')
             ->margins(0, 0, 0, 0)
             ->showBackground()

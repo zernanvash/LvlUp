@@ -82,7 +82,7 @@
             $rc = $rankColors[$user->rank] ?? $rankColors['Bronze'];
         @endphp
         <a href="{{ route('profile.public', $user->name) }}"
-            class="group block lvl-panel overflow-hidden hover:scale-[1.02] transition-transform duration-200 card-hover"
+            class="tilt-card group block lvl-panel overflow-hidden card-hover"
             style="border-color: {{ $rc['border'] }}77 !important; border-width: 2px;">
 
             {{-- Card top accent --}}

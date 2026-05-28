@@ -72,7 +72,7 @@ $typeConfig = [
             $type = $project->project_type ?? 'other';
             $cfg  = $typeConfig[$type] ?? $typeConfig['other'];
         @endphp
-        <div class="rounded-xl overflow-hidden border border-white/10 bg-purple-950/30 backdrop-blur flex flex-col group hover:border-purple-500/30 transition-all duration-200">
+        <div class="tilt-card rounded-xl overflow-hidden border border-white/10 bg-purple-950/30 backdrop-blur flex flex-col group hover:border-purple-500/30 transition-all duration-200">
 
             {{-- Thumbnail / placeholder --}}
             @if($project->thumbnail)

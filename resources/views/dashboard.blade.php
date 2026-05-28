@@ -70,22 +70,22 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Projects</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ $projects->count() }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">Portfolio entries</p>
             </div>
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Badges</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ $badges->count() }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">{{ $equippedBadges->count() }} equipped</p>
             </div>
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Skills</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ $unlockedNodes }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">of {{ $totalNodes }} nodes</p>
             </div>
-            <div class="lvl-panel p-4 text-center">
+            <div class="tilt-card lvl-panel p-4 text-center">
                 <p class="lvl-label">Total XP</p>
                 <p class="mt-1 text-3xl font-black text-[var(--lvl-text)]">{{ number_format($user->total_xp) }}</p>
                 <p class="text-xs text-[var(--lvl-muted)]">Lifetime earned</p>
@@ -94,7 +94,7 @@
     </section>
 
     <section class="grid gap-4 lg:grid-cols-2">
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="mb-4 flex items-center justify-between">
                 <div>
                     <p class="lvl-label">Skill radar</p>
@@ -129,7 +129,7 @@
             @endif
         </div>
 
-        <div class="lvl-panel p-5">
+        <div class="tilt-card lvl-panel p-5">
             <div class="mb-4 flex items-center justify-between">
                 <div>
                     <p class="lvl-label">Activity</p>

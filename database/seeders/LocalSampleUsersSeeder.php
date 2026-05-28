@@ -30,6 +30,8 @@ class LocalSampleUsersSeeder extends Seeder
                     ['name' => 'Component Library Refresh', 'language' => 'JavaScript', 'project_type' => 'web', 'is_featured' => true],
                     ['name' => 'Mobile Onboarding Flow', 'language' => 'Vue', 'project_type' => 'mobile', 'is_featured' => false],
                 ],
+                'badge_slugs' => ['pixel-pusher', 'style-architect', 'component-thinker', 'frontend-virtuoso', 'on-a-roll', 'skill-collector'],
+                'node_titles' => ['Hello, World!', 'HTML & CSS Craftsman', 'Responsive Design', 'JavaScript Awakening', 'CSS Architecture', 'React / Vue Practitioner'],
             ],
             [
                 'name' => 'Noah Backend',
@@ -47,6 +49,8 @@ class LocalSampleUsersSeeder extends Seeder
                     ['name' => 'Activity Stream Worker', 'language' => 'Go', 'project_type' => 'devops', 'is_featured' => false],
                     ['name' => 'Search Ranking Service', 'language' => 'Python', 'project_type' => 'backend', 'is_featured' => false],
                 ],
+                'badge_slugs' => ['server-whisperer', 'api-craftsman', 'database-architect', 'backend-boss', 'streak-keeper'],
+                'node_titles' => ['Hello, World!', 'CLI Basics', 'Git Flow', 'Branching Strategy', 'REST API Builder', 'Auth & Security', 'Database Design', 'SQL Mastery'],
             ],
             [
                 'name' => 'Iris Fullstack',
@@ -65,6 +69,8 @@ class LocalSampleUsersSeeder extends Seeder
                     ['name' => 'Local Dev Seed Pack', 'language' => 'PHP', 'project_type' => 'devops', 'is_featured' => false],
                     ['name' => 'Resume PDF Cache', 'language' => 'PHP', 'project_type' => 'backend', 'is_featured' => false],
                 ],
+                'badge_slugs' => ['hello-world', 'fullstack-initiate', 'fullstack-engineer', 'the-whole-stack', 'portfolio-builder', 'fortnight-grind'],
+                'node_titles' => ['Hello, World!', 'HTML & CSS Craftsman', 'Git Flow', 'Branching Strategy', 'REST API Builder', 'Auth & Security', 'Full Stack Developer', 'Docker & Containers'],
             ],
             [
                 'name' => 'Kai Private',
@@ -81,12 +87,34 @@ class LocalSampleUsersSeeder extends Seeder
                     ['name' => 'First Laravel CRUD', 'language' => 'PHP', 'project_type' => 'web', 'is_featured' => false],
                     ['name' => 'Responsive Login Practice', 'language' => 'HTML', 'project_type' => 'web', 'is_featured' => false],
                 ],
+                'badge_slugs' => ['hello-world', 'pixel-pusher'],
+                'node_titles' => ['Hello, World!', 'HTML & CSS Craftsman'],
+            ],
+            [
+                'name' => 'Aiden Mythic',
+                'email' => 'aiden@lvlup.local',
+                'title' => 'Legendary Architect',
+                'bio' => 'Maxed out user who has explored and mastered every dimension of engineering, from pixel-perfect animations to distributed systems and AI models.',
+                'level' => 100,
+                'xp' => 0,
+                'total_xp' => 999999,
+                'rank' => 'Master',
+                'technical_skills' => 'Laravel, React, React Native, AWS, Kubernetes, Docker, PyTorch, Python, Go, Redis, SQL, NoSQL',
+                'projects' => [
+                    ['name' => 'Distributed Giga-Monolith', 'language' => 'PHP', 'project_type' => 'fullstack', 'is_featured' => true],
+                    ['name' => 'Automated Cloud Orchestrator', 'language' => 'Go', 'project_type' => 'devops', 'is_featured' => true],
+                    ['name' => 'Self-Hosting Neural Network', 'language' => 'Python', 'project_type' => 'ai', 'is_featured' => true],
+                    ['name' => 'Cross-Platform Game Engine', 'language' => 'TypeScript', 'project_type' => 'mobile', 'is_featured' => true],
+                    ['name' => 'Real-Time Edge Analytics', 'language' => 'Rust', 'project_type' => 'backend', 'is_featured' => false],
+                ],
+                'badge_slugs' => 'ALL',
+                'node_titles' => 'ALL',
             ],
         ];
 
-        $skills = Skill::query()->limit(8)->get();
-        $badges = Badge::query()->limit(6)->get();
-        $nodes = SkillNode::query()->limit(6)->get();
+        $skills = Skill::all();
+        $badges = Badge::all();
+        $nodes = SkillNode::all();
 
         foreach ($samples as $index => $sample) {
             $user = User::updateOrCreate(
@@ -154,24 +182,39 @@ class LocalSampleUsersSeeder extends Seeder
             });
 
             if ($badges->isNotEmpty()) {
-                $badgeSync = $badges->take(min(3 + $index, $badges->count()))
-                    ->mapWithKeys(fn (Badge $badge, int $badgeIndex) => [
+                if ($sample['badge_slugs'] === 'ALL') {
+                    $badgeSync = $badges->mapWithKeys(fn (Badge $badge, int $badgeIndex) => [
                         $badge->id => [
                             'earned_at' => now()->subDays($badgeIndex + $index),
-                            'is_displayed' => $badgeIndex < 3,
+                            'is_displayed' => $badgeIndex < 6,
                         ],
-                    ])
-                    ->all();
-                $user->badges()->syncWithoutDetaching($badgeSync);
+                    ])->all();
+                } else {
+                    $badgeSync = $badges->whereIn('slug', $sample['badge_slugs'])
+                        ->values()
+                        ->mapWithKeys(fn (Badge $badge, int $badgeIndex) => [
+                            $badge->id => [
+                                'earned_at' => now()->subDays($badgeIndex + $index),
+                                'is_displayed' => $badgeIndex < 6,
+                            ],
+                        ])->all();
+                }
+                $user->badges()->sync($badgeSync);
             }
 
             if ($nodes->isNotEmpty()) {
-                $nodeSync = $nodes->take(min(2 + $index, $nodes->count()))
-                    ->mapWithKeys(fn (SkillNode $node, int $nodeIndex) => [
+                if ($sample['node_titles'] === 'ALL') {
+                    $nodeSync = $nodes->mapWithKeys(fn (SkillNode $node, int $nodeIndex) => [
                         $node->id => ['unlocked_at' => now()->subDays($nodeIndex + 1)],
-                    ])
-                    ->all();
-                $user->unlockedNodes()->syncWithoutDetaching($nodeSync);
+                    ])->all();
+                } else {
+                    $nodeSync = $nodes->whereIn('title', $sample['node_titles'])
+                        ->values()
+                        ->mapWithKeys(fn (SkillNode $node, int $nodeIndex) => [
+                            $node->id => ['unlocked_at' => now()->subDays($nodeIndex + 1)],
+                        ])->all();
+                }
+                $user->unlockedNodes()->sync($nodeSync);
             }
         }
     }
