@@ -139,14 +139,14 @@
             </div>
 
             <div class="grid grid-cols-7 gap-1.5">
-                @foreach([1,0,2,3,1,0,4,2,3,4,1,0,2,3,0,1,4,4,3,2,1,3,4,2,1,0,3,4,1,2,4,3,2,1,4] as $dot)
+                @foreach($heatmap as $dot)
                 <span class="h-4 rounded-[4px] border {{ $dot === 0 ? 'bg-[var(--lvl-surface-soft)] border-[var(--lvl-border-soft)]' : '' }}"
                     style="@if($dot === 1) background:#cecbf6; border-color:#cecbf6; @elseif($dot === 2) background:#afa9ec; border-color:#afa9ec; @elseif($dot === 3) background:#7f77dd; border-color:#7f77dd; @elseif($dot === 4) background:#534ab7; border-color:#534ab7; @endif"></span>
                 @endforeach
             </div>
 
             <div class="mt-4 grid grid-cols-7 items-end gap-1.5 h-16">
-                @foreach([32, 48, 42, 85, 61, 55, 100] as $bar)
+                @foreach($weeklyChart as $bar)
                 <span class="rounded-t bg-[var(--lvl-p200)]" style="height: {{ $bar }}%; @if($bar > 80) background: var(--lvl-p600); @endif"></span>
                 @endforeach
             </div>

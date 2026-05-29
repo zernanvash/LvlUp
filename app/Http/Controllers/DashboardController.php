@@ -20,6 +20,20 @@ class DashboardController extends Controller
             $user->save();
         }
 
+        // Reset streak to 0 if a day was missed
+        if ($user->last_activity_date) {
+            $today = now()->toDateString();
+            $yesterday = now()->subDay()->toDateString();
+            $lastActivity = $user->last_activity_date->toDateString();
+
+            if ($lastActivity !== $today && $lastActivity !== $yesterday) {
+                if ($user->streak_days > 0) {
+                    $user->streak_days = 0;
+                    $user->save();
+                }
+            }
+        }
+
         $projects = Cache::remember(
             "dashboard.projects.{$user->id}",
             now()->addSeconds(30),
@@ -34,12 +48,88 @@ class DashboardController extends Controller
         $streakBonusActive    = $user->streakBonusActive();
         $streakBonusMultiplier = $user->streakBonusMultiplier();
 
+        // Calculate dynamic activity pulse (heatmap) and weekly chart
+        $startDate = now()->subDays(34)->startOfDay();
+
+        $projectDates = $user->projects()
+            ->where('created_at', '>=', $startDate)
+            ->pluck('created_at')
+            ->map(fn($d) => $d->toDateString())
+            ->toArray();
+
+        $nodeDates = $user->unlockedNodes()
+            ->wherePivot('unlocked_at', '>=', $startDate)
+            ->get()
+            ->map(fn($n) => \Carbon\Carbon::parse($n->pivot->unlocked_at)->toDateString())
+            ->toArray();
+
+        $badgeDates = $user->badges()
+            ->wherePivot('earned_at', '>=', $startDate)
+            ->get()
+            ->map(fn($b) => \Carbon\Carbon::parse($b->pivot->earned_at)->toDateString())
+            ->toArray();
+
+        // Combine all activity dates
+        $allActivities = array_merge($projectDates, $nodeDates, $badgeDates);
+        $activityCounts = array_count_values($allActivities);
+
+        // Generate 35 days array (from 34 days ago until today)
+        $heatmap = [];
+        for ($i = 34; $i >= 0; $i--) {
+            $date = now()->subDays($i)->toDateString();
+            $count = $activityCounts[$date] ?? 0;
+            
+            // Map count to level 0-4
+            if ($count === 0) {
+                $level = 0;
+            } elseif ($count === 1) {
+                $level = 1;
+            } elseif ($count === 2) {
+                $level = 2;
+            } elseif ($count === 3) {
+                $level = 3;
+            } else {
+                $level = 4;
+            }
+            $heatmap[] = $level;
+        }
+
+        // Weekly chart data (Monday to Sunday of the current week)
+        $startOfWeek = now()->startOfWeek();
+        $weekActivities = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfWeek->copy()->addDays($i)->toDateString();
+            $weekActivities[$date] = 0;
+        }
+
+        foreach ($allActivities as $dateStr) {
+            if (isset($weekActivities[$dateStr])) {
+                $weekActivities[$dateStr]++;
+            }
+        }
+
+        $weeklyChart = [];
+        foreach ($weekActivities as $date => $count) {
+            if ($count === 0) {
+                $height = 8;
+            } elseif ($count === 1) {
+                $height = 35;
+            } elseif ($count === 2) {
+                $height = 65;
+            } else {
+                $height = 100;
+            }
+            $weeklyChart[] = $height;
+        }
+
         return view('dashboard', compact(
             'projects',
             'xpToNextLevel',
             'showMilestoneBanner',
             'streakBonusActive',
-            'streakBonusMultiplier'
+            'streakBonusMultiplier',
+            'heatmap',
+            'weeklyChart'
         ));
     }
 }

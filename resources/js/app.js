@@ -51,7 +51,12 @@ document.addEventListener('submit', (event) => {
     form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((button) => {
         button.disabled = true;
         if (button.tagName === 'BUTTON') {
-            button.textContent = button.dataset.loadingText || 'Working...';
+            // Prepend a spinner icon to the button, keeping original text
+            if (!button.querySelector('.fa-spinner')) {
+                const spinner = document.createElement('i');
+                spinner.className = 'fas fa-spinner fa-spin mr-2';
+                button.insertBefore(spinner, button.firstChild);
+            }
         }
     });
 });

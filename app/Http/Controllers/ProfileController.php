@@ -67,7 +67,8 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        // Only update fields that are actually present in the request input to prevent forms wiping each other
+        $data = array_intersect_key($request->validated(), $request->all());
 
         // Never overwrite visibility_settings from the profile form
         unset($data['visibility_settings']);

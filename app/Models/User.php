@@ -116,6 +116,13 @@ class User extends Authenticatable
         $this->xp += $amount;
         $this->total_xp += $amount;
 
+        if ($this->xp < 0) {
+            $this->xp = 0;
+        }
+        if ($this->total_xp < 0) {
+            $this->total_xp = 0;
+        }
+
         $leveledUp = false;
         $previousRank = $this->rank;
 

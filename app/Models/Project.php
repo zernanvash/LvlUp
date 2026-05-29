@@ -107,6 +107,7 @@ class Project extends Model
         });
 
         static::deleted(function ($project) {
+            $project->user->addXP(-$project->xp_reward);
             Cache::forget("dashboard.projects.{$project->user_id}");
             Cache::forget("api.stats.{$project->user_id}");
         });
