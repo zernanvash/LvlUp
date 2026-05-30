@@ -8,7 +8,7 @@
 @php
     $user = auth()->user();
     $vis = $user->visibility_settings ?? [];
-    $activeTab = session('active_tab', 'overview');
+    $activeTab = request()->query('tab', session('active_tab', 'overview'));
 @endphp
 
 <div class="max-w-7xl mx-auto" x-data="{ tab: '{{ $activeTab }}' }">

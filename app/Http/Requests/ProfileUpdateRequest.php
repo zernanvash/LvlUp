@@ -16,8 +16,9 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => [
+                'sometimes',
                 'required',
                 'string',
                 'lowercase',
@@ -25,27 +26,27 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'title'           => ['nullable', 'string', 'max:255'],
-            'bio'             => ['nullable', 'string', 'max:1000'],
-            'linkedin_url'    => ['nullable', 'url', 'max:255'],
-            'github_url'      => ['nullable', 'url', 'max:255'],
-            'website_url'     => ['nullable', 'url', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'linkedin_url' => ['nullable', 'url', 'max:255'],
+            'github_url' => ['nullable', 'url', 'max:255'],
+            'website_url' => ['nullable', 'url', 'max:255'],
             // Private contact
-            'phone_number'    => ['nullable', 'string', 'max:50'],
-            'home_address'    => ['nullable', 'string', 'max:255'],
-            'city'            => ['nullable', 'string', 'max:100'],
-            'country'         => ['nullable', 'string', 'max:100'],
+            'phone_number' => ['nullable', 'string', 'max:50'],
+            'home_address' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'max:100'],
             // Skills
             'technical_skills' => ['nullable', 'string', 'max:2000'],
             // Resume details
             'resume_job_title' => ['nullable', 'string', 'max:255'],
-            'resume_summary'   => ['nullable', 'string', 'max:3000'],
-            'work_experience'  => ['nullable', 'string', 'max:5000'],
-            'education'        => ['nullable', 'string', 'max:3000'],
-            'certifications'   => ['nullable', 'string', 'max:3000'],
-            'languages'        => ['nullable', 'string', 'max:500'],
+            'resume_summary' => ['nullable', 'string', 'max:3000'],
+            'work_experience' => ['nullable', 'string', 'max:5000'],
+            'education' => ['nullable', 'string', 'max:3000'],
+            'certifications' => ['nullable', 'string', 'max:3000'],
+            'languages' => ['nullable', 'string', 'max:500'],
             // Visibility toggles
-            'visibility_settings'   => ['nullable', 'array'],
+            'visibility_settings' => ['nullable', 'array'],
             'visibility_settings.*' => ['boolean'],
         ];
     }

@@ -52,7 +52,7 @@ class ResumeAiPipeline
         $serialized = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         $shouldUseLongContext = strlen($serialized) >= (int) config('resume_ai.long_context_threshold');
 
-        if (!$shouldUseLongContext || !$this->canUseNvidia()) {
+        if (! $shouldUseLongContext || ! $this->canUseNvidia()) {
             return [
                 'data' => [
                     'focus' => $context['target']['title'],
@@ -113,7 +113,7 @@ class ResumeAiPipeline
 
     private function generateContent($user, object $resumeInput, Collection $projects, Collection $skills, Collection $certificates, array $context, array $analysis): array
     {
-        if (!$this->canUseNvidia()) {
+        if (! $this->canUseNvidia()) {
             return [
                 'data' => $this->localResumeContent($user, $resumeInput, $projects, $skills, $certificates),
                 'metadata' => [
@@ -138,7 +138,7 @@ class ResumeAiPipeline
                 ],
                 [
                     'role' => 'user',
-                    'content' => "Generate an ATS-friendly resume tailored to the target role. Required keys: summary, skills, experience, projects, education, certifications.\n\n" . json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+                    'content' => "Generate an ATS-friendly resume tailored to the target role. Required keys: summary, skills, experience, projects, education, certifications.\n\n".json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
                 ],
             ]);
 
@@ -176,7 +176,7 @@ class ResumeAiPipeline
             'notes' => 'Use the selected Laravel Blade PDF template with print-safe spacing.',
         ];
 
-        if (!$this->canUseNvidia()) {
+        if (! $this->canUseNvidia()) {
             return [
                 'data' => $localPlan,
                 'metadata' => [
@@ -195,7 +195,7 @@ class ResumeAiPipeline
                 ],
                 [
                     'role' => 'user',
-                    'content' => "Return JSON with template, renderer, page_size, density, notes. Do not return code.\n\nTemplate: {$template}\nContent:\n" . json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+                    'content' => "Return JSON with template, renderer, page_size, density, notes. Do not return code.\n\nTemplate: {$template}\nContent:\n".json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
                 ],
             ]);
 
@@ -232,9 +232,9 @@ class ResumeAiPipeline
             'candidate' => [
                 'name' => $user->name,
                 'email' => $user->email,
-                'title' => $user->title ?? $user->resume_job_title ?? null,
+                'title' => $user->resume_job_title ?? $user->title ?? null,
                 'location' => collect([$user->city ?? null, $user->country ?? null])->filter()->join(', '),
-                'bio' => $user->bio,
+                'bio' => $user->resume_summary ?? $user->bio ?? null,
                 'work_experience' => $user->work_experience,
                 'education' => $user->education,
                 'technical_skills' => $user->technical_skills,
@@ -254,7 +254,7 @@ class ResumeAiPipeline
                 'id' => $skill->id ?? null,
                 'name' => $skill->name ?? null,
                 'rarity' => $skill->rarity ?? null,
-            ])->filter(fn ($skill) => !empty($skill['name']))->values()->all(),
+            ])->filter(fn ($skill) => ! empty($skill['name']))->values()->all(),
             'projects' => $projects->map(fn ($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
@@ -290,20 +290,20 @@ class ResumeAiPipeline
         $response = Http::withToken(config('resume_ai.nvidia.api_key'))
             ->acceptJson()
             ->timeout((int) config('resume_ai.nvidia.timeout'))
-            ->post(config('resume_ai.nvidia.base_url') . '/chat/completions', [
+            ->post(config('resume_ai.nvidia.base_url').'/chat/completions', [
                 'model' => $model,
                 'messages' => $messages,
                 'temperature' => 0.25,
                 'response_format' => ['type' => 'json_object'],
             ]);
 
-        if (!$response->successful()) {
-            throw new \RuntimeException('NVIDIA request failed: ' . $response->status() . ' ' . Str::limit($response->body(), 500));
+        if (! $response->successful()) {
+            throw new \RuntimeException('NVIDIA request failed: '.$response->status().' '.Str::limit($response->body(), 500));
         }
 
         $text = data_get($response->json(), 'choices.0.message.content');
 
-        if (!is_string($text) || trim($text) === '') {
+        if (! is_string($text) || trim($text) === '') {
             throw new \RuntimeException('NVIDIA response did not include message content.');
         }
 
@@ -322,8 +322,8 @@ class ResumeAiPipeline
 
         $data = json_decode($text, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
-            throw new \RuntimeException('AI JSON decode failed: ' . json_last_error_msg());
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($data)) {
+            throw new \RuntimeException('AI JSON decode failed: '.json_last_error_msg());
         }
 
         return $data;
@@ -333,8 +333,8 @@ class ResumeAiPipeline
     {
         $missing = array_diff(self::CONTENT_KEYS, array_keys($data));
 
-        if (!empty($missing)) {
-            throw new \RuntimeException('AI resume content missing keys: ' . implode(', ', $missing));
+        if (! empty($missing)) {
+            throw new \RuntimeException('AI resume content missing keys: '.implode(', ', $missing));
         }
     }
 
@@ -376,22 +376,22 @@ class ResumeAiPipeline
             $skillList = $project->skills ? $project->skills->pluck('name')->join(', ') : '';
             $description = $project->description ?: 'Portfolio project demonstrating applied software development skills.';
 
-            return "- {$project->name}: {$description}" . ($skillList ? " ({$skillList})" : '');
+            return "- {$project->name}: {$description}".($skillList ? " ({$skillList})" : '');
         })->join("\n");
 
         $certificationText = $certificates->map(function ($certificate) {
             $parts = array_filter([
                 $certificate->title,
                 $certificate->issuer ? "Issuer: {$certificate->issuer}" : null,
-                $certificate->issued_date ? 'Issued: ' . $certificate->issued_date->format('M Y') : null,
+                $certificate->issued_date ? 'Issued: '.$certificate->issued_date->format('M Y') : null,
                 $certificate->ai_summary,
             ]);
 
-            return '- ' . implode(' | ', $parts);
+            return '- '.implode(' | ', $parts);
         })->join("\n");
 
-        $role = $resumeInput->job_title ?: ($user->title ?? 'Software Developer');
-        $summary = $user->bio ?: "Developer targeting {$role} roles with practical project experience and a growing technical portfolio.";
+        $role = $resumeInput->job_title ?: ($user->resume_job_title ?? $user->title ?? 'Software Developer');
+        $summary = $user->resume_summary ?? $user->bio ?: "Developer targeting {$role} roles with practical project experience and a growing technical portfolio.";
 
         return [
             'summary' => $summary,

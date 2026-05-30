@@ -14,7 +14,9 @@ use Spatie\Browsershot\Browsershot;
 class ResumeController extends Controller
 {
     protected $analyzer;
+
     protected $pipeline;
+
     protected $cloudinary;
 
     public function __construct(ResumeAnalyzer $analyzer, ResumeAiPipeline $pipeline, CloudinaryStorageService $cloudinary)
@@ -53,20 +55,20 @@ class ResumeController extends Controller
 
         $user = auth()->user()->load('projects.skills');
 
-        $keywords      = $this->analyzer->extractKeywords($validated['job_description']);
+        $keywords = $this->analyzer->extractKeywords($validated['job_description']);
         $rankedProjects = $this->analyzer->rankProjects($user->projects, $keywords);
-        $matchScore    = $this->analyzer->calculateMatchScore($user, $keywords);
+        $matchScore = $this->analyzer->calculateMatchScore($user, $keywords);
 
         return response()->json([
-            'success'     => true,
-            'keywords'    => $keywords,
+            'success' => true,
+            'keywords' => $keywords,
             'match_score' => $matchScore,
-            'projects'    => $rankedProjects->map(fn($p) => [
-                'id'              => $p->id,
-                'name'            => $p->name,
-                'description'     => $p->description,
+            'projects' => $rankedProjects->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'description' => $p->description,
                 'relevance_score' => round($p->relevance_score ?? 0),
-                'skills'          => $p->skills->pluck('name'),
+                'skills' => $p->skills->pluck('name'),
             ]),
         ]);
     }
@@ -77,10 +79,10 @@ class ResumeController extends Controller
     public function generate(Request $request)
     {
         $validated = $request->validate([
-            'job_title'           => 'required|string|max:255',
-            'job_description'     => 'nullable|string',
-            'selected_project_ids'=> 'nullable|array',
-            'template'            => 'nullable|string|in:modern,classic,minimal,creative',
+            'job_title' => 'required|string|max:255',
+            'job_description' => 'nullable|string',
+            'selected_project_ids' => 'nullable|array',
+            'template' => 'nullable|string|in:modern,classic,minimal,creative',
         ]);
 
         $user = auth()->user()->load([
@@ -90,19 +92,19 @@ class ResumeController extends Controller
         ]);
 
         $selectedIds = $validated['selected_project_ids'] ?? $user->projects->pluck('id')->toArray();
-        $projects    = $user->projects->whereIn('id', $selectedIds);
-        $skills      = $user->unlockedNodes->map(fn($n) => $n->skill)->filter();
-        $certificates= $user->certificates;
+        $projects = $user->projects->whereIn('id', $selectedIds);
+        $skills = $user->unlockedNodes->map(fn ($n) => $n->skill)->filter();
+        $certificates = $user->certificates;
 
         // Extract keywords for match scoring
-        $jobDesc  = $validated['job_description'] ?? '';
+        $jobDesc = $validated['job_description'] ?? '';
         $keywords = $jobDesc ? $this->analyzer->extractKeywords($jobDesc) : [];
         $matchScore = $keywords ? $this->analyzer->calculateMatchScore($user, $keywords) : 0;
 
-        $resumeInput = (object)[
-            'job_title'       => $validated['job_title'],
+        $resumeInput = (object) [
+            'job_title' => $validated['job_title'],
             'job_description' => $jobDesc,
-            'template'         => $validated['template'] ?? 'modern',
+            'template' => $validated['template'] ?? 'modern',
         ];
 
         $pipelineResult = $this->pipeline->generate(
@@ -120,26 +122,26 @@ class ResumeController extends Controller
         $resume = $user->resumes()->updateOrCreate(
             ['user_id' => $user->id],
             [
-                'job_title'            => $validated['job_title'],
-                'job_description'      => $jobDesc,
+                'job_title' => $validated['job_title'],
+                'job_description' => $jobDesc,
                 'selected_project_ids' => $selectedIds,
-                'target_keywords'      => implode(', ', $keywords),
-                'match_score'          => $matchScore,
-                'template'             => $validated['template'] ?? 'modern',
-                'ai_content'           => json_encode($aiContent),
-                'pdf_path'             => null,
-                'pdf_public_id'        => null,
-                'pdf_template'         => null,
-                'pdf_generated_at'     => null,
+                'target_keywords' => implode(', ', $keywords),
+                'match_score' => $matchScore,
+                'template' => $validated['template'] ?? 'modern',
+                'ai_content' => json_encode($aiContent),
+                'pdf_path' => null,
+                'pdf_public_id' => null,
+                'pdf_template' => null,
+                'pdf_generated_at' => null,
             ]
         );
 
         return response()->json([
-            'success'    => true,
+            'success' => true,
             'ai_content' => $aiContent,
-            'resume_id'  => $resume->id,
-            'match_score'=> round($matchScore),
-            'pipeline'   => $pipelineResult['metadata'],
+            'resume_id' => $resume->id,
+            'match_score' => round($matchScore),
+            'pipeline' => $pipelineResult['metadata'],
         ]);
     }
 
@@ -156,21 +158,21 @@ class ResumeController extends Controller
 
         $resume = $user->resumes()->latest()->first();
 
-        if (!$resume) {
+        if (! $resume) {
             return back()->with('error', 'Please generate your resume first.');
         }
 
-        $aiContent   = json_decode($resume->ai_content ?? '{}', true);
+        $aiContent = json_decode($resume->ai_content ?? '{}', true);
         $selectedIds = $resume->selected_project_ids ?? [];
-        $projects    = $user->projects->whereIn('id', $selectedIds);
-        $template    = $request->input('template', $resume->template ?? 'modern');
+        $projects = $user->projects->whereIn('id', $selectedIds);
+        $template = $request->input('template', $resume->template ?? 'modern');
 
-        $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
+        $filename = 'resume_'.str()->slug($user->name).'_'.now()->format('Ymd').'.pdf';
         $pdf = $this->cachedPdf($resume, $user, $projects, $aiContent, $template);
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
             ->header('Cache-Control', 'private, max-age=300');
     }
 
@@ -187,21 +189,21 @@ class ResumeController extends Controller
 
         $resume = $user->resumes()->latest()->first();
 
-        if (!$resume) {
+        if (! $resume) {
             return response('Please generate your resume first.', 404);
         }
 
-        $aiContent   = json_decode($resume->ai_content ?? '{}', true);
+        $aiContent = json_decode($resume->ai_content ?? '{}', true);
         $selectedIds = $resume->selected_project_ids ?? [];
-        $projects    = $user->projects->whereIn('id', $selectedIds);
-        $template    = $request->input('template', $resume->template ?? 'modern');
+        $projects = $user->projects->whereIn('id', $selectedIds);
+        $template = $request->input('template', $resume->template ?? 'modern');
 
-        $filename = 'resume_' . str()->slug($user->name) . '_' . now()->format('Ymd') . '.pdf';
+        $filename = 'resume_'.str()->slug($user->name).'_'.now()->format('Ymd').'.pdf';
         $pdf = $this->cachedPdf($resume, $user, $projects, $aiContent, $template);
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $filename . '"')
+            ->header('Content-Disposition', 'inline; filename="'.$filename.'"')
             ->header('Cache-Control', 'private, max-age=300');
     }
 
@@ -236,10 +238,10 @@ class ResumeController extends Controller
 
     private function renderPdf($user, Resume $resume, $projects, array $aiContent, string $template): string
     {
-        $html = view('resume.pdf.' . $template, [
-            'user'       => $user,
-            'resume'     => $resume,
-            'projects'   => $projects,
+        $html = view('resume.pdf.'.$template, [
+            'user' => $user,
+            'resume' => $resume,
+            'projects' => $projects,
             'ai_content' => $aiContent,
         ])->render();
 
@@ -254,8 +256,8 @@ class ResumeController extends Controller
 
     private function storeCachedPdf(Resume $resume, $user, string $template, string $pdf): void
     {
-        $filename = 'resume_' . $resume->id . '_' . $template . '.pdf';
-        $publicId = 'resume_' . $resume->id . '_' . $template;
+        $filename = 'resume_'.$resume->id.'_'.$template.'.pdf';
+        $publicId = 'resume_'.$resume->id.'_'.$template;
 
         if ($this->cloudinary->configured()) {
             $uploaded = $this->cloudinary->uploadPdf($pdf, 'lvlup/resumes', $publicId, $filename);
@@ -270,7 +272,7 @@ class ResumeController extends Controller
             return;
         }
 
-        $path = 'resume/' . $user->id . '/' . $filename;
+        $path = 'resume/'.$user->id.'/'.$filename;
         Storage::disk('local')->put($path, $pdf);
 
         $resume->update([
@@ -278,6 +280,49 @@ class ResumeController extends Controller
             'pdf_public_id' => null,
             'pdf_template' => $template,
             'pdf_generated_at' => now(),
+        ]);
+    }
+
+    /**
+     * Save the user's profile/resume details directly to the database.
+     */
+    public function saveProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:50',
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'bio' => 'nullable|string|max:1000',
+            'technical_skills' => 'nullable|string|max:2000',
+            'work_experience' => 'nullable|string|max:5000',
+            'education' => 'nullable|string|max:3000',
+            'linkedin_url' => 'nullable|url|max:255',
+            'github_url' => 'nullable|url|max:255',
+        ]);
+
+        $user = auth()->user();
+
+        $user->title = $validated['title'] ?? null;
+        $user->resume_job_title = $validated['title'] ?? null;
+        $user->bio = $validated['bio'] ?? null;
+        $user->resume_summary = $validated['bio'] ?? null;
+        $user->phone_number = $validated['phone_number'] ?? null;
+        $user->city = $validated['city'] ?? null;
+        $user->country = $validated['country'] ?? null;
+        $user->technical_skills = $validated['technical_skills'] ?? null;
+        $user->work_experience = $validated['work_experience'] ?? null;
+        $user->education = $validated['education'] ?? null;
+        $user->linkedin_url = $validated['linkedin_url'] ?? null;
+        $user->github_url = $validated['github_url'] ?? null;
+
+        $user->save();
+        $user->clearFastUiCaches();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully!',
+            'user' => $user,
         ]);
     }
 }

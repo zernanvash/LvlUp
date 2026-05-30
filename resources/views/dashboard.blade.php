@@ -103,28 +103,24 @@
                 <span class="lvl-chip">{{ number_format($skillProgress, 1) }}%</span>
             </div>
 
+            <div class="relative w-full h-[260px] flex items-center justify-center my-2">
+                <canvas id="skillRadarChart"></canvas>
+            </div>
+
             @if($topSkills->count())
-                <div class="space-y-3">
-                    @foreach($topSkills as $index => $skill)
-                    @php $width = max(30, 95 - ($index * 13)); @endphp
-                    <div class="flex items-center gap-3">
-                        <div class="h-10 w-10 flex-shrink-0 rounded-lg bg-[var(--lvl-p50)] border border-[var(--lvl-p100)] text-[var(--lvl-p600)] flex items-center justify-center">
-                            <i class="{{ $skill->icon ?? 'fas fa-code' }}"></i>
+                <div class="mt-4 pt-4 border-t border-[var(--lvl-border-soft)] grid grid-cols-2 gap-3 text-center">
+                    @foreach($topSkills->take(2) as $skill)
+                        <div class="p-2 rounded-lg bg-[var(--lvl-surface-soft)] border border-[var(--lvl-border-soft)]">
+                            <p class="text-xs text-[var(--lvl-muted)] font-semibold truncate">{{ $skill->name }}</p>
                         </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="mb-1 flex justify-between gap-2">
-                                <p class="truncate text-sm font-bold text-[var(--lvl-text)]">{{ $skill->name }}</p>
-                                <span class="text-xs font-bold text-[var(--lvl-p600)]">{{ $width }}%</span>
-                            </div>
-                            <div class="lvl-xp-bg h-1.5"><div class="lvl-xp-fill" style="width: {{ $width }}%;"></div></div>
-                        </div>
-                    </div>
                     @endforeach
+                    <a href="{{ route('skill-tree.index') }}" class="col-span-2 text-center text-xs font-bold text-[var(--lvl-p400)] hover:underline">
+                        View Full Skill Tree →
+                    </a>
                 </div>
             @else
-                <div class="rounded-lg border border-dashed border-[var(--lvl-border)] bg-[var(--lvl-surface-soft)] p-6 text-center">
-                    <p class="text-sm font-bold text-[var(--lvl-text)]">No skill nodes unlocked yet</p>
-                    <a href="{{ route('skill-tree.index') }}" class="mt-2 inline-flex text-sm font-bold text-[var(--lvl-p600)]">Open the skill tree</a>
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-[var(--lvl-faint)]">Unlock nodes on the skill tree to shape your radar.</p>
                 </div>
             @endif
         </div>
@@ -309,3 +305,83 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('skillRadarChart').getContext('2d');
+    
+    const radarData = @json($radarData);
+    const labels = radarData.map(d => d.label);
+    const scores = radarData.map(d => d.score);
+    
+    // Style variables matching LvlUp custom properties
+    const purpleMain = '#7f77dd';      // --lvl-p400
+    const purpleLight = '#afa9ec';     // --lvl-p600
+    const purpleFill = 'rgba(127, 119, 221, 0.2)';
+    const gridColor = 'rgba(127, 119, 221, 0.15)';
+    const textColor = '#c5bed8';       // --lvl-muted
+    
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Capability %',
+                data: scores,
+                backgroundColor: purpleFill,
+                borderColor: purpleLight,
+                borderWidth: 2,
+                pointBackgroundColor: purpleMain,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: purpleMain,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.raw + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                r: {
+                    angleLines: {
+                        color: gridColor
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    pointLabels: {
+                        color: textColor,
+                        font: {
+                            family: 'Inter, sans-serif',
+                            size: 10,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        display: false,
+                        stepSize: 20
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 100
+                }
+            }
+        }
+    });
+});
+</script>
+@endpush

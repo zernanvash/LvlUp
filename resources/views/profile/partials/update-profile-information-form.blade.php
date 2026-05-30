@@ -8,6 +8,7 @@
         <form method="post" action="{{ route('profile.update') }}" class="space-y-5">
             @csrf
             @method('patch')
+            <input type="hidden" name="active_tab" value="settings">
 
             {{-- Name & Title row --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

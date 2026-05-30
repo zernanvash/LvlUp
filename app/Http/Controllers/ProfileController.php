@@ -21,7 +21,7 @@ class ProfileController extends Controller
         $user = User::where('name', $username)->firstOrFail();
 
         // Check if profile is private
-        if (!$user->is_public && (!Auth::check() || Auth::id() !== $user->id)) {
+        if (! $user->is_public && (! Auth::check() || Auth::id() !== $user->id)) {
             abort(403, 'This profile is private.');
         }
 
@@ -31,7 +31,7 @@ class ProfileController extends Controller
                 'projects' => function ($query) {
                     $query->where('is_featured', true)->latest()->take(6);
                 },
-                'unlockedNodes.skill'
+                'unlockedNodes.skill',
             ]);
 
             return [$user, [
@@ -73,16 +73,21 @@ class ProfileController extends Controller
         // Never overwrite visibility_settings from the profile form
         unset($data['visibility_settings']);
 
-        $request->user()->fill($data);
+        $user = $request->user();
+        $user->fill($data);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
-        $request->user()->clearFastUiCaches();
+        $user->save();
+        $user->refresh();
+        $user->clearFastUiCaches();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        $activeTab = $request->input('tab', 'settings');
+
+        return Redirect::route('profile.edit', ['tab' => $activeTab])
+            ->with('status', 'profile-updated');
     }
 
     /**
@@ -99,7 +104,7 @@ class ProfileController extends Controller
         $settings = [];
         foreach ($visibilityFields as $field) {
             // Checkbox sends '1' when checked, absent when unchecked
-            $settings[$field] = $request->input('visibility_settings.' . $field) === '1';
+            $settings[$field] = $request->input('visibility_settings.'.$field) === '1';
         }
 
         $request->user()->update(['visibility_settings' => $settings]);

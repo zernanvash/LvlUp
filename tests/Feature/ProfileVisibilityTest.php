@@ -77,7 +77,7 @@ it('updates profile with title and bio', function () {
         'bio' => 'I love coding and building awesome projects.',
     ]);
 
-    $response->assertRedirect(route('profile.edit'));
+    $response->assertRedirect(route('profile.edit', ['tab' => 'settings']));
     $response->assertSessionHas('status', 'profile-updated');
 
     expect($user->fresh()->title)->toBe('Full Stack Developer');

@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use App\Models\Badge;
 use App\Models\Skill;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
@@ -15,7 +12,7 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         // Track last login date (separate from activity streak)
-        if (!$user->last_login || $user->last_login->toDateString() !== now()->toDateString()) {
+        if (! $user->last_login || $user->last_login->toDateString() !== now()->toDateString()) {
             $user->last_login = now()->toDateString();
             $user->save();
         }
@@ -43,9 +40,9 @@ class DashboardController extends Controller
                 ->get()
         );
 
-        $xpToNextLevel        = $user->xpToNextLevel();
-        $showMilestoneBanner  = $user->shouldShowMilestoneBanner();
-        $streakBonusActive    = $user->streakBonusActive();
+        $xpToNextLevel = $user->xpToNextLevel();
+        $showMilestoneBanner = $user->shouldShowMilestoneBanner();
+        $streakBonusActive = $user->streakBonusActive();
         $streakBonusMultiplier = $user->streakBonusMultiplier();
 
         // Calculate dynamic activity pulse (heatmap) and weekly chart
@@ -54,19 +51,19 @@ class DashboardController extends Controller
         $projectDates = $user->projects()
             ->where('created_at', '>=', $startDate)
             ->pluck('created_at')
-            ->map(fn($d) => $d->toDateString())
+            ->map(fn ($d) => $d->toDateString())
             ->toArray();
 
         $nodeDates = $user->unlockedNodes()
             ->wherePivot('unlocked_at', '>=', $startDate)
             ->get()
-            ->map(fn($n) => \Carbon\Carbon::parse($n->pivot->unlocked_at)->toDateString())
+            ->map(fn ($n) => \Carbon\Carbon::parse($n->pivot->unlocked_at)->toDateString())
             ->toArray();
 
         $badgeDates = $user->badges()
             ->wherePivot('earned_at', '>=', $startDate)
             ->get()
-            ->map(fn($b) => \Carbon\Carbon::parse($b->pivot->earned_at)->toDateString())
+            ->map(fn ($b) => \Carbon\Carbon::parse($b->pivot->earned_at)->toDateString())
             ->toArray();
 
         // Combine all activity dates
@@ -78,7 +75,7 @@ class DashboardController extends Controller
         for ($i = 34; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
             $count = $activityCounts[$date] ?? 0;
-            
+
             // Map count to level 0-4
             if ($count === 0) {
                 $level = 0;
@@ -122,6 +119,42 @@ class DashboardController extends Controller
             $weeklyChart[] = $height;
         }
 
+        // Fetch core skills and compute dynamic radar chart values
+        $skills = Skill::whereIn('slug', ['web-dev', 'backend', 'database', 'devops', 'mobile', 'ai', 'fullstack'])
+            ->withCount('nodes')
+            ->get();
+        $radarData = [];
+
+        foreach ($skills as $skill) {
+            $total = $skill->nodes_count;
+            $unlocked = $user->unlockedNodes()->where('skill_id', $skill->id)->count();
+            $nodeProgress = $total > 0 ? ($unlocked / $total) * 100 : 0;
+
+            $projectProficiency = $skill->calculateUserProficiency($user); // 0-5
+            $proficiencyProgress = ($projectProficiency / 5) * 100;
+
+            // Composite score is the weighted average of node progress (60%) and project proficiency (40%)
+            $score = ($nodeProgress * 0.6) + ($proficiencyProgress * 0.4);
+            $score = min(100, max(0, round($score)));
+
+            // Simplify label for chart space
+            $shortName = match ($skill->slug) {
+                'web-dev' => 'Web Dev',
+                'backend' => 'Backend',
+                'database' => 'Database',
+                'devops' => 'DevOps',
+                'mobile' => 'Mobile',
+                'ai' => 'AI & ML',
+                'fullstack' => 'Full Stack',
+                default => $skill->name
+            };
+
+            $radarData[] = [
+                'label' => $shortName,
+                'score' => $score,
+            ];
+        }
+
         return view('dashboard', compact(
             'projects',
             'xpToNextLevel',
@@ -129,7 +162,8 @@ class DashboardController extends Controller
             'streakBonusActive',
             'streakBonusMultiplier',
             'heatmap',
-            'weeklyChart'
+            'weeklyChart',
+            'radarData'
         ));
     }
 }
