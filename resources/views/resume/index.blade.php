@@ -13,6 +13,35 @@
     $profileScore= ($hasBio + $hasWork + $hasEducation + $hasSkills) * 25;
 @endphp
 
+<style>
+    .project-checkbox {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 0.375rem !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        cursor: pointer !important;
+        display: inline-block !important;
+        position: relative !important;
+        transition: all 0.2s ease !important;
+    }
+    .project-checkbox:checked {
+        background-color: #a855f7 !important;
+        border-color: #a855f7 !important;
+        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+        background-size: 100% 100% !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+    }
+    .project-checkbox:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4) !important;
+    }
+</style>
+
+
 {{-- Flash messages --}}
 @foreach(['cert_success','cert_error','error'] as $key)
     @if(session($key))
@@ -165,7 +194,7 @@
                     <label class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all border"
                            :class="selectedProjects.includes({{ $project->id }}) ? 'bg-purple-500/20 border-purple-500/40' : 'bg-white/5 border-white/10 hover:border-purple-500/30'">
                         <input type="checkbox" :value="{{ $project->id }}" x-model="selectedProjects"
-                               class="mt-0.5 rounded text-purple-500 bg-white/10 border-white/20">
+                               class="mt-0.5 project-checkbox">
                         <div class="flex-1 min-w-0">
                             <p class="text-white text-sm font-semibold truncate">{{ $project->name }}</p>
                             <p class="text-gray-400 text-xs mt-0.5 line-clamp-2">{{ $project->description }}</p>
