@@ -6,210 +6,11 @@
 
 @section('content')
 @php
-    $hasBio      = !empty($user->resume_summary) || !empty($user->bio);
+    $hasBio      = !empty($user->bio);
     $hasWork     = !empty($user->work_experience);
     $hasEducation= !empty($user->education);
     $hasSkills   = !empty($user->technical_skills);
     $profileScore= ($hasBio + $hasWork + $hasEducation + $hasSkills) * 25;
-
-    // Define all portfolio quests
-    $quests = [];
-    
-    // Profile details quests
-    if (!$hasBio) {
-        $quests[] = [
-            'id' => 'bio',
-            'title' => 'Write a Professional Summary',
-            'category' => 'Resume Details',
-            'xp' => 'Basic Profile',
-            'description' => 'Tell recruiters about your expertise and career goals. AI needs this to set the resume tone.',
-            'url' => route('profile.edit', ['tab' => 'resume']),
-            'btn_text' => 'Add Summary',
-            'icon' => 'fa-id-badge',
-            'color' => 'amber',
-        ];
-    }
-    if (!$hasWork) {
-        $quests[] = [
-            'id' => 'work',
-            'title' => 'Add Work Experience',
-            'category' => 'Resume Details',
-            'xp' => 'Basic Profile',
-            'description' => 'Add past jobs. AI uses your roles and responsibilities to generate achievements.',
-            'url' => route('profile.edit', ['tab' => 'resume']),
-            'btn_text' => 'Add Experience',
-            'icon' => 'fa-briefcase',
-            'color' => 'blue',
-        ];
-    }
-    if (!$hasEducation) {
-        $quests[] = [
-            'id' => 'education',
-            'title' => 'Add Education Details',
-            'category' => 'Resume Details',
-            'xp' => 'Basic Profile',
-            'description' => 'List your university degree, bootcamp, or other training history.',
-            'url' => route('profile.edit', ['tab' => 'resume']),
-            'btn_text' => 'Add Education',
-            'icon' => 'fa-graduation-cap',
-            'color' => 'emerald',
-        ];
-    }
-    if (!$hasSkills) {
-        $quests[] = [
-            'id' => 'skills',
-            'title' => 'List Technical Skills',
-            'category' => 'Profile Settings',
-            'xp' => 'Basic Profile',
-            'description' => 'List key languages/frameworks (comma-separated). Helps with ATS keyword matching.',
-            'url' => route('profile.edit', ['tab' => 'settings']),
-            'btn_text' => 'Add Skills',
-            'icon' => 'fa-tools',
-            'color' => 'purple',
-        ];
-    }
-
-    // Portfolio grind quests
-    $projectCount = $user->projects->count();
-    if ($projectCount < 3) {
-        $quests[] = [
-            'id' => 'projects',
-            'title' => "Grind Portfolio Projects ({$projectCount}/3)",
-            'category' => 'Portfolio Grind',
-            'xp' => 'XP Reward: +250 XP',
-            'description' => 'Add at least 3 projects to your portfolio. AI ranks and matches projects to the job description.',
-            'url' => route('projects.create'),
-            'btn_text' => 'Add Project',
-            'icon' => 'fa-folder-plus',
-            'color' => 'pink',
-        ];
-    }
-
-    $unlockedCount = $user->unlockedNodes->count();
-    if ($unlockedCount < 5) {
-        $quests[] = [
-            'id' => 'skill_tree',
-            'title' => "Unlock Skill Tree Nodes ({$unlockedCount}/5)",
-            'category' => 'Skill Tree Grind',
-            'xp' => 'Proficiency Boost',
-            'description' => 'Spend XP/Primogems to unlock skill nodes. Unlocked skills are automatically verified on your resume.',
-            'url' => route('skill-tree.index'),
-            'btn_text' => 'Explore Skill Tree',
-            'icon' => 'fa-sitemap',
-            'color' => 'cyan',
-        ];
-    }
-
-    $certCount = $user->certificates->count();
-    if ($certCount === 0) {
-        $quests[] = [
-            'id' => 'certificates',
-            'title' => 'Upload Certifications',
-            'category' => 'Credentials',
-            'xp' => 'AI Enhanced',
-            'description' => 'Upload PDF/image certs. AI summarizes them and adds official credentials to your resume.',
-            'url' => '#',
-            'btn_text' => 'Upload Below',
-            'icon' => 'fa-certificate',
-            'color' => 'rose',
-            'is_anchor' => true,
-        ];
-    }
-
-    if (empty($user->github_url) || empty($user->linkedin_url)) {
-        $quests[] = [
-            'id' => 'socials',
-            'title' => 'Link GitHub & LinkedIn',
-            'category' => 'Profile Settings',
-            'xp' => 'Social Proof',
-            'description' => 'Add links so hiring managers can view your online presence and source code.',
-            'url' => route('profile.edit', ['tab' => 'settings']),
-            'btn_text' => 'Link Accounts',
-            'icon' => 'fa-link',
-            'color' => 'sky',
-        ];
-    }
-
-    $completedQuestsCount = 8 - count($quests);
-    $questCompletenessPercent = round(($completedQuestsCount / 8) * 100);
-
-    // Static class mapping helper for Tailwind CSS safety
-    $getQuestColorClasses = function($color) {
-        return match($color) {
-            'amber' => [
-                'bg' => 'bg-amber-500/10',
-                'text' => 'text-amber-400',
-                'border' => 'border-amber-500/25',
-                'hover' => 'hover:border-amber-500/40',
-                'btn' => 'bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30',
-                'label' => 'text-amber-400',
-            ],
-            'blue' => [
-                'bg' => 'bg-blue-500/10',
-                'text' => 'text-blue-400',
-                'border' => 'border-blue-500/25',
-                'hover' => 'hover:border-blue-500/40',
-                'btn' => 'bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30',
-                'label' => 'text-blue-400',
-            ],
-            'emerald' => [
-                'bg' => 'bg-emerald-500/10',
-                'text' => 'text-emerald-400',
-                'border' => 'border-emerald-500/25',
-                'hover' => 'hover:border-emerald-500/40',
-                'btn' => 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30',
-                'label' => 'text-emerald-400',
-            ],
-            'purple' => [
-                'bg' => 'bg-purple-500/10',
-                'text' => 'text-purple-400',
-                'border' => 'border-purple-500/25',
-                'hover' => 'hover:border-purple-500/40',
-                'btn' => 'bg-purple-500/20 border-purple-500/30 text-purple-300 hover:bg-purple-500/30',
-                'label' => 'text-purple-400',
-            ],
-            'pink' => [
-                'bg' => 'bg-pink-500/10',
-                'text' => 'text-pink-400',
-                'border' => 'border-pink-500/25',
-                'hover' => 'hover:border-pink-500/40',
-                'btn' => 'bg-pink-500/20 border-pink-500/30 text-pink-300 hover:bg-pink-500/30',
-                'label' => 'text-pink-400',
-            ],
-            'cyan' => [
-                'bg' => 'bg-cyan-500/10',
-                'text' => 'text-cyan-400',
-                'border' => 'border-cyan-500/25',
-                'hover' => 'hover:border-cyan-500/40',
-                'btn' => 'bg-cyan-500/20 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/30',
-                'label' => 'text-cyan-400',
-            ],
-            'rose' => [
-                'bg' => 'bg-rose-500/10',
-                'text' => 'text-rose-400',
-                'border' => 'border-rose-500/25',
-                'hover' => 'hover:border-rose-500/40',
-                'btn' => 'bg-rose-500/20 border-rose-500/30 text-rose-300 hover:bg-rose-500/30',
-                'label' => 'text-rose-400',
-            ],
-            'sky' => [
-                'bg' => 'bg-sky-500/10',
-                'text' => 'text-sky-400',
-                'border' => 'border-sky-500/25',
-                'hover' => 'hover:border-sky-500/40',
-                'btn' => 'bg-sky-500/20 border-sky-500/30 text-sky-300 hover:bg-sky-500/30',
-                'label' => 'text-sky-400',
-            ],
-            default => [
-                'bg' => 'bg-gray-500/10',
-                'text' => 'text-gray-400',
-                'border' => 'border-gray-500/25',
-                'hover' => 'hover:border-gray-500/40',
-                'btn' => 'bg-gray-500/20 border-gray-500/30 text-gray-300 hover:bg-gray-500/30',
-                'label' => 'text-gray-400',
-            ],
-        };
-    };
 @endphp
 
 {{-- Flash messages --}}
@@ -225,67 +26,25 @@
 
 <div class="max-w-7xl mx-auto" x-data="resumeBuilder()" x-cloak>
 
-    {{-- AI Resume Quest Board & Quest Log --}}
-    @if(count($quests) > 0)
-    <div class="mb-6 glow-border rounded-2xl p-5 bg-gradient-to-br from-indigo-950/60 to-purple-950/40 backdrop-blur" x-data="{ showQuests: true }">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                    <i class="fas fa-shield-halved text-lg"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-white text-sm sm:text-base flex items-center gap-2">
-                        <span>AI Resume Quest Board</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">{{ $completedQuestsCount }}/8 Quests Completed</span>
-                    </h4>
-                    <p class="text-xs text-gray-400 mt-0.5">Grind your portfolio & profile to unlock the highest quality AI resume output.</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="w-full sm:w-32 bg-white/10 rounded-full h-2 overflow-hidden flex-shrink-0">
-                    <div class="bg-gradient-to-r from-amber-500 to-amber-300 h-full rounded-full transition-all duration-500" style="width: {{ $questCompletenessPercent }}%"></div>
-                </div>
-                <button @click="showQuests = !showQuests" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition flex items-center gap-1.5">
-                    <span x-text="showQuests ? 'Hide Quests' : 'View Quests'"></span>
-                    <i class="fas" :class="showQuests ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                </button>
-            </div>
+    {{-- Profile completeness banner --}}
+    @if($profileScore < 100)
+    <div class="mb-6 glow-border rounded-2xl p-4 bg-gradient-to-r from-amber-900/30 to-amber-800/20 backdrop-blur flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-amber-400 text-xl"></i>
         </div>
-        
-        {{-- Quest List --}}
-        <div x-show="showQuests" x-transition class="mt-5 space-y-3 pt-4 border-t border-white/5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                @foreach($quests as $quest)
-                @php $c = $getQuestColorClasses($quest['color']); @endphp
-                <div class="flex items-start gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 hover:{{ $c['border'] }} transition-all group">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 {{ $c['bg'] }} {{ $c['text'] }} border {{ $c['border'] }}">
-                        <i class="fas {{ $quest['icon'] }} text-sm"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-[10px] font-bold uppercase tracking-wider {{ $c['text'] }}">{{ $quest['category'] }}</span>
-                            <span class="text-[10px] text-gray-500 font-mono">{{ $quest['xp'] }}</span>
-                        </div>
-                        <h5 class="text-white text-xs sm:text-sm font-bold truncate mt-0.5">{{ $quest['title'] }}</h5>
-                        <p class="text-gray-400 text-xs mt-1 leading-relaxed line-clamp-2">{{ $quest['description'] }}</p>
-                        <div class="mt-2.5">
-                            @if(!empty($quest['is_anchor']))
-                            <button @click.prevent="document.getElementById('certificates-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })"
-                                    class="text-[11px] px-2.5 py-1 rounded {{ $c['btn'] }} font-semibold transition">
-                                {{ $quest['btn_text'] }}
-                            </button>
-                            @else
-                            <a href="{{ $quest['url'] }}" 
-                               class="text-[11px] px-2.5 py-1 rounded {{ $c['btn'] }} font-semibold transition inline-block">
-                                {{ $quest['btn_text'] }}
-                            </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
+        <div class="flex-1">
+            <p class="font-bold text-amber-300 text-sm">Profile {{ $profileScore }}% complete — richer profile = better AI resume</p>
+            <p class="text-xs text-amber-400/70 mt-1">
+                Missing:
+                @if(!$hasBio)<span class="mr-2">Bio</span>@endif
+                @if(!$hasWork)<span class="mr-2">Work Experience</span>@endif
+                @if(!$hasEducation)<span class="mr-2">Education</span>@endif
+                @if(!$hasSkills)<span class="mr-2">Technical Skills</span>@endif
+            </p>
         </div>
+        <a href="{{ route('profile.edit') }}" class="flex-shrink-0 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-sm hover:bg-amber-500/30 transition font-semibold">
+            Complete Profile →
+        </a>
     </div>
     @endif
 
@@ -303,115 +62,53 @@
                         <i class="fas fa-user text-purple-400 text-sm"></i>
                     </div>
                     <h3 class="font-bold text-white">Profile Information</h3>
-                    <span x-show="!editingProfile" class="ml-auto text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                    <span class="ml-auto text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
                         <i class="fas fa-check-circle mr-1"></i>Auto-filled
                     </span>
-                    <button @click="editingProfile = !editingProfile" type="button"
-                            :class="editingProfile ? 'ml-auto text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 font-semibold transition' : 'ml-auto text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/30 font-semibold transition'">
-                        <i class="fas" :class="editingProfile ? 'fa-times mr-1' : 'fa-edit mr-1'"></i>
-                        <span x-text="editingProfile ? 'Cancel' : 'Edit'"></span>
-                    </button>
                 </div>
-
-                {{-- Edit Profile Form --}}
-                <div x-show="editingProfile" class="space-y-4" style="display: none;">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Title</label>
-                            <input type="text" x-model="profileTitle" placeholder="e.g. Senior Full Stack Developer" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-                        </div>
-                        <div>
-                            <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Phone</label>
-                            <input type="text" x-model="profilePhone" placeholder="+1 (555) 000-0000" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-                        </div>
-                        <div>
-                            <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">City</label>
-                            <input type="text" x-model="profileCity" placeholder="San Francisco" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-                        </div>
-                        <div>
-                            <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Country</label>
-                            <input type="text" x-model="profileCountry" placeholder="United States" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-                        </div>
-                        <div>
-                            <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">LinkedIn URL</label>
-                            <input type="text" x-model="profileLinkedin" placeholder="https://linkedin.com/in/username" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
-                        </div>
-                        <div>
-                            <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">GitHub URL</label>
-                            <input type="text" x-model="profileGithub" placeholder="https://github.com/username" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-white/5 rounded-xl p-3">
+                        <p class="text-xs text-purple-400 mb-1">Full Name</p>
+                        <p class="text-white font-semibold">{{ $user->name }}</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-3">
+                        <p class="text-xs text-purple-400 mb-1">Title</p>
+                        <p class="text-white font-semibold">{{ $user->title ?? $user->resume_job_title ?? '—' }}</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-3">
+                        <p class="text-xs text-purple-400 mb-1">Email</p>
+                        <p class="text-white text-sm">{{ $user->email }}</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-3">
+                        <p class="text-xs text-purple-400 mb-1">Location</p>
+                        <p class="text-white text-sm">{{ collect([$user->city, $user->country])->filter()->join(', ') ?: '—' }}</p>
+                    </div>
+                    @if($user->phone_number)
+                    <div class="bg-white/5 rounded-xl p-3">
+                        <p class="text-xs text-purple-400 mb-1">Phone</p>
+                        <p class="text-white text-sm">{{ $user->phone_number }}</p>
+                    </div>
+                    @endif
+                    @if($user->linkedin_url || $user->github_url)
+                    <div class="bg-white/5 rounded-xl p-3">
+                        <p class="text-xs text-purple-400 mb-1">Links</p>
+                        <div class="flex gap-3">
+                            @if($user->linkedin_url)
+                            <a href="{{ $user->linkedin_url }}" class="text-blue-400 text-sm hover:text-blue-300" target="_blank"><i class="fab fa-linkedin mr-1"></i>LinkedIn</a>
+                            @endif
+                            @if($user->github_url)
+                            <a href="{{ $user->github_url }}" class="text-purple-400 text-sm hover:text-purple-300" target="_blank"><i class="fab fa-github mr-1"></i>GitHub</a>
+                            @endif
                         </div>
                     </div>
-                    <div>
-                        <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Bio / Professional Summary</label>
-                        <textarea x-model="profileBio" rows="3" placeholder="Write a short bio or professional summary..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none"></textarea>
-                    </div>
-                    <div>
-                        <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Technical Skills (comma-separated)</label>
-                        <textarea x-model="profileSkills" rows="2" placeholder="Laravel, Vue, Tailwind, MySQL..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none"></textarea>
-                    </div>
-                    <div>
-                        <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Work Experience</label>
-                        <textarea x-model="profileWork" rows="4" placeholder="Format: Company | Role | Duration | Description" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none"></textarea>
-                    </div>
-                    <div>
-                        <label class="text-xs text-purple-300 font-semibold uppercase tracking-wider block mb-1">Education</label>
-                        <textarea x-model="profileEducation" rows="3" placeholder="Format: Institution | Degree | Year | Notes" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none"></textarea>
-                    </div>
-                    <button @click="saveProfile()" type="button" :disabled="savingProfile"
-                            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm hover:from-purple-500 hover:to-indigo-500 transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
-                        <span x-show="!savingProfile" class="flex items-center justify-center gap-2">
-                            <i class="fas fa-save"></i> Save to Database
-                        </span>
-                        <span x-show="savingProfile" class="flex items-center justify-center gap-2">
-                            <i class="fas fa-spinner fa-spin"></i> Saving...
-                        </span>
-                    </button>
+                    @endif
                 </div>
-
-                {{-- Read-only Profile Details --}}
-                <div x-show="!editingProfile" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="bg-white/5 rounded-xl p-3">
-                            <p class="text-xs text-purple-400 mb-1">Full Name</p>
-                            <p class="text-white font-semibold">{{ $user->name }}</p>
-                        </div>
-                        <div class="bg-white/5 rounded-xl p-3">
-                            <p class="text-xs text-purple-400 mb-1">Title</p>
-                            <p class="text-white font-semibold" x-text="profileTitle || '—'"></p>
-                        </div>
-                        <div class="bg-white/5 rounded-xl p-3">
-                            <p class="text-xs text-purple-400 mb-1">Email</p>
-                            <p class="text-white text-sm">{{ $user->email }}</p>
-                        </div>
-                        <div class="bg-white/5 rounded-xl p-3">
-                            <p class="text-xs text-purple-400 mb-1">Location</p>
-                            <p class="text-white text-sm" x-text="(profileCity || profileCountry) ? [profileCity, profileCountry].filter(Boolean).join(', ') : '—'"></p>
-                        </div>
-                        <div class="bg-white/5 rounded-xl p-3" x-show="profilePhone">
-                            <p class="text-xs text-purple-400 mb-1">Phone</p>
-                            <p class="text-white text-sm" x-text="profilePhone"></p>
-                        </div>
-                        <div class="bg-white/5 rounded-xl p-3" x-show="profileLinkedin || profileGithub">
-                            <p class="text-xs text-purple-400 mb-1">Links</p>
-                            <div class="flex gap-3">
-                                <a x-show="profileLinkedin" :href="profileLinkedin" class="text-blue-400 text-sm hover:text-blue-300" target="_blank"><i class="fab fa-linkedin mr-1"></i>LinkedIn</a>
-                                <a x-show="profileGithub" :href="profileGithub" class="text-purple-400 text-sm hover:text-purple-300" target="_blank"><i class="fab fa-github mr-1"></i>GitHub</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white/5 rounded-xl p-3" x-show="profileBio">
-                        <p class="text-xs text-purple-400 mb-1">Bio</p>
-                        <p class="text-gray-300 text-sm leading-relaxed" x-text="profileBio"></p>
-                    </div>
-                    <div class="bg-white/5 rounded-xl p-3" x-show="profileWork">
-                        <p class="text-xs text-purple-400 mb-1">Work Experience</p>
-                        <p class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="profileWork"></p>
-                    </div>
-                    <div class="bg-white/5 rounded-xl p-3" x-show="profileEducation">
-                        <p class="text-xs text-purple-400 mb-1">Education</p>
-                        <p class="text-gray-300 text-sm whitespace-pre-line leading-relaxed" x-text="profileEducation"></p>
-                    </div>
+                @if($user->bio)
+                <div class="mt-3 bg-white/5 rounded-xl p-3">
+                    <p class="text-xs text-purple-400 mb-1">Bio</p>
+                    <p class="text-gray-300 text-sm leading-relaxed">{{ $user->bio }}</p>
                 </div>
+                @endif
             </div>
 
             {{-- Skills --}}
@@ -470,13 +167,7 @@
                         <input type="checkbox" :value="{{ $project->id }}" x-model="selectedProjects"
                                class="mt-0.5 rounded text-purple-500 bg-white/10 border-white/20">
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between gap-2">
-                                <p class="text-white text-sm font-semibold truncate">{{ $project->name }}</p>
-                                <span x-show="selectedProjects.includes({{ $project->id }})" x-transition
-                                      class="flex-shrink-0 text-purple-400 text-[10px] bg-purple-500/10 border border-purple-500/30 rounded-full px-1.5 py-0.5 font-bold flex items-center gap-1">
-                                    <i class="fas fa-check text-[8px]"></i> Selected
-                                </span>
-                            </div>
+                            <p class="text-white text-sm font-semibold truncate">{{ $project->name }}</p>
                             <p class="text-gray-400 text-xs mt-0.5 line-clamp-2">{{ $project->description }}</p>
                             @if($project->skills->count())
                             <div class="flex flex-wrap gap-1 mt-1">
@@ -507,7 +198,7 @@
             </div>
 
             {{-- Certificates --}}
-            <div id="certificates-card" class="glow-border rounded-2xl p-5 bg-gradient-to-br from-pink-900/30 to-rose-950/40 backdrop-blur">
+            <div class="glow-border rounded-2xl p-5 bg-gradient-to-br from-pink-900/30 to-rose-950/40 backdrop-blur">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-8 h-8 rounded-lg bg-pink-500/30 flex items-center justify-center">
                         <i class="fas fa-certificate text-pink-400 text-sm"></i>
@@ -892,7 +583,7 @@
 <script>
 function resumeBuilder() {
     return {
-        jobTitle:        @json($resume?->job_title ?? $user->resume_job_title ?? $user->title ?? ''),
+        jobTitle:        '{{ addslashes($resume?->job_title ?? '') }}',
         jobDescription:  '',
         template:        '{{ $resume?->template ?? 'modern' }}',
         selectedProjects: @json($resume ? ($resume->selected_project_ids ?? []) : $user->projects->pluck('id')->take(5)->values()),
@@ -902,20 +593,6 @@ function resumeBuilder() {
         viewMode:        'preview',
         pdfPreviewUrl:   '',
         pdfLoaded:       false,
-
-        // Profile Form properties
-        editingProfile:  false,
-        savingProfile:   false,
-        profileTitle:    @json($user->resume_job_title ?? $user->title ?? ''),
-        profilePhone:    @json($user->phone_number ?? ''),
-        profileCity:     @json($user->city ?? ''),
-        profileCountry:  @json($user->country ?? ''),
-        profileBio:      @json($user->resume_summary ?? $user->bio ?? ''),
-        profileSkills:   @json($user->technical_skills ?? ''),
-        profileWork:     @json($user->work_experience ?? ''),
-        profileEducation: @json($user->education ?? ''),
-        profileLinkedin: @json($user->linkedin_url ?? ''),
-        profileGithub:   @json($user->github_url ?? ''),
 
         init() {
             this.$watch('template', (value) => {
@@ -928,43 +605,6 @@ function resumeBuilder() {
         updatePreviewUrl() {
             this.pdfLoaded = false;
             this.pdfPreviewUrl = '{{ route('resume.preview') }}?template=' + this.template + '&t=' + Date.now();
-        },
-
-        async saveProfile() {
-            this.savingProfile = true;
-            try {
-                const res = await fetch('{{ route('resume.profile.save') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({
-                        title:            this.profileTitle,
-                        phone_number:     this.profilePhone,
-                        city:             this.profileCity,
-                        country:          this.profileCountry,
-                        bio:              this.profileBio,
-                        technical_skills: this.profileSkills,
-                        work_experience:  this.profileWork,
-                        education:        this.profileEducation,
-                        linkedin_url:     this.profileLinkedin,
-                        github_url:       this.profileGithub,
-                    }),
-                });
-                const data = await res.json();
-                if (data.success) {
-                    this.editingProfile = false;
-                    window.location.reload();
-                } else {
-                    alert('Failed to save profile: ' + (data.message || 'unknown error'));
-                }
-            } catch (e) {
-                console.error(e);
-                alert('An error occurred while saving.');
-            } finally {
-                this.savingProfile = false;
-            }
         },
 
         async generateResume() {
